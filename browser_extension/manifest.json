@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Sipcount — AI water footprint",
+  "version": "0.2.0",
+  "description": "Shows how much water your AI prompts use. Counts only — never reads, stores or sends what you type. No network permission.",
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Sipcount — today's AI water use",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*", "https://claude.ai/*", "https://gemini.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
