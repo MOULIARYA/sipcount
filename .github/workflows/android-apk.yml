@@ -45,6 +45,50 @@ jobs:
       - name: Generate Android scaffold
         run: flutter create --platforms=android --org io.sipcount --project-name ai_water .
 
+      # Stable signing: when the two secrets exist, sign with the project key so builds
+      # install over each other. Without them, fall back to the runner's throw-away debug key.
+      - name: Configure release signing
+        if: ${{ secrets.SIPCOUNT_KEYSTORE_B64 != '' }}
+        shell: bash
+        env:
+          KS_B64: ${{ secrets.SIPCOUNT_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.SIPCOUNT_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$KS_B64" | base64 -d > android/app/sipcount-release.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KS_PASS
+          keyPassword=$KS_PASS
+          keyAlias=sipcount
+          storeFile=sipcount-release.jks
+          EOF
+          python3 - <<'PY'
+          import pathlib, re
+          p = pathlib.Path('android/app/build.gradle.kts')
+          s = p.read_text()
+          if 'key.properties' not in s:
+              s = s.replace('android {', '''val keyProps = java.util.Properties().apply {
+              val f = rootProject.file("key.properties")
+              if (f.exists()) f.inputStream().use { load(it) }
+          }
+
+          android {''', 1)
+              s = s.replace('buildTypes {', '''signingConfigs {
+                  create("release") {
+                      storeFile = file(keyProps.getProperty("storeFile"))
+                      storePassword = keyProps.getProperty("storePassword")
+                      keyAlias = keyProps.getProperty("keyAlias")
+                      keyPassword = keyProps.getProperty("keyPassword")
+                  }
+              }
+
+              buildTypes {''', 1)
+              s = re.sub(r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)',
+                         'signingConfig = signingConfigs.getByName("release")', s)
+              p.write_text(s)
+          PY
+          echo "Release signing configured."
+
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test

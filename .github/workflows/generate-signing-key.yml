@@ -1,0 +1,56 @@
+name: Generate signing key (run once)
+
+# One-time helper. Creates a release keystore and hands it to the repo owner as a PRIVATE
+# workflow artifact (artifacts are downloadable only by people with write access, even on a
+# public repo). Follow the README inside the artifact to store it as repository secrets.
+# Nothing is printed to the log.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Create keystore and instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          PASS=$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)
+          keytool -genkeypair -v \
+            -keystore out/sipcount-release.jks \
+            -alias sipcount -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=Sipcount, O=Sipcount, C=IN" >/dev/null 2>&1
+          base64 -w0 out/sipcount-release.jks > out/SIPCOUNT_KEYSTORE_B64.txt
+          printf '%s' "$PASS" > out/SIPCOUNT_KEYSTORE_PASSWORD.txt
+          cat > out/README.txt <<'EOF'
+          Sipcount signing key — keep this folder private (do NOT commit it).
+
+          Add two repository secrets at
+            https://github.com/mouliarya/sipcount/settings/secrets/actions  → "New repository secret"
+
+            Name:  SIPCOUNT_KEYSTORE_B64        Value: entire contents of SIPCOUNT_KEYSTORE_B64.txt
+            Name:  SIPCOUNT_KEYSTORE_PASSWORD   Value: contents of SIPCOUNT_KEYSTORE_PASSWORD.txt
+
+          Then re-run the "Android APK" workflow (Actions → Android APK → Run workflow).
+          From that build on, every APK is signed with this key and installs over the previous one.
+          Keep a copy of this folder somewhere safe (e.g. OneDrive): losing it means users must
+          uninstall/reinstall once more.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sipcount-signing-key-PRIVATE
+          path: out/
+          retention-days: 7
+          if-no-files-found: error
