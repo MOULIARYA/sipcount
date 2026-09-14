@@ -8,7 +8,7 @@
 -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/a11y_description"
-    android:accessibilityEventTypes="typeViewClicked|typeViewTextChanged|typeWindowStateChanged"
+    android:accessibilityEventTypes="typeViewClicked|typeViewTextChanged|typeWindowStateChanged|typeWindowContentChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:packageNames="com.openai.chatgpt,com.anthropic.claude,com.google.android.apps.bard,com.android.chrome"
