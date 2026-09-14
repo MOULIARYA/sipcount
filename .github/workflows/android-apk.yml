@@ -26,6 +26,9 @@ jobs:
     defaults:
       run:
         working-directory: app
+    env:
+      # 'true' once the signing secrets exist (secrets cannot be referenced in `if:` directly)
+      HAS_SIGNING_KEY: ${{ secrets.SIPCOUNT_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,7 +51,7 @@ jobs:
       # Stable signing: when the two secrets exist, sign with the project key so builds
       # install over each other. Without them, fall back to the runner's throw-away debug key.
       - name: Configure release signing
-        if: ${{ secrets.SIPCOUNT_KEYSTORE_B64 != '' }}
+        if: env.HAS_SIGNING_KEY == 'true'
         shell: bash
         env:
           KS_B64: ${{ secrets.SIPCOUNT_KEYSTORE_B64 }}
