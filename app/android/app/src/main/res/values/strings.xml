@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a11y_label">Sipcount prompt counter</string>
+    <string name="a11y_description">Sipcount notices when you tap Send in ChatGPT, Claude, Gemini or Chrome, counts how many characters you typed, and immediately discards the text. It never reads, stores or transmits what you write. Only daily millilitre totals are kept, on this phone.</string>
+</resources>
