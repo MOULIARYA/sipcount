@@ -33,6 +33,10 @@ class Tracker extends ChangeNotifier {
   WaterEstimate? lastEstimate;
   String? lastNudge;
 
+  /// Session-only diagnostics for testing (never persisted).
+  String? lastVendor;
+  DateTime? lastEventAt;
+
   static Future<Tracker> start({ListenerChannel? channel}) async {
     final t = Tracker._(await ConstantsRepository.load(), await AggregateStore.open(), channel ?? ListenerChannel());
     t._days = t._store.readAll();
@@ -122,6 +126,8 @@ class Tracker extends ChangeNotifier {
     _days = _store.readAll();
     lastEstimate = est;
     lastNudge = _nudgeFor(tier, e);
+    lastVendor = switch (e.vendor) { 'openai' => 'ChatGPT', 'anthropic' => 'Claude', 'google' => 'Gemini', _ => e.vendor };
+    lastEventAt = DateTime.now();
     notifyListeners();
   }
 
