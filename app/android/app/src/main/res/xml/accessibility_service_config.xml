@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scope is as narrow as the platform allows:
+  - only the four whitelisted packages (ChatGPT, Claude, Gemini, Chrome)
+  - only click / text-changed / window-changed events
+  - flagRetrieveInteractiveWindows is NOT requested; canRetrieveWindowContent is
+    required to read the clicked button's label and the edit field's length.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/a11y_description"
+    android:accessibilityEventTypes="typeViewClicked|typeViewTextChanged|typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:packageNames="com.openai.chatgpt,com.anthropic.claude,com.google.android.apps.bard,com.android.chrome"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="100"
+    android:settingsActivity="io.sipcount.ai_water.MainActivity" />
