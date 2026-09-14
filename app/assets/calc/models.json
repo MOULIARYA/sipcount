@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "constants_version": "2026-09-14",
+  "notes": [
+    "All values are ESTIMATES derived from public sources; vendors do not publish per-query figures for most models.",
+    "Units: energy in Wh; WUE in L/kWh (numerically identical to mL/Wh, so water_mL = energy_Wh * PUE * (wue_site + wue_grid)).",
+    "Values marked source='TODO' are placeholders that MUST be sourced before release; the engine will refuse to use them unless allowPlaceholders=true."
+  ],
+  "token_estimation": {
+    "chars_per_token": 4.0,
+    "source": "OpenAI tokenizer rule of thumb (~4 chars/token English). Heuristic; no tokenizer shipped to keep footprint small."
+  },
+  "task_profiles": {
+    "text": {
+      "default_output_tokens": 300,
+      "energy_multiplier": 1.0
+    },
+    "code": {
+      "default_output_tokens": 600,
+      "energy_multiplier": 1.0
+    },
+    "long_context": {
+      "default_output_tokens": 500,
+      "energy_multiplier": 1.0,
+      "note": "Energy scales with input tokens automatically; no extra multiplier applied."
+    },
+    "image": {
+      "fixed_energy_wh_per_item": 2.9,
+      "source": "Luccioni, Jernite, Strubell (2023) 'Power Hungry Processing' — mean 2.907 kWh per 1,000 images for SDXL-class models.",
+      "confidence": "medium"
+    }
+  },
+  "model_tiers": {
+    "standard": {
+      "energy_wh_per_1k_tokens": 0.75,
+      "reference_query": "~100 input + ~300 output tokens ≈ 0.30 Wh",
+      "sources": [
+        "Epoch AI (Feb 2025): GPT-4o typical query ≈ 0.3 Wh",
+        "Google (Aug 2025) Gemini Apps technical report: median text prompt 0.24 Wh, 0.26 mL water",
+        "OpenAI/S. Altman (Jun 2025): average query ≈ 0.34 Wh, ≈0.32 mL water"
+      ],
+      "confidence": "medium"
+    },
+    "reasoning": {
+      "energy_wh_per_1k_tokens": 7.5,
+      "note": "10x standard. Reasoning models emit thousands of hidden chain-of-thought tokens not visible to the listener.",
+      "sources": ["Multiplier is an internal estimate; no vendor-published figure. Revisit."],
+      "confidence": "low"
+    },
+    "lightweight": {
+      "energy_wh_per_1k_tokens": 0.15,
+      "note": "Small/'mini'/'flash' models; ~0.2x standard.",
+      "sources": ["Internal estimate based on parameter-count ratios; revisit."],
+      "confidence": "low"
+    }
+  },
+  "vendor_model_map": {
+    "openai":    { "default_tier": "standard", "patterns": { "o1": "reasoning", "o3": "reasoning", "o4": "reasoning", "thinking": "reasoning", "mini": "lightweight", "nano": "lightweight" } },
+    "anthropic": { "default_tier": "standard", "patterns": { "opus": "standard", "extended": "reasoning", "haiku": "lightweight" } },
+    "google":    { "default_tier": "standard", "patterns": { "pro": "standard", "thinking": "reasoning", "flash": "lightweight", "flash-lite": "lightweight" } },
+    "unknown":   { "default_tier": "standard", "patterns": {} }
+  },
+  "regions": {
+    "us_default": {
+      "pue": 1.15,
+      "wue_site_l_per_kwh": 0.55,
+      "wue_grid_l_per_kwh": 3.142,
+      "sources": [
+        "Li, Yang, Islam, Ren (2023) 'Making AI Less Thirsty' — Microsoft US average on-site WUE 0.55 L/kWh; US average off-site (grid) water intensity 3.142 L/kWh (EWIF).",
+        "PUE 1.15 approximates hyperscaler fleet averages (Google ~1.10, Microsoft ~1.18)."
+      ],
+      "confidence": "medium"
+    },
+    "colo_average": {
+      "pue": 1.5,
+      "wue_site_l_per_kwh": 1.8,
+      "wue_grid_l_per_kwh": 3.142,
+      "sources": ["Uptime Institute surveys: industry-average PUE ≈1.5; site WUE ≈1.8 L/kWh (industry average, LBNL 2016 / Uptime)."],
+      "confidence": "low"
+    },
+    "eu_west": {
+      "pue": 1.15,
+      "wue_site_l_per_kwh": 0.55,
+      "wue_grid_l_per_kwh": null,
+      "sources": ["TODO: source EU grid water intensity (EWIF) before enabling."],
+      "confidence": "placeholder"
+    },
+    "asia_south": {
+      "pue": 1.3,
+      "wue_site_l_per_kwh": null,
+      "wue_grid_l_per_kwh": null,
+      "sources": ["TODO"],
+      "confidence": "placeholder"
+    }
+  },
+  "equivalents_ml": {
+    "sip": 15,
+    "espresso_cup": 30,
+    "coffee_cup": 240,
+    "water_bottle": 500
+  }
+}
