@@ -1,0 +1,24 @@
+name: ai_water
+description: Sipcount — see the water footprint of your AI prompts. Zero data retention.
+publish_to: "none"
+version: 0.3.0+3
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # BSD-3. Stores aggregate counters (mL per day) only. Chosen over Drift/sqlite for v0.3
+  # because it needs no code generation step in CI and the data is a handful of numbers.
+  shared_preferences: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/calc/models.json
