@@ -31,9 +31,30 @@ async function handle(ev) {
   await updateBadge(s);
 }
 
+// Draw the Sipcount droplet (same shape as the prototype) — no image files needed.
+function drawDrop(size, over) {
+  const c = new OffscreenCanvas(size, size), g = c.getContext('2d');
+  const k = (size * 0.94) / 130, ox = (size - 100 * k) / 2, oy = (size - 130 * k) / 2;
+  g.translate(ox, oy); g.scale(k, k);
+  const p = new Path2D('M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z');
+  const grad = g.createLinearGradient(20, 30, 80, 120);
+  if (over) { grad.addColorStop(0, '#FFB08A'); grad.addColorStop(1, '#FF6A3D'); } else { grad.addColorStop(0, '#9FD9FF'); grad.addColorStop(1, '#2E8BD6'); }
+  g.fillStyle = grad; g.fill(p);
+  g.strokeStyle = 'rgba(13,19,33,.35)'; g.lineWidth = 3; g.stroke(p);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(34, 78, 9, 16, -0.35, 0, Math.PI * 2); g.fill();
+  return g.getImageData(0, 0, size, size);
+}
+let iconState = null;
+async function setIcon(over) {
+  if (iconState === over) return; iconState = over;
+  const imageData = {}; for (const s of [16, 24, 32, 48, 128]) imageData[s] = drawDrop(s, over);
+  await chrome.action.setIcon({ imageData });
+}
+
 async function updateBadge(s) {
   s = s || await getState();
   const t = s.days[dayKey(Date.now())]; const ml = t ? t.s1 + t.s2 : 0;
+  await setIcon(ml > s.budget);
   const text = ml === 0 ? '' : ml < 10 ? ml.toFixed(1) : ml < 1000 ? String(Math.round(ml)) : (ml / 1000).toFixed(1) + 'L';
   await chrome.action.setBadgeText({ text });
   await chrome.action.setBadgeBackgroundColor({ color: ml > s.budget ? '#FF8A5B' : '#3A9BE0' });
