@@ -96,10 +96,27 @@ browser_extension/                        MV3; content scripts per vendor host; 
 
 Flutter (BSD-3), flutter_riverpod (MIT), drift (MIT, sqlite counters), flutter_local_notifications (BSD-3), share_plus (BSD-3). No analytics, no crash reporting, no network permission in v1.
 
-## 7. Next steps
+## 7. Increment log
 
-1. Confirm methodology for the 3–5 mL discrepancy (§3).
-2. `flutter create` scaffold + run the 7 tests (blocked locally today: sandbox shell unavailable; run `flutter test` on your machine).
-3. Android `PromptAccessibilityService` for ChatGPT / Claude / Gemini packages + Chrome.
-4. Browser extension content scripts (chatgpt.com, claude.ai, gemini.google.com).
-5. Aggregate store, tracking UI, budget alerts, export.
+| Inc | Delivered | Where |
+|---|---|---|
+| 1 | Web prototype (standalone HTML) | `prototype/sipcount.html` → https://mouliarya.github.io/sipcount/sipcount.html |
+| 2 | Chrome MV3 extension (no network permission) | `browser_extension/` |
+| 3 | Android app: Flutter shell (Today + Settings, dark), `PromptAccessibilityService`, pending-event queue, aggregate counters, CI-built APK | `app/`, `.github/workflows/android-apk.yml` → release tag `android-latest` |
+
+### Increment 3 decisions (2026-09-14)
+
+- **Detection = AccessibilityService** (chosen over custom keyboard / share sheet): zero friction after a one-time toggle. Scope is the narrowest the platform allows: 4 packages, 3 event types, bounded 300-node window scans, labels ≤ 40 chars only. Play Store review risk accepted for now (distribution is direct APK).
+- **Counters store = `shared_preferences`** (BSD-3) instead of Drift: no code-gen step in CI, and the data is a JSON map of day → {n, s1, s2, wh, by-tier, by-task}. Migrate to Drift only if per-hour views are needed.
+- **Offline capture**: when the Flutter engine is not running, the service appends PromptEvent JSON (counts only) to an app-private `pending_prompt_events.jsonl` (max 2000 lines); Dart drains it on launch. Calculation therefore always happens in Dart — one engine, one set of golden tests.
+- **No INTERNET permission** in the manifest; backups and device transfer excluded via `data_extraction_rules.xml`.
+- **CI**: only hand-written Android files are in git. The workflow runs `flutter create --platforms=android` (never overwrites) to generate Gradle/wrapper/icons, then `analyze → test → build apk --release` (debug-key signed) and publishes to the `android-latest` pre-release.
+- **Demo mode**: "Try it" buttons on the Today screen inject synthetic PromptEvents through the real pipeline, so the app can be shown before the permission is granted.
+
+## 8. Next steps
+
+1. User test on a real phone (ChatGPT / Claude / Gemini apps + Chrome); tune send-button and model-label heuristics from feedback.
+2. Confirm methodology for the 3–5 mL discrepancy (§3).
+3. Detect keyboard-Enter sends; distinguish image generation; whitelist Firefox / Samsung Internet.
+4. Budget alerts (`flutter_local_notifications`), weekly/annual views, CSV/JSON export.
+5. Increment 4: iOS (keyboard + share extension) — needs Apple developer account.
