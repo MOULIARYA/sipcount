@@ -27,7 +27,20 @@ class PromptAccessibilityService : AccessibilityService() {
                 // event.text holds what was typed; we keep only its length.
                 var len = 0
                 for (cs in event.text) len += cs?.length ?: 0
-                if (len > 0) lastEditLength[pkg] = len
+                val previous = lastEditLength[pkg] ?: 0
+                if (len > 0) {
+                    lastEditLength[pkg] = len
+                } else if (previous >= MIN_SEND_CHARS || event.removedCount >= MIN_SEND_CHARS) {
+                    // Field went from N chars to empty in ONE event: that is what a send does.
+                    // Backspacing shrinks the field one character (or word) at a time and
+                    // never trips this because `previous` is then 1 or 2 by the time it hits 0.
+                    // Jetpack Compose apps (ChatGPT, Gemini) never emit TYPE_VIEW_CLICKED for
+                    // finger taps, so this is the primary detector on Android; the click path
+                    // below still covers View-based apps and Chrome.
+                    handleSend(pkg, maxOf(previous, event.removedCount))
+                } else {
+                    lastEditLength.remove(pkg)
+                }
             }
             AccessibilityEvent.TYPE_VIEW_CLICKED -> handleClick(pkg, event)
             else -> Unit
@@ -42,7 +55,11 @@ class PromptAccessibilityService : AccessibilityService() {
         val src = event.source ?: return
         val isSend = try { looksLikeSend(src) } finally { safeRecycle(src) }
         if (!isSend) return
+        handleSend(pkg, 0)
+    }
 
+    /** [knownChars] is the length inferred by the caller (0 = unknown, fall back to window scan). */
+    private fun handleSend(pkg: String, knownChars: Int) {
         val now = System.currentTimeMillis()
         if (now - lastEmitMs < DEBOUNCE_MS) return
 
@@ -52,7 +69,7 @@ class PromptAccessibilityService : AccessibilityService() {
         val scan = if (root != null) scanWindow(root, vendor) else WindowScan(null, 0, null)
         safeRecycle(root)
 
-        val chars = scan.editLength ?: lastEditLength[pkg] ?: 0
+        val chars = if (knownChars > 0) knownChars else scan.editLength ?: lastEditLength[pkg] ?: 0
         if (chars == 0 && scan.attachments == 0) return
 
         val ev = PromptEvent(
@@ -152,6 +169,7 @@ class PromptAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val DEBOUNCE_MS = 1500L
+        private const val MIN_SEND_CHARS = 3
         private const val MAX_NODES = 300
         private const val MAX_LABEL_CHARS = 40
 
