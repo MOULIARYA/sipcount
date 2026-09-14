@@ -78,6 +78,15 @@ class TodayPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 if (tracker.lastNudge != null) _Nudge(text: tracker.lastNudge!),
                 if (tracker.lastNudge != null) const SizedBox(height: 12),
+                if (tracker.lastEventAt != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      'Last counted: ${tracker.lastVendor} · ${tracker.lastEventAt!.hour.toString().padLeft(2, '0')}:${tracker.lastEventAt!.minute.toString().padLeft(2, '0')} · ${fmtMl(tracker.lastEstimate?.totalMl ?? 0)} mL',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: SipColors.muted, fontSize: 12),
+                    ),
+                  ),
                 Row(children: [
                   Expanded(child: _Stat(label: 'On-site cooling', value: '${fmtMl(t.scope1Ml)} mL', sub: 'Scope 1')),
                   const SizedBox(width: 12),
