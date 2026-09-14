@@ -7,6 +7,10 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.tracker});
   final Tracker tracker;
 
+  // Stamped by CI via --dart-define; 'dev' when built locally.
+  static const _build = String.fromEnvironment('SIPCOUNT_BUILD', defaultValue: 'dev');
+  static const _sha = String.fromEnvironment('SIPCOUNT_SHA', defaultValue: 'local');
+
   static const _regionLabels = {'us_default': 'US hyperscale (default)', 'colo_average': 'Industry-average colocation'};
 
   @override
@@ -92,7 +96,13 @@ class SettingsPage extends StatelessWidget {
                 ),
               ]),
               const SizedBox(height: 20),
-              const Center(child: Text('Sipcount v0.3 · open source · no ads, no accounts', style: TextStyle(color: SipColors.muted, fontSize: 12))),
+              const Center(
+                child: Text(
+                  'Sipcount 0.3 · build $_build · $_sha\nopen source · no ads, no accounts',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: SipColors.muted, fontSize: 12, height: 1.5),
+                ),
+              ),
             ],
           ),
         ),
