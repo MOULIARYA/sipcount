@@ -49,8 +49,15 @@ jobs:
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
 
+      # Every build gets a unique, visible identity: version 0.3.<run#>, Android versionCode = run#,
+      # and the short commit SHA shown in Settings so testers can confirm which build they run.
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release \
+            --build-name=0.3.${{ github.run_number }} \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SIPCOUNT_BUILD=${{ github.run_number }} \
+            --dart-define=SIPCOUNT_SHA=${GITHUB_SHA::7}
 
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/sipcount-android.apk
@@ -73,9 +80,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
-          name: Sipcount Android — latest build
+          name: Sipcount Android — build ${{ github.run_number }}
           prerelease: true
           body: |
-            Direct-install build from commit ${{ github.sha }}.
+            Build ${{ github.run_number }} from commit ${{ github.sha }}.
+            In the app: Settings → bottom line shows "build ${{ github.run_number }}".
             Install guide: https://github.com/${{ github.repository }}/blob/main/app/ANDROID-INSTALL.md
           files: app/build/app/outputs/flutter-apk/sipcount-android.apk
