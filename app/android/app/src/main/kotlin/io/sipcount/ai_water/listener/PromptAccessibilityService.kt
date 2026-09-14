@@ -19,10 +19,19 @@ class PromptAccessibilityService : AccessibilityService() {
 
     private val lastEditLength = HashMap<String, Int>()
     private var lastEmitMs = 0L
+    private var lastPollMs = 0L
+    private var lastWindowStateMs = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pkg = event.packageName?.toString() ?: return
         when (event.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                // Screen navigation (chat → settings, new chat…). Used to suppress the
+                // "text box vanished" heuristic right after such a change.
+                lastWindowStateMs = System.currentTimeMillis()
+                lastEditLength.remove(pkg)
+            }
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> pollEditLength(pkg)
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
                 // event.text holds what was typed; we keep only its length.
                 var len = 0
@@ -50,6 +59,54 @@ class PromptAccessibilityService : AccessibilityService() {
     override fun onInterrupt() = Unit
 
     // ------------------------------------------------------------------------------------------
+
+    /**
+     * Fallback for apps (Gemini, Claude) that replace the text box on send instead of
+     * clearing it, so no TYPE_VIEW_TEXT_CHANGED arrives. Throttled; reads one length only.
+     *   box had >= MIN_SEND_CHARS  →  box present and empty        = send (strong)
+     *   box had >= MIN_SEND_CHARS  →  no box in the window at all  = send, unless the screen
+     *                                                                 just changed (weak)
+     */
+    private fun pollEditLength(pkg: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastPollMs < POLL_MS) return
+        lastPollMs = now
+
+        val root = rootInActiveWindow ?: return
+        val len = try { findEditLength(root) } finally { safeRecycle(root) }
+        val previous = lastEditLength[pkg] ?: 0
+
+        when {
+            len == null -> {
+                // Text box gone. Only trust it if this is not a screen change.
+                if (previous >= MIN_SEND_CHARS && now - lastWindowStateMs > NAV_GUARD_MS) handleSend(pkg, previous)
+                else if (previous > 0 && now - lastWindowStateMs <= NAV_GUARD_MS) lastEditLength.remove(pkg)
+            }
+            len > 0 -> lastEditLength[pkg] = len
+            previous >= MIN_SEND_CHARS -> handleSend(pkg, previous)
+            else -> lastEditLength.remove(pkg)
+        }
+    }
+
+    /** Length of the first editable field found (bounded BFS), or null if none exists. */
+    private fun findEditLength(root: AccessibilityNodeInfo): Int? {
+        var visited = 0
+        var result: Int? = null
+        val q = ArrayDeque<AccessibilityNodeInfo>().apply { add(root) }
+        while (q.isNotEmpty() && visited < MAX_EDIT_SCAN_NODES) {
+            val n = q.poll() ?: break
+            visited++
+            if (n.isEditable) {
+                result = n.text?.length ?: 0
+                if (n !== root) safeRecycle(n)
+                break
+            }
+            for (i in 0 until n.childCount) n.getChild(i)?.let { q.add(it) }
+            if (n !== root) safeRecycle(n)
+        }
+        while (q.isNotEmpty()) safeRecycle(q.poll())
+        return result
+    }
 
     private fun handleClick(pkg: String, event: AccessibilityEvent) {
         val src = event.source ?: return
@@ -170,6 +227,9 @@ class PromptAccessibilityService : AccessibilityService() {
     companion object {
         private const val DEBOUNCE_MS = 1500L
         private const val MIN_SEND_CHARS = 3
+        private const val POLL_MS = 400L
+        private const val NAV_GUARD_MS = 1500L
+        private const val MAX_EDIT_SCAN_NODES = 150
         private const val MAX_NODES = 300
         private const val MAX_LABEL_CHARS = 40
 
