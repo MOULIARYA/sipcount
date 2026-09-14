@@ -11,12 +11,20 @@ No developer tools needed. The APK is built automatically by GitHub every time t
 
 Android 8+ required. Tested target: Android 13–15.
 
+### If Google Play Protect blocks the install
+
+In India and some other countries, Play Protect blocks *every* sideloaded app that declares an accessibility service, with a generic warning about "sensitive data / identity theft". It is not a finding about this app. Either tap **More details → Install anyway**, or (more reliable): open the **Play Store → profile picture → Play Protect → ⚙ → turn off "Scan apps with Play Protect"**, install the APK, then turn scanning back on.
+
 ## 2. Turn on counting
 
 1. Open Sipcount → tap **Open Accessibility settings**.
 2. Find **Sipcount prompt counter** (usually under *Downloaded apps* / *Installed services*) → toggle **On** → **Allow**.
 3. Android shows a warning that the service can "view and control your screen". That is the OS's generic text for every accessibility service; Sipcount's code only reads button labels and text *length* (see *Privacy* below).
 4. Back in Sipcount the pill in the top-right turns green: **Listening**.
+
+### If the toggle is grey ("Restricted setting")
+
+Android 13+ locks accessibility for sideloaded apps until you unlock it per app: **Settings → Apps → Sipcount → ⋮ (top-right) → Allow restricted settings**, then repeat step 2. On Samsung the item is in the same ⋮ menu; on Xiaomi/HyperOS look under *App info → Restrictions*.
 
 ## 3. Test it
 
@@ -36,7 +44,7 @@ The app has **no internet permission** — Android will not let it send anything
 
 ## Known limitations (v0.3)
 
-- Sending with the keyboard's Enter key (instead of the Send button) is not detected yet.
+- Detection in the ChatGPT and Gemini apps relies on the text box emptying when you send (their UI toolkit hides button taps from accessibility services). Clearing a typed prompt with select-all + delete will be counted as a send.
 - Image *generation* is not distinguished from a normal prompt; attaching a file or image counts as "long context".
 - Hidden reasoning tokens cannot be seen, so reasoning-model estimates use a fixed 10× multiplier (low confidence).
 - Other browsers (Firefox, Samsung Internet, Edge) are not yet whitelisted.
