@@ -126,6 +126,9 @@ class PromptAccessibilityService : AccessibilityService() {
         val scan = if (root != null) scanWindow(root, vendor) else WindowScan(null, 0, null)
         safeRecycle(root)
 
+        // The Google app is also Search/Discover; only its Gemini screen counts.
+        if (pkg == GOOGLE_APP && !scan.sawGemini) return
+
         val chars = if (knownChars > 0) knownChars else scan.editLength ?: lastEditLength[pkg] ?: 0
         if (chars == 0 && scan.attachments == 0) return
 
@@ -155,6 +158,7 @@ class PromptAccessibilityService : AccessibilityService() {
         "com.openai.chatgpt" -> "openai"
         "com.anthropic.claude" -> "anthropic"
         "com.google.android.apps.bard" -> "google"
+        GOOGLE_APP -> "google" // Gemini screen inside the Google app; verified after the window scan
         "com.android.chrome" -> hostVendor(root)
         else -> null
     }
@@ -178,7 +182,7 @@ class PromptAccessibilityService : AccessibilityService() {
         return vendor
     }
 
-    private class WindowScan(val modelHint: String?, val attachments: Int, val editLength: Int?)
+    private class WindowScan(val modelHint: String?, val attachments: Int, val editLength: Int?, val sawGemini: Boolean = false)
 
     /** Bounded BFS over the window. Reads lengths and short labels only. */
     private fun scanWindow(root: AccessibilityNodeInfo, vendor: String): WindowScan {
@@ -186,6 +190,7 @@ class PromptAccessibilityService : AccessibilityService() {
         var best: String? = null
         var attachments = 0
         var editLength: Int? = null
+        var sawGemini = false
         var visited = 0
         val q = ArrayDeque<AccessibilityNodeInfo>().apply { add(root) }
         while (q.isNotEmpty() && visited < MAX_NODES) {
@@ -198,13 +203,14 @@ class PromptAccessibilityService : AccessibilityService() {
                 shortLabel(n)?.let { label ->
                     for (k in keywords) if (label.contains(k) && (best == null || k.length > best!!.length)) best = k
                     if (label.contains("remove") && (label.contains("attach") || label.contains("file") || label.contains("image"))) attachments++
+                    if (label.contains("gemini")) sawGemini = true
                 }
             }
             for (i in 0 until n.childCount) n.getChild(i)?.let { q.add(it) }
             if (n !== root) safeRecycle(n)
         }
         while (q.isNotEmpty()) safeRecycle(q.poll())
-        return WindowScan(best, attachments, editLength)
+        return WindowScan(best, attachments, editLength, sawGemini)
     }
 
     /** contentDescription or text, lowercased, only if short enough to be a UI label. */
@@ -225,6 +231,7 @@ class PromptAccessibilityService : AccessibilityService() {
     }
 
     companion object {
+        private const val GOOGLE_APP = "com.google.android.googlequicksearchbox"
         private const val DEBOUNCE_MS = 1500L
         private const val MIN_SEND_CHARS = 3
         private const val POLL_MS = 400L
