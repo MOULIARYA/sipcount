@@ -30,9 +30,9 @@ jobs:
       # 'true' once the signing secrets exist (secrets cannot be referenced in `if:` directly)
       HAS_SIGNING_KEY: ${{ secrets.SIPCOUNT_KEYSTORE_B64 != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -109,7 +109,7 @@ jobs:
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/sipcount-android.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sipcount-android-apk
           path: app/build/app/outputs/flutter-apk/sipcount-android.apk
