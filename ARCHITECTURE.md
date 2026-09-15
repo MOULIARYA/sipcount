@@ -12,6 +12,9 @@ Source of truth for requirements: `Requirement/PROJECT.txt`. Decisions below rec
 | D4 | ESG Reporting API | **Local export only** (CSV/JSON via share sheet, documented schema) | A backend contradicts zero retention and adds cost. Enterprise ingestion can consume the export. |
 | D5 | Constants | Versioned `assets/calc/models.json` with citations and confidence levels; engine **refuses placeholder regions** | Per-query figures are estimates; the UI must be able to show provenance. |
 | D6 | Model identification | Vendor from app package / hostname; tier from on-screen model label via substring patterns (`o3`→reasoning, `flash`→lightweight …) | Listener can see the model selector but not the API call. |
+| D8 | Mobile sensing (2026-09-15) | **Layered**: network sensor (VpnService / iOS Network Extension; host + byte counts only) as primary, accessibility as optional model-name enhancer (Android), export import as optional true-up | Vendors expose no usage; the network layer is app- and browser-agnostic and identical on both platforms. See ISSUES.md D-1…D-6. |
+| D9 | Tier inference | TTFB + reply size → tier; user "usual model" prior; corrected by exports when present | Model is inside TLS; tier (not model) is what the formula needs. |
+| D10 | Calibration distribution | Extension measures → aggregate coefficients in versioned `models.json` → **shipped in app updates**; opt-in "keep constants fresh" download from GitHub Pages | Preserves the no-internet default while allowing fresh numbers. |
 | D7 | Task profiling | `text` / `code` / `long_context` / `image` from UI cues (image-gen mode, attachments, code fences) | Drives output-token defaults and fixed energy for images. |
 
 ## 2. Requirement → module map

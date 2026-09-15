@@ -20,7 +20,24 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 | I-14 | GitHub MCP connector not available in Cowork (only "GitHub Integration" for Projects) | Open (process) | Ask Xebia admin to enable the GitHub connector; until then pushes go through Chrome web upload. |
 | I-16 | Android `models.json` (PUE 1.15, 2 regions) out of sync with prototype v2 constants (PUE 1.17, 7 regions, hydro toggle) | Open | Port `SIPCOUNT_CONFIG.regions` to models.json; re-derive the 7 golden test values; add cooling/hydro settings to the Flutter Settings page. |
 | I-17 | Partner deliverable 3 (micro-copy) is per-tier in the prototype but the Android app has none | Open | Port after I-16. |
+| I-18 | Spike: bytes↔tokens and TTFB↔tier correlation via extension (prerequisite for the network sensor) | Open | Add a calibration mode to the extension that logs (model, chars in, chars out, request bytes, response bytes, TTFB) — counts only. |
+| I-19 | Network sensor (Android VpnService) prototype: detect prompt to chatgpt.com / claude.ai / gemini hosts, emit PromptEvent with size + timing | Open | Depends on I-18. Cannot coexist with another VPN. |
+| I-20 | "Keep constants fresh" toggle: fetch published `models.json` from GitHub Pages; ship constants in updates by default | Open | Adds INTERNET permission gated by user toggle; document in privacy text. |
+| I-21 | iOS: Network Extension entitlement + Apple developer account | Parked | Needed for the doorman on iOS; $99/yr + approval time. |
 | I-15 | Sandbox shell broken by Windows update (2026-09-08) → no local compile/test, no zip, no keytool | Open (environment) | All verification is by review + CI. |
+
+## Direction decisions — mobile sensing (2026-09-15, Madhur)
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| D-1 | **Layered sensor model for mobile** (iOS + Android, personal phones) | Decided | Primary: *network sensor* ("doorman") — local VPN service (Android) / Network Extension (iOS) sees only destination host + byte counts, never content; app-agnostic, covers browsers. Optional: accessibility screen-watcher (Android only) for model name. Optional: monthly export import ("receipts") for exact true-up — assume most users won't; design must not depend on it. |
+| D-2 | **Model/tier inference without seeing the model** | Decided | Time-to-first-byte + reply size → tier (light / standard / reasoning); user's "usual model" setting as prior; receipts import corrects when available. Needs calibration (D-3). |
+| D-3 | **Calibration pipeline: extension → published constants → app** | Decided (middle path) | The browser extension, which sees model name *and* traffic, produces aggregate coefficients (bytes/token per vendor, TTFB & size thresholds per tier, tier prevalence). Coefficients live in versioned `models.json`. **App ships constants in every update (no internet needed)**; a Settings toggle "keep constants fresh" additionally downloads the public file from GitHub Pages (read-only, nothing sent). Default = off, preserving the no-internet claim. |
+| D-4 | QR-code personal pairing (extension → phone, offline) | Parked — flourish | Madhur to raise with partner. Zero servers; helps only users with both installed. |
+| D-5 | In-chat "Sipcount" connector for ChatGPT/Claude ("how much water did this chat use?") | Parked — idea | Awareness/distribution, not measurement. Connected-apps direction is AI → app, so it cannot report usage. |
+| D-6 | Competitive landscape check | Done | All comparable tools are desktop browser extensions (ByteThirst, AI ftPrint, AI Impact Tracker, chatgpt-co2-tracker, Bottle it Back); no mobile measurement app found. Bottle it Back's "donate the water back" angle worth discussing. |
+
+Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
 ## Partner feedback (received 2026-09-15) — summary
 
