@@ -70,7 +70,10 @@ jobs:
           p = pathlib.Path('android/app/build.gradle.kts')
           s = p.read_text()
           if 'key.properties' not in s:
-              s = s.replace('android {', '''val keyProps = java.util.Properties().apply {
+              # In Gradle Kotlin DSL `java` resolves to the Java plugin extension, so the
+              # class must be imported rather than referenced as java.util.Properties.
+              s = 'import java.util.Properties\n' + s
+              s = s.replace('android {', '''val keyProps = Properties().apply {
               val f = rootProject.file("key.properties")
               if (f.exists()) f.inputStream().use { load(it) }
           }
