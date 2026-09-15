@@ -91,8 +91,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .pill{font-size:.73em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
 .pill.warn{background:rgba(255,160,122,.18);color:var(--warn)}
 .pill.good{background:rgba(139,231,180,.18);color:var(--good)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:4px}
 .chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:.87em;border-radius:99px;padding:8px 12px;cursor:pointer;min-height:var(--tap);display:flex;align-items:center;gap:6px}
 .chip[aria-pressed=true]{border-color:var(--accent);background:var(--water-soft)}
 .chip.locked{opacity:.5}
@@ -489,8 +488,8 @@ function setPlant(pct, fast=false, svg=$('plantSvg')){
   svg.classList.toggle('fast',fast);
   const t=Math.min(1,Math.max(0,(pct-C.plant.thriving)/(C.plant.drooping-C.plant.thriving)));   // 0 thriving → 1 at limit
   const w=Math.min(1,Math.max(0,(pct-C.plant.drooping)/0.5));                                       // 0 → 1 fully wilted
-  const droop=t*22+w*40, stemLean=t*4+w*14;
-  const leafColor = w>0 ? mix('#5FCF7F','#8A5A2B',w) : mix('#5FCF7F','#B9C94A',t*0.8);
+  const droop=t*32+w*40, stemLean=t*6+w*14;
+  const leafColor = w>0 ? mix('#B9C94A','#8A5A2B',w) : mix('#5FCF7F','#B9C94A',t);
   svg.querySelectorAll('.leaf').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-w*0.35})`; l.style.fill=leafColor; });
   svg.querySelector('.stem').style.transform=`rotate(${stemLean}deg) scaleY(${1-w*0.18})`;
   svg.querySelector('.stem').style.stroke=w>0?mix('#2E9C57','#6B4B2A',w):'#2E9C57';
