@@ -45,7 +45,32 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
-## Partner feedback (received 2026-09-15) — summary
+## Partner feedback round 2 (received 2026-09-15) — vision & UI spec
+
+**Vision (mandatory):** shareable consumer utility for Gen Alpha / Gen Z / tech-forward adults; scientific credibility + short-form virality (TikTok/Shorts/Reels) + campus gamification. Not an ESG calculator.
+
+**Accepted as mandatory (UI/product):**
+- System-driven theme via `prefers-color-scheme`, no manual toggle; AAA contrast in both light and dark.
+- Single-input onboarding "What is your age?"; layout density adapts to age (larger targets/high contrast for older users; denser, gamified for younger).
+- Metaphor library: Youth 10–17 = pixel-art water bucket, milk glass, boba cup, milkshake, smoothie; 18+ unlocks matcha, espresso cup, beer mug, classic coffee mug.
+- Universal Dynamic Plant for all ages with health states (thriving → drooping/colour shift → cinematic wilt when limit exceeded).
+- "Simulate Heavy Query" 3-second thriving→withered preview for screen recording.
+- One-tap 9:16 story export with metaphor-based micro-copy and watermark "Sipcount • Track your AI footprint".
+- Campus/Group "Digital Sobriety" leaderboard tab with a shared grove.
+
+**Conflicts / risks needing Madhur's decision (see D-8…D-12 once decided):**
+1. *Theme*: our founding constraint was "dark by default to save energy"; she wants system-driven with no toggle. Product owner wins unless Madhur objects; we can still surface an OLED-savings nudge.
+2. *Age question*: asking an exact age is fine on-device if we **store only the derived tier, never the number**, and transmit nothing. Bigger issue: **declaring 10–12-year-olds as a target audience** triggers Google Play Families policy (stricter review, restrictions on data/APIs, and it would collide with the VpnService + leaderboard/social features) and India DPDP parental-consent rules if any data ever leaves the device. Recommendation: store rating 13+ ("Teen"); youth tier designed for 13–17; a user who types 10–12 still gets the youth visuals but no social features.
+3. *Beer mug*: "alcohol references" in the content-rating questionnaire raise the rating (Teen → potentially 17+/Mature in some regions). Recommend gating behind 21+ or dropping; needs decision.
+4. *Leaderboard*: a shared grove across users **requires a server** (or peer sync) — our architecture is zero-retention/no-backend. Options: (a) opt-in, pseudonymous, group-aggregate-only backend (daily mL totals + handle + group code; no prompt data; free tier e.g. Cloudflare Workers/Supabase) — keeps prompt privacy intact but is our first backend; (b) local "friends" leaderboard exchanged via QR/link — no server, clunky; (c) defer. Also: social features + minors ⇒ another reason for 13+.
+5. *React/Tailwind deliverables (App.js, Dashboard.js, DynamicPlant.js, ShareModal.js)*: technical choice is ours; Flutter remains the real app. Recommendation: keep the single-file prototype on GitHub Pages (no build step) but structure it as those four named modules so her spec maps 1:1; port to Flutter after.
+
+**Decisions (Madhur, 2026-09-15):** D-8 theme = system-driven, no toggle (product owner), OLED nudge in copy · D-9 official audience **13+**; youth tier 13–17; ages 10–12 typed → youth visuals, social features off; store tier only, never the age · D-10 **beer mug dropped** · D-11 leaderboard **mocked with sample data in v3**; backend decision after her review · D-12 prototype stays **single-file**, structured as App / Dashboard / DynamicPlant / ShareModal.
+
+**Assumptions to confirm (volumes for metaphors, mL):** milk glass 250, boba cup 500, milkshake 400, smoothie 350, matcha 240, espresso 30, beer mug 500, coffee mug 240, pixel bucket = daily budget (fills to 100 %).
+**Brand note:** "Minecraft graphic" → generic pixel-art bucket (cannot reproduce the game's assets).
+
+## Partner feedback round 1 (received 2026-09-15) — summary
 
 Target: the **web prototype** at mouliarya.github.io/sipcount (deliverables requested as HTML/Tailwind/JS or React, a JS config object, and micro-copy).
 
