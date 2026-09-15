@@ -45,6 +45,29 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 3 (received 2026-09-15, on prototype v3)
+
+**Accepted as mandatory:**
+1. Remove age onboarding; full metaphor library for everyone, chosen in Settings. Hero = standard water drop + raw mL. Remove the cup-chip row from Today.
+2. Metaphors move to **milestone toasts** (Zomato/Swiggy-style slide-ins): "Woah, that's 1 Boba down! 🧋", "Another bucket bites the dust! 🪣", per-prompt variant when one prompt alone exceeds a unit.
+3. Merge Trends into Today: 7-day chart under the daily summary; new **Insights card** naming the AI brands used (ChatGPT / Claude / Gemini …), the dominant model tier, and an efficiency line ("standard models handled 60 % of tasks, saving ~40 mL vs the heaviest tier").
+4. **Contextual plant engine**: seasonality; regional/endemic flora (Neem for Delhi, Saguaro for US Southwest…); optional endangered-species mode tied to local water stress.
+5. **"Neutralize my water footprint"** button → modal linking out to water-project platforms (Act4Water, Water.org) sized to the user's calculated usage.
+
+**Implications / risks (Claude):**
+- Dropping age also drops age-driven density; keep "Text size" in Settings (accessibility). Store audience stays 13+ (D-9); Grove visible to all.
+- Insights need per-day counters by **vendor × tier** (new in the data model; extension and app sensors already know vendor). Midjourney is not tracked by any sensor yet — add as a web host later.
+- Efficiency saving is a counterfactual (what the same prompts would have cost on the heaviest tier used that day, or reasoning if none) — label it "roughly", never as measured.
+- Regional flora: we have **no location** (privacy) → derive from the existing region setting, plus a manual species picker. Seasonality from date + hemisphere of that region. Species artwork is the largest effort item; endangered-species facts must come from IUCN/regional red lists with citations — research task before drawing.
+- Offsets: "water-positive credits" claims are contested; button can keep her label but modal copy must say "supports projects that restore water" and show the platform's own price per m³ as an estimate. Link-out only — no in-app payment (keeps us clear of store IAP rules). Verify Act4Water is a real, current platform before linking.
+- Brand names (ChatGPT, Claude, Gemini) in insights are fine as factual references; keep model-tier language ours ("reasoning", "standard").
+
+**Decisions (Madhur, 2026-09-15):** D-13 one species per region + generic flower; endangered mode for regions with a verified water-threatened species · D-14 no location: plant follows the region setting, manual species picker · D-15 offset feature keeps her label, honest copy, link-out only.
+
+**Research outcomes (2026-09-15) → v4:** Act4Water is a B2B credit standard (no consumer checkout) → dropped from links. Link-outs: charity: water (≈1,100 L/$1 published), Water.org ($5/person), WaterAid India (INR, 80G), BEF Water Restoration Certificates ($4 = 3,785 L; labelled restoration, not offset). Flora corrections: Singapore → Tembusu (rain tree is Neotropical), US generic → Sugar maple (Saguaro is Sonoran-only), Japan → Yoshino cherry (cultivated hybrid, noted). Endangered species with documented water-abstraction threats: Huachuca water-umbel (US SW), Texas wild-rice, Doñana pond grass (EU/Spain), Kathalekan marsh nut (India), Bukit Timah cryptocoryne (Singapore); none verified yet for Nordics/Japan. Store rule: donations must open the charity's site in the browser; no amount/email collected in-app.
+
+**Delivered as prototype v4:** no onboarding; water-drop hero; metaphors in Settings + milestone/per-prompt slide-in alerts; 7-day chart + Insights card (brand × tier, counterfactual saving labelled "roughly") on Today; contextual plant (species × season × health, endangered wetland mode); Neutralize modal. Data model now stores per-day vendor × tier counters (still counts only). Day buckets now use the local calendar day (was UTC).
+
 ## Partner feedback round 2 (received 2026-09-15) — vision & UI spec
 
 **Vision (mandatory):** shareable consumer utility for Gen Alpha / Gen Z / tech-forward adults; scientific credibility + short-form virality (TikTok/Shorts/Reels) + campus gamification. Not an ESG calculator.

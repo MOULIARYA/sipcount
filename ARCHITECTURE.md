@@ -70,6 +70,20 @@ Formula unchanged: Scope 1 = E × PUE × WUE_site; Scope 2 = E × PUE × EWIF_gr
 
 Cooling overrides (WUE_site): towers 1.8 (M), adiabatic 0.32 (H, LBNL 2024), dry/free-air 0.03 (H). Water stress is context only: the headline mL never changes; the "weighted" line uses an illustrative multiplier (band midpoint ÷ 20 %).
 
+### 3b. Contextual plant — flora & endangered species (prototype v4, verified 2026-09-15)
+
+| Region | Mascot (native confirmed) | Seasonality | Endangered species shown in "water stress" mode | Threat (source) |
+|---|---|---|---|---|
+| US | Sugar maple *Acer saccharum* | deciduous; blooms Apr–May; red autumn | Huachuca water-umbel *Lilaeopsis schaffneriana recurva* — ESA Endangered | groundwater pumping, drought (US FWS) |
+| Texas | Live oak *Quercus virginiana* | evergreen; catkins Mar–Apr | Texas wild-rice *Zizania texana* — ESA Endangered | reduced spring flow from Edwards Aquifer pumping (US FWS) |
+| EU | Pedunculate oak *Quercus robur* | deciduous; blooms Apr–May; brown autumn | Doñana pond grass *Micropyropsis tuberosa* — IUCN EN | pond desiccation from groundwater abstraction (Nature Ecol. Evol. 2022) |
+| Nordics | Silver birch *Betula pendula* | deciduous; golden autumn | — not yet verified | |
+| India | Neem *Azadirachta indica* | evergreen; flowers Mar–May | Kathalekan marsh nut *Semecarpus kathalekanensis* — IUCN CR | swamp water diverted for agriculture (IUCN 2021) |
+| Singapore | Tembusu *Cyrtophyllum fragrans* | evergreen; flowers May–Jun & Oct–Nov | Bukit Timah cryptocoryne *Cryptocoryne × timahensis* — nationally CR | single pool, hydrology-dependent |
+| Japan | Yoshino cherry *Prunus × yedoensis* (cultivated hybrid) | deciduous; blooms late Mar–early Apr | — not yet verified | |
+
+Season is derived from the device date and the region (all Northern hemisphere; Singapore treated as aseasonal). No location is collected.
+
 **Known divergence:** `app/assets/calc/models.json` still uses PUE 1.15 for `us_default`; the prototype uses Li's 1.170. Golden tests must be re-derived when models.json is synced (ISSUES I-16).
 
 **Methodological caveats to surface in any report:** WRI EWIFs reflect ~2016 mixes and allocate 100 % of gross reservoir evaporation to hydropower; Google's 0.26 mL/prompt is on-site only, Mistral's 45 mL is full life-cycle, OpenAI's 0.32 mL has no stated scope — not comparable.
