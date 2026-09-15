@@ -12,112 +12,139 @@
 :root{
   --ink:#0D1321; --surface:#161F31; --surface-2:#1E2A40; --line:#28364F;
   --text:#E8EEF6; --muted:#8C9AB3; --water:#7CC8FF; --water-deep:#3A9BE0; --water-soft:rgba(124,200,255,.14);
-  --warn:#FF8A5B; --good:#7BE0A8;
+  --warn:#FF8A5B; --good:#7BE0A8; --accent:var(--water);
   --display:'Unbounded',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
+  --fs:15px; --tap:44px; --radius:18px;
   color-scheme:dark;
 }
 /* Dark-first by design (energy saving). Light theme kept legible for laptops in daylight. */
 @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --ink:#EEF3FA; --surface:#FFFFFF; --surface-2:#E3ECF7; --line:#CCD8E8; --text:#0D1321; --muted:#586780; --water:#1F7FD1; --water-deep:#125EA3; --water-soft:rgba(31,127,209,.12); color-scheme:light; } }
 :root[data-theme="light"]{ --ink:#EEF3FA; --surface:#FFFFFF; --surface-2:#E3ECF7; --line:#CCD8E8; --text:#0D1321; --muted:#586780; --water:#1F7FD1; --water-deep:#125EA3; --water-soft:rgba(31,127,209,.12); color-scheme:light; }
 
+/* Age-tier accents (visual only; numbers never change with age) */
+:root[data-tier="teen"]{ --accent:#B48CFF; }
+:root[data-tier="young"]{ --accent:#7CC8FF; }
+:root[data-tier="adult"]{ --accent:#63D1C4; }
+:root[data-tier="senior"]{ --accent:#8FD3FF; }
+
+/* Large print / senior mode: WCAG 2.1 AAA contrast (≥7:1 body, ≥4.5:1 large), 48px targets */
+:root[data-large="1"]{ --fs:19px; --tap:52px; --text:#FFFFFF; --muted:#C9D3E3; --ink:#05080F; --surface:#111827; --surface-2:#1B2436; --line:#3A4760; --water:#9ED8FF; --radius:14px; }
+@media (prefers-color-scheme: light){ :root[data-large="1"]:not([data-theme="dark"]){ --ink:#FFFFFF; --surface:#F4F7FB; --surface-2:#E6EDF6; --line:#9FB0C8; --text:#000000; --muted:#2E3B4E; --water:#0B5CAB; --water-deep:#083F75; } }
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:24px;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
-.phone{width:100%;max-width:420px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:min(820px,calc(100vh - 48px))}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:var(--fs);line-height:1.45;padding-inline:16px;padding-block:24px;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
+.phone{width:100%;max-width:420px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:min(840px,calc(100vh - 48px))}
 @media (max-width:480px){body{padding:0}.phone{border:0;border-radius:0;min-height:100vh;max-width:none}}
 .screen{flex:1;padding:20px 18px 12px;display:none;flex-direction:column;gap:18px}
 .screen.active{display:flex}
 h1,h2,h3{margin:0;text-wrap:balance}
-h1{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.01em}
-h2{font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.big{font-family:var(--display);font-size:46px;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.big small{font-size:18px;font-weight:500;color:var(--muted);margin-left:4px}
-.sub{color:var(--muted);font-size:14px}
+h1{font-family:var(--display);font-size:1.35em;font-weight:700;letter-spacing:-.01em}
+h2{font-family:var(--body);font-size:.87em;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-size:.8em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.big{font-family:var(--display);font-size:3em;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.big small{font-size:.4em;font-weight:500;color:var(--muted);margin-left:4px}
+.sub{color:var(--muted);font-size:.93em}
 .row{display:flex;gap:12px;align-items:center}
 .between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
 .stack{display:flex;flex-direction:column;gap:6px}
-.panel{background:var(--surface);border-radius:18px;padding:16px}
+.panel{background:var(--surface);border-radius:var(--radius);padding:16px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tile{background:var(--surface);border-radius:14px;padding:12px 14px}
-.tile .v{font-family:var(--display);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
-.tile .l{font-size:12px;color:var(--muted);margin-top:2px}
+.tile .v{font-family:var(--display);font-size:1.3em;font-weight:500;font-variant-numeric:tabular-nums}
+.tile .l{font-size:.8em;color:var(--muted);margin-top:2px}
 .gauge{display:flex;gap:18px;align-items:center}
-.drop{width:112px;height:140px;flex:none;position:relative}
-.drop svg{width:100%;height:100%;display:block}
-.fill{transition:transform .8s cubic-bezier(.2,.8,.2,1)}
-.scopebar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex}
-.scopebar i{display:block;height:100%}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.vessel{width:124px;height:150px;flex:none;position:relative}
+.vessel svg{width:100%;height:100%;display:block;overflow:visible}
+.fill{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.ring{transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}
+.wave{animation:wave 3s linear infinite}
+@keyframes wave{from{transform:translateX(0)}to{transform:translateX(-40px)}}
+.scopebar{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex}
+.scopebar i{display:block;height:100%;transition:width .6s}
+.legend{display:flex;gap:14px;font-size:.8em;color:var(--muted);flex-wrap:wrap}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
-label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
-select,input[type=number],textarea{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%}
-textarea{resize:vertical;min-height:88px;font-size:14px}
-input[type=range]{width:100%;accent-color:var(--water)}
-.seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px}
-.seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:13px;padding:9px 6px;border-radius:9px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--water);color:#06233B}
-.seg button:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--water);outline-offset:2px}
-.btn{border:0;font:inherit;font-weight:700;font-size:15px;padding:14px;border-radius:14px;cursor:pointer;background:var(--water);color:#06233B;width:100%}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:.87em;color:var(--muted);font-weight:600}
+select,input[type=number],textarea{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-height:var(--tap)}
+textarea{resize:vertical;min-height:88px;font-size:.93em}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:var(--tap)}
+.seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:.87em;padding:9px 6px;border-radius:9px;cursor:pointer;min-height:calc(var(--tap) - 8px);min-width:64px}
+.seg button[aria-pressed=true]{background:var(--accent);color:#06233B}
+.seg button:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border:0;font:inherit;font-weight:700;font-size:1em;padding:14px;border-radius:14px;cursor:pointer;background:var(--accent);color:#06233B;width:100%;min-height:var(--tap)}
 .btn.ghost{background:var(--surface-2);color:var(--text)}
 .btn.danger{background:transparent;color:var(--warn);border:1px solid var(--line)}
-.result{background:linear-gradient(160deg,var(--surface),var(--surface-2));border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px}
-.range{font-size:13px;color:var(--muted)}
-.nudge{background:var(--water-soft);border-radius:14px;padding:12px 14px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
-.nudge b{color:var(--water)}
+.result{background:linear-gradient(160deg,var(--surface),var(--surface-2));border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px}
+.range{font-size:.87em;color:var(--muted)}
+.nudge{background:var(--water-soft);border-radius:14px;padding:12px 14px;font-size:.93em;display:flex;gap:10px;align-items:flex-start}
+.nudge b{color:var(--accent)}
 .nudge.quiet{background:var(--surface-2);color:var(--muted)}
-.pill{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
-.pill.warn{background:rgba(255,138,91,.15);color:var(--warn)}
-.pill.good{background:rgba(123,224,168,.15);color:var(--good)}
+.pill{font-size:.73em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.warn{background:rgba(255,138,91,.18);color:var(--warn)}
+.pill.good{background:rgba(123,224,168,.18);color:var(--good)}
+.pill.stress-0{background:rgba(123,224,168,.18);color:var(--good)} .pill.stress-1{background:rgba(123,224,168,.12);color:var(--good)}
+.pill.stress-2{background:rgba(255,206,91,.18);color:#FFD56B} .pill.stress-3,.pill.stress-4{background:rgba(255,138,91,.2);color:var(--warn)}
 .bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:150px;padding-top:6px}
 .bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
 .bar i{display:block;width:100%;border-radius:8px 8px 4px 4px;background:var(--water-deep);min-height:3px;position:relative}
-.bar i.today{background:var(--water)}
+.bar i.today{background:var(--accent)}
 .bar i.spike{background:var(--warn)}
-.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-.bar em{font-style:normal;font-size:11px;color:var(--muted)}
+.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.73em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar em{font-style:normal;font-size:.73em;color:var(--muted)}
 .list{display:flex;flex-direction:column}
-.list .it{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.list .it{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.93em}
 .list .it:last-child{border-bottom:0}
-.list .it span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+.list .it span:last-child{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
 details{background:var(--surface);border-radius:14px;padding:0 14px}
-summary{cursor:pointer;padding:13px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+summary{cursor:pointer;padding:13px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;min-height:var(--tap);align-items:center}
 summary::after{content:"+";color:var(--muted)}
 details[open] summary::after{content:"–"}
-details p,details ul{color:var(--muted);font-size:13px;margin:0 0 12px}
+details p,details ul{color:var(--muted);font-size:.87em;margin:0 0 12px}
 details ul{padding-left:18px}
-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:.75em;font-weight:700;cursor:help;background:transparent;font-family:var(--body)}
+.why{background:var(--surface);border-radius:var(--radius);padding:14px 16px;font-size:.93em;line-height:1.5}
+.why b{color:var(--accent)}
+.conf{font-size:.73em;color:var(--muted)}
+.conf i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.conf .high{background:var(--good)} .conf .medium{background:#FFD56B} .conf .low{background:var(--warn)}
+.agecard{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.agecard button{border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;border-radius:14px;padding:12px;text-align:left;cursor:pointer;min-height:64px;display:flex;flex-direction:column;gap:2px}
+.agecard button[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.agecard button small{color:var(--muted);font-size:.8em}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;min-height:var(--tap);font-size:.93em}
+.toggle input{width:44px;height:26px;accent-color:var(--accent)}
 nav{display:flex;border-top:1px solid var(--line);background:var(--surface);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
-nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:600;padding:8px 4px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.73em;font-weight:600;padding:8px 4px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav button[aria-current=page]{color:var(--water)}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--water);color:#06233B;padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+nav button[aria-current=page]{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#06233B;padding:10px 16px;border-radius:99px;font-weight:700;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:5}
 .toast.show{opacity:1;transform:translateX(-50%)}
-.demo{font-size:12px;color:var(--muted);text-align:center;margin:0}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.demo{font-size:.8em;color:var(--muted);text-align:center;margin:0}
+.sheet{position:fixed;inset:0;background:rgba(5,8,15,.75);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.sheet.open{display:flex}
+.sheet .card{background:var(--surface);border-radius:24px 24px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div class="phone">
+  <!-- ============ TODAY ============ -->
   <section class="screen active" id="s-today">
     <div class="row between">
       <h1>Sipcount</h1>
-      <span class="pill" id="regionPill">US grid</span>
+      <div class="row" style="gap:6px"><span class="pill" id="regionPill">US</span><span class="pill" id="stressPill" hidden></span></div>
     </div>
     <div class="panel">
       <div class="gauge">
-        <div class="drop" aria-hidden="true">
-          <svg viewBox="0 0 100 130">
-            <defs><clipPath id="dropClip"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs>
-            <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="var(--surface-2)"/>
-            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--water)" style="transform:translateY(130px)"/></g>
-            <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="var(--line)" stroke-width="1.5"/>
-          </svg>
-        </div>
+        <div class="vessel" id="vessel" aria-hidden="true"></div>
         <div class="stack">
           <span class="eyebrow">Today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
           <div class="sub" id="todayEq">—</div>
           <div class="sub" id="todayBudget">—</div>
+          <div class="sub" id="todayStress" hidden></div>
         </div>
       </div>
     </div>
@@ -128,14 +155,16 @@ nav button[aria-current=page]{color:var(--water)}
       <div class="tile"><div class="v" id="tSaved">0 mL</div><div class="l">saved by switching</div></div>
     </div>
     <div class="stack">
-      <h2>Where the water goes</h2>
-      <div class="scopebar"><i id="sb1" style="width:15%;background:var(--water)"></i><i id="sb2" style="width:85%;background:var(--water-deep)"></i></div>
-      <div class="legend"><span><b style="background:var(--water)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--water-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
+      <div class="row between"><h2 id="scopeHead">Where the water goes</h2><button class="tip" id="whyBtn" aria-label="Why does electricity use water?">?</button></div>
+      <div class="scopebar"><i id="sb1" style="width:15%;background:var(--accent)"></i><i id="sb2" style="width:85%;background:var(--water-deep)"></i></div>
+      <div class="legend"><span><b style="background:var(--accent)"></b><span id="l1">Cooling the servers</span> <span id="p1">15%</span></span><span><b style="background:var(--water-deep)"></b><span id="l2">Making the electricity</span> <span id="p2">85%</span></span></div>
     </div>
-    <div class="nudge" id="todayNudge"><span>💧</span><span>Log a prompt to see its footprint. Nothing you type is ever stored — only the count.</span></div>
+    <div class="why" id="whyBox" hidden></div>
+    <div class="nudge" id="todayNudge"></div>
     <p class="demo" id="demoNote"></p>
   </section>
 
+  <!-- ============ LOG ============ -->
   <section class="screen" id="s-log">
     <h1>Log a prompt</h1>
     <p class="sub" style="margin:-8px 0 0">In the real app this happens automatically when you hit send in ChatGPT, Claude or Gemini. Here you simulate it.</p>
@@ -162,39 +191,58 @@ nav button[aria-current=page]{color:var(--water)}
       <span class="eyebrow">This prompt</span>
       <div class="big"><span id="estMl">0</span><small>mL</small></div>
       <div class="range" id="estRange">—</div>
-      <div class="row" style="font-size:13px;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span></div>
+      <div class="row wrap" style="font-size:.87em;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span><span id="estSplit"></span></div>
     </div>
     <div class="nudge" id="nudge"></div>
     <button class="btn" id="logBtn">Log it</button>
   </section>
 
+  <!-- ============ TRENDS ============ -->
   <section class="screen" id="s-trends">
     <h1>Trends</h1>
     <div class="panel">
       <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
       <div class="bars" id="bars"></div>
     </div>
-    <div class="stack">
-      <h2>By model type</h2>
-      <div class="panel list" id="byTier"></div>
-    </div>
-    <div class="stack">
-      <h2>By task</h2>
-      <div class="panel list" id="byTask"></div>
-    </div>
+    <div class="stack"><h2>By model type</h2><div class="panel list" id="byTier"></div></div>
+    <div class="stack"><h2>By task</h2><div class="panel list" id="byTask"></div></div>
     <button class="btn ghost" id="exportBtn">Copy ESG export (CSV)</button>
   </section>
 
+  <!-- ============ SETTINGS ============ -->
   <section class="screen" id="s-settings">
     <h1>Settings</h1>
+
+    <div class="stack">
+      <div class="row between"><h2>Show my water as…</h2><span class="conf">visuals only — the numbers never change</span></div>
+      <div class="agecard" id="ageCards"></div>
+      <label class="toggle"><span>Large print &amp; high contrast</span><input type="checkbox" id="largeToggle"></label>
+    </div>
+
     <label class="f">Daily water budget (mL)<input type="number" id="budgetIn" min="10" step="10"></label>
-    <label class="f">Data-centre region<select id="regionSel"><option value="us_default">US hyperscale (sourced)</option><option value="colo_average">Industry-average colo (low confidence)</option></select></label>
+
+    <div class="stack">
+      <label class="f">Where your AI runs (data-centre region)<select id="regionSel"></select></label>
+      <div class="conf" id="regionConf"></div>
+    </div>
+    <label class="f">Server cooling technology<select id="coolingSel"></select></label>
+    <label class="toggle"><span>Count hydropower reservoir evaporation <button class="tip" id="hydroTip" aria-label="About hydropower water">?</button></span><input type="checkbox" id="hydroToggle"></label>
+    <label class="toggle"><span>Show local water-stress context</span><input type="checkbox" id="stressToggle"></label>
+
     <details><summary>How we calculate</summary>
-      <p>Per prompt: <code>energy × PUE × (cooling water + grid water)</code>. Energy comes from the model type and prompt length; PUE is data-centre overhead; water is in litres per kWh.</p>
-      <ul><li>Standard model ≈ 0.75 Wh per 1,000 tokens (Epoch AI 2025; Google &amp; OpenAI 2025 disclosures)</li><li>Reasoning models ≈ 10× (our estimate, low confidence)</li><li>Image ≈ 2.9 Wh each (Luccioni et al. 2023)</li><li>US: PUE 1.15, cooling 0.55 L/kWh, grid 3.142 L/kWh (Li et al. 2023)</li></ul>
-      <p>The range shown spans vendor-reported lows (≈0.2×) to 2023 academic highs (≈3.9×). Constants version <code>2026-09-14</code>.</p>
+      <p>Per prompt, in millilitres:</p>
+      <p><code>Scope 1 (cooling)  = energy × PUE × WUE<sub>site</sub></code><br><code>Scope 2 (grid)     = energy × PUE × EWIF<sub>grid</sub></code><br><code>Total = Scope 1 + Scope 2</code></p>
+      <ul>
+        <li><b>energy</b> (Wh) from model class × prompt length: standard ≈ 0.75 Wh per 1,000 tokens (Epoch AI 2025; Google &amp; OpenAI 2025 disclosures); reasoning ≈ 10× (our estimate, low confidence); image ≈ 2.9 Wh (Luccioni et al. 2023).</li>
+        <li><b>PUE</b>: data-centre overhead (published fleet figures per region).</li>
+        <li><b>WUE<sub>site</sub></b> (L/kWh, ISO/IEC 30134-9): on-site cooling water per kWh of IT energy — depends on cooling technology.</li>
+        <li><b>EWIF<sub>grid</sub></b> (L/kWh): water evaporated to generate the region's electricity (WRI 2020, Reig et al.; Li et al. 2023). With hydropower on, reservoir evaporation is counted — this is why hydro-heavy grids can look thirstier than coal grids.</li>
+        <li>Water stress: WRI Aqueduct 4.0 class of the region. Shown as context; it does not change the millilitres.</li>
+      </ul>
+      <p>The range shown spans vendor-reported lows (≈0.2×) to 2023 academic highs (≈3.9×). Constants version <code id="cVersion"></code>. Full sources: <code>ARCHITECTURE.md</code> in the repo.</p>
     </details>
-    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. The app keeps only daily totals (mL per model type and task) on this device. Clear them any time below.</p></details>
+    <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
+    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. The app keeps only daily totals (mL per model type and task) plus your display preferences on this device. Clear them any time below.</p></details>
     <button class="btn danger" id="wipeBtn">Clear all my data</button>
     <button class="btn ghost" id="sampleBtn">Load sample week (for demos)</button>
   </section>
@@ -208,118 +256,325 @@ nav button[aria-current=page]{color:var(--water)}
 </div>
 <div class="toast" id="toast" role="status"></div>
 
+<!-- First-run chooser -->
+<div class="sheet" id="ageSheet" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+  <div class="card">
+    <h1 id="ageTitle">How should we show your water?</h1>
+    <p class="sub" style="margin:0">Pick the picture that makes most sense to you. It changes only the visuals — never the numbers. You can switch any time in Settings.</p>
+    <div class="agecard" id="ageCardsSheet"></div>
+  </div>
+</div>
+
 <script>
-// ===== Constants: mirrors app/assets/calc/models.json v2026-09-14 =====
-const C = {
-  version:'2026-09-14', charsPerToken:4,
-  tiers:{ lightweight:{wh1k:0.15, label:'Light'}, standard:{wh1k:0.75, label:'Standard'}, reasoning:{wh1k:7.5, label:'Reasoning'} },
-  tasks:{ text:{out:300,mult:1,label:'Text'}, code:{out:600,mult:1,label:'Code'}, long_context:{out:500,mult:1,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
-  regions:{ us_default:{pue:1.15,site:0.55,grid:3.142,label:'US grid'}, colo_average:{pue:1.5,site:1.8,grid:3.142,label:'Colo avg'} },
-  range:{low:0.2, high:3.9},
-  eq:[['bottle',500],['coffee cup',240],['espresso',30],['sip',15]],
-  models:{
+/* =====================================================================================
+   SIPCOUNT CONFIG — editable. All water constants in L/kWh (≡ mL/Wh). Energy in Wh.
+   Confidence: high = published for exactly this quantity; medium = published, adapted;
+   low = derived from published components (derivation in `note`).
+   Primary sources: Li, Yang, Islam, Ren (2023/25) "Making AI Less Thirsty" (arXiv 2304.03271);
+   WRI Reig et al. (2020) "Guidance for Calculating Water Use Embedded in Purchased Electricity";
+   Macknick et al. (NREL 2011/2012); LBNL (2024) US Data Center Energy Usage Report;
+   Microsoft datacenters efficiency page (FY24/FY25); Google (2025) arXiv 2508.15734;
+   Meta 2025 Environmental Data Index; WRI Aqueduct 4.0 (Kuzma et al. 2023); IMDA Green DC Roadmap 2024.
+   ===================================================================================== */
+const SIPCOUNT_CONFIG = {
+  version: '2026-09-15',
+  charsPerToken: 4,
+  tiers: { lightweight:{wh1k:0.15,label:'Light',conf:'low'}, standard:{wh1k:0.75,label:'Standard',conf:'medium'}, reasoning:{wh1k:7.5,label:'Reasoning',conf:'low'} },
+  tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
+  range: { low:0.2, high:3.9 },
+
+  // WUE_site by cooling technology (L per kWh of IT energy). 'reported' = the region's published fleet value.
+  cooling: {
+    reported:  { label:'As reported for this region', note:'Published fleet WUE (see region)' },
+    tower:     { wue:1.80, label:'Evaporative cooling towers', conf:'medium', note:'Industry-average water-cooled DC ≈1.8 L/kWh (Uptime/LBNL); hyperscale towers ≈1 L/kWh, hot climates up to 9.' },
+    adiabatic: { wue:0.32, label:'Air-side economiser + adiabatic assist', conf:'high', note:'LBNL 2024 hyperscale median 0.32 L/kWh.' },
+    dry:       { wue:0.03, label:'Closed-loop / dry / free-air cooling', conf:'high', note:'Microsoft EMEA FY24–25 0.03 L/kWh; humidification only. Raises PUE slightly.' }
+  },
+
+  // WRI Aqueduct 4.0 baseline water-stress classes. `weight` is an ILLUSTRATIVE context multiplier
+  // (midpoint of the withdrawal/availability band ÷ 20 %). It never changes the headline mL.
+  stress: [
+    { id:0, label:'Low', band:'<10 % of supply withdrawn', weight:0.25 },
+    { id:1, label:'Low–medium', band:'10–20 %', weight:0.75 },
+    { id:2, label:'Medium–high', band:'20–40 %', weight:1.5 },
+    { id:3, label:'High', band:'40–80 %', weight:3 },
+    { id:4, label:'Extremely high', band:'>80 %', weight:5 }
+  ],
+
+  regions: {
+    us_hyperscale: { label:'United States · hyperscale', short:'US', pue:1.17, wueSite:0.55,
+      ewif:{ incl:3.142, excl:1.67 }, stress:1, stressConf:'medium', defaultCooling:'reported',
+      conf:{ pue:'high', wueSite:'high', ewifIncl:'high', ewifExcl:'low' },
+      note:'PUE 1.17 & WUE 0.55 = Microsoft US average (Li et al. Table 1). EWIF 3.142 = WRI US national (0.83 gal/kWh) incl. hydro. Excl-hydro derived: (0.83 − 6.5 % × 5.99) × 3.785.',
+      sources:['Li et al. 2023/25, Table 1','WRI 2020, Appendix 2/4/6','Microsoft FY25: Americas PUE 1.16, WUE 0.34 (newer fleet)'] },
+    us_ercot: { label:'United States · Texas (ERCOT)', short:'Texas', pue:1.28, wueSite:0.25,
+      ewif:{ incl:1.287, excl:1.22 }, stress:3, stressConf:'low', defaultCooling:'reported',
+      conf:{ pue:'high', wueSite:'high', ewifIncl:'high', ewifExcl:'low' },
+      note:'Gas-heavy grid with once-through cooling → low grid water. PUE/WUE = Microsoft San Antonio (Li et al.). EWIF = WRI eGRID ERCT 0.34 gal/kWh. Stress class not verified at state level.',
+      sources:['Li et al. 2023/25, Table 1','WRI 2020, Appendix 1 (eGRID subregions)','EIA Today in Energy, Oct 2025 (2025 mix)'] },
+    eu_average: { label:'Europe · EU average', short:'EU', pue:1.16, wueSite:0.03,
+      ewif:{ incl:3.95, excl:1.9 }, stress:2, stressConf:'medium', defaultCooling:'reported',
+      conf:{ pue:'high', wueSite:'high', ewifIncl:'low', ewifExcl:'low' },
+      note:'PUE/WUE = Microsoft EMEA FY25 (free-air cooling). EWIF = generation-weighted mean of 26 WRI country factors (2016 mix; likely lower today as coal declines). Stress varies: Spain/Italy high, Germany medium-high, France/NL low-medium.',
+      sources:['Microsoft efficiency page FY25','WRI 2020, Appendix 2/6/7 (derived)','WRI Aqueduct 4.0 country classes (2023)'] },
+    nordic: { label:'Nordics · Norway / Sweden / Finland', short:'Nordic', pue:1.12, wueSite:0.05,
+      ewif:{ incl:6.00, excl:1.12 }, stress:0, stressConf:'medium', defaultCooling:'reported',
+      conf:{ pue:'high', wueSite:'high', ewifIncl:'low', ewifExcl:'low' },
+      note:'Free-air cooled, hydro/nuclear/wind grid. With hydro ON the WRI method counts gross reservoir evaporation (Norway 6.66, Sweden 6.02, Finland 4.54 L/kWh) — contested for cold climates (Bakken et al. 2017: net evaporation can be near zero). Excl-hydro (1.12) is the more realistic bound here.',
+      sources:['Li et al. Table 1 (Microsoft Sweden/Finland)','WRI 2020, Appendix 2/4/6 (derived weighted)','Mekonnen & Hoekstra 2012; Bakken et al. 2017'] },
+    india: { label:'India · national grid', short:'India', pue:1.43, wueSite:2.0,
+      ewif:{ incl:3.44, excl:2.25 }, stress:4, stressConf:'medium', defaultCooling:'reported',
+      conf:{ pue:'medium', wueSite:'low', ewifIncl:'high', ewifExcl:'low' },
+      note:'Coal ≈75 % of generation. EWIF 3.44 = WRI India (0.91 gal/kWh, ~2016 mix). With CEA norm 3.5 m³/MWh for coal and 2024 mix: ≈3.6 incl / 2.7 excl. PUE = Microsoft India (projected). WUE 2.0 = typical tower-cooled DC (derived); Microsoft plans zero-water sites.',
+      sources:['WRI 2020, Appendix 2/4/6','CSE 2021 "Water Use by India\'s Coal Power Plants" (CEA norms)','WRI Aqueduct: India extremely high stress'] },
+    singapore: { label:'APAC · Singapore', short:'SG', pue:1.28, wueSite:2.2,
+      ewif:{ incl:0.75, excl:0.40 }, stress:4, stressConf:'high', defaultCooling:'reported',
+      conf:{ pue:'high', wueSite:'medium', ewifIncl:'low', ewifExcl:'low' },
+      note:'94 % gas generation, largely seawater-cooled → low freshwater EWIF (derived from Macknick NGCC factors; not in WRI). WUE 2.2 = IMDA industry median 2021 (cooling towers). Highest water-stress score in Aqueduct; managed via NEWater/desalination.',
+      sources:['EMA fuel mix 2024','Macknick et al. 2011 (NGCC factors)','IMDA Green DC Roadmap 2024','Microsoft APAC FY25 PUE 1.28'] },
+    japan: { label:'APAC · Japan', short:'JP', pue:1.10, wueSite:0.32,
+      ewif:{ incl:2.31, excl:1.50 }, stress:-1, stressConf:'low', defaultCooling:'adiabatic',
+      conf:{ pue:'high', wueSite:'low', ewifIncl:'high', ewifExcl:'low' },
+      note:'EWIF 2.31 = WRI Japan (0.61 gal/kWh). PUE = Google Inzai (TTM 1.10). No published site WUE → adiabatic default 0.32 assumed. Water-stress class not verified.',
+      sources:['WRI 2020, Appendix 2/4/6','Google datacenters PUE page 2026','LBNL 2024 (WUE assumption)'] }
+  },
+
+  models: {
     openai:[['GPT-5','standard'],['GPT-5 mini','lightweight'],['o3','reasoning'],['GPT-4o','standard']],
     anthropic:[['Claude Sonnet','standard'],['Claude Opus','standard'],['Claude Opus (extended thinking)','reasoning'],['Claude Haiku','lightweight']],
     google:[['Gemini Pro','standard'],['Gemini Flash','lightweight'],['Gemini Pro (Deep Think)','reasoning'],['Gemini Flash-Lite','lightweight']]
+  },
+
+  /* Age-adaptive metaphors. Units are real volumes; the pictures are generic (no brands). */
+  tiers_age: {
+    teen:   { label:'10–17', title:'Gamer mode', vessel:'potion',
+              units:[['boba cup',500,'boba cups'],['potion charge',50,'potion charges'],['boba sip',20,'boba sips']],
+              scope:['Cooling the servers','Powering the servers'],
+              why:'<b>Why does electricity use water?</b> Most power plants boil water into steam to spin a generator, then use <i>more</i> water to cool it down — and a lot of that evaporates. So every prompt sips a bit of water at a power plant far away, plus a bit at the data centre.',
+              nudgeLight:'Quick question? A <b>light model</b> uses about 5× less water. Save the big one for boss fights.' },
+    young:  { label:'18–35', title:'Everyday mode', vessel:'ring',
+              units:[['tumbler fill',1180,'tumbler fills (1.18 L)'],['plant watering',250,'houseplant waterings'],['espresso shot',30,'espresso shots']],
+              scope:['On-site cooling','Electricity generation'],
+              why:'<b>Why does electricity use water?</b> Roughly 60 % of the world’s electricity still comes from steam turbines (coal, gas, nuclear). They evaporate cooling water — about 1–3 litres per kWh. Your prompt’s share is tiny, but a few hundred prompts a day is a real glass of water.',
+              nudgeLight:'Short prompt? A <b>lighter model</b> does it for about a fifth of the water.' },
+    adult:  { label:'36–59', title:'Professional mode', vessel:'mug',
+              units:[['watering can',5000,'watering cans (5 L)'],['bottle of water',500,'bottles of water (500 mL)'],['coffee mug',240,'coffee mugs (240 mL)']],
+              scope:['Scope 1 · on-site cooling','Scope 2 · grid electricity'],
+              why:'<b>Why does electricity use water?</b> Data centres consume water twice: directly, in evaporative cooling of the servers (Scope 1), and indirectly at the power station, where thermoelectric generation evaporates cooling water (Scope 2). Scope 2 is usually the larger share — and it depends on the local grid mix.',
+              nudgeLight:'For routine tasks a <b>lighter model</b> cuts water use by roughly 80 %.' },
+    senior: { label:'60–100', title:'Clear mode', vessel:'cup', large:true,
+              units:[['glass of water',237,'glasses of water (8 oz)'],['tablespoon',15,'tablespoons'],['teaspoon',5,'teaspoons']],
+              scope:['Cooling the computers','Making the electricity'],
+              why:'<b>Why does electricity use water?</b> Power stations heat water into steam to turn their machines, and much of it escapes into the air as vapour. Each question you ask a computer uses a little of that water, far away — and a little more to keep the computers cool.',
+              nudgeLight:'For a simple question, choose the <b>smaller model</b>. It uses much less water.' }
   }
 };
-// ===== Engine: same math as WaterCalculator.dart =====
-function estimate({tier,task,region,inputTokens,items=1}){
-  const T=C.tiers[tier], K=C.tasks[task], R=C.regions[region];
+const C = SIPCOUNT_CONFIG;
+
+/* ===== Engine (same math as WaterCalculator.dart) ===== */
+function regionParams(regionId, coolingId, hydro){
+  const R=C.regions[regionId]; const site = coolingId==='reported' ? R.wueSite : C.cooling[coolingId].wue;
+  return { pue:R.pue, site, grid: hydro ? R.ewif.incl : R.ewif.excl };
+}
+function estimate({tier,task,inputTokens,items=1,params}){
+  const T=C.tiers[tier], K=C.tasks[task], P=params;
   let energy, tokens;
-  if(K.fixed!=null){ energy=K.fixed*items; tokens=0; } else { tokens=inputTokens+K.out; energy=T.wh1k*tokens/1000*K.mult; }
-  const f=energy*R.pue;
-  return {energyWh:energy, s1:f*R.site, s2:f*R.grid, total:f*(R.site+R.grid), tokens};
+  if(K.fixed!=null){ energy=K.fixed*items; tokens=0; } else { tokens=inputTokens+K.out; energy=T.wh1k*tokens/1000; }
+  const f=energy*P.pue;
+  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), tokens };
 }
 const tok=ch=>ch<=0?0:Math.ceil(ch/C.charsPerToken);
 const fmt=(n,d)=>n.toLocaleString(undefined,{maximumFractionDigits:d??(n<10?1:0),minimumFractionDigits:0});
-function equiv(ml){ for(const [l,v] of C.eq){ if(ml>=v) return `${fmt(ml/v,1)} ${l}${ml/v>=1.95?'s':''}`; } return `${fmt(ml/15,1)} of a sip`; }
+function equiv(ml){
+  const u=C.tiers_age[S.age||'young'].units; // sorted large → small
+  for(const [one,v,many] of u){ if(ml>=v) { const n=ml/v; return `${fmt(n,n<10?1:0)} ${n<1.5?one:many}`; } }
+  const [one,v]=u[u.length-1]; return `${fmt(ml/v,1)} of a ${one}`;
+}
 
-// ===== Storage: aggregate counters only, on this device =====
-const KEY='sipcount.v1';
+/* ===== Storage: aggregate counters + display prefs only, on this device ===== */
+const KEY='sipcount.v2';
 const dayKey=d=>d.toISOString().slice(0,10);
 let S=load();
-function load(){ try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days) return j; }catch(e){} return {budget:100, region:'us_default', saved:0, days:{}, sample:false}; }
+function load(){
+  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days) return j; }catch(e){}
+  let days={}, sample=false, budget=100;
+  try{ const old=JSON.parse(localStorage.getItem('sipcount.v1')); if(old&&old.days){ days=old.days; sample=!!old.sample; budget=old.budget||100; } }catch(e){}
+  return { budget, region:'us_hyperscale', cooling:'reported', hydro:true, stress:true, age:null, large:false, saved:0, days, sample };
+}
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function bucket(k){ return S.days[k] ||= {n:0,s1:0,s2:0,tier:{},task:{}}; }
 function record(e,tier,task,dt){ const b=bucket(dayKey(dt||new Date())); b.n++; b.s1+=e.s1; b.s2+=e.s2; b.tier[tier]=(b.tier[tier]||0)+e.total; b.task[task]=(b.task[task]||0)+e.total; }
+function params(){ return regionParams(S.region,S.cooling,S.hydro); }
 function loadSample(){
-  S.days={}; S.sample=true; S.saved=41.3;
+  S.days={}; S.sample=true; S.saved=41.3; const P=params();
   const plan=[[6,0],[9,1],[7,0],[14,2],[5,0],[11,1],[3,0]];
   plan.forEach(([n,img],i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i));
     for(let p=0;p<n;p++){ const tier=p%5===0?'reasoning':(p%3===0?'lightweight':'standard'); const task=p%4===0?'code':'text';
-      record(estimate({tier,task,region:S.region,inputTokens:tok(200+((p*137)%900))}),tier,task,d); }
-    for(let k=0;k<img;k++) record(estimate({tier:'standard',task:'image',region:S.region,inputTokens:0}),'standard','image',d);
+      record(estimate({tier,task,inputTokens:tok(200+((p*137)%900)),params:P}),tier,task,d); }
+    for(let k=0;k<img;k++) record(estimate({tier:'standard',task:'image',inputTokens:0,params:P}),'standard','image',d);
   });
   save();
 }
 if(!Object.keys(S.days).length && !S.wiped) loadSample();
 
-// ===== UI =====
+/* ===== UI plumbing ===== */
 let vendor='openai', task='text', chars=400;
 const $=id=>document.getElementById(id);
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id));
   document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
-  if(id==='today') renderToday(); if(id==='trends') renderTrends();
+  if(id==='today') renderToday(); if(id==='trends') renderTrends(); if(id==='settings') renderSettings();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
 function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
 function last7(){ return [...Array(7)].map((_,i)=>{const d=new Date(); d.setDate(d.getDate()-(6-i)); return dayKey(d);}); }
+function applyTheme(){
+  const tier=S.age||'young'; document.documentElement.dataset.tier=tier;
+  const large = S.large || !!C.tiers_age[tier].large; document.documentElement.dataset.large = large?'1':'0';
+}
 
+/* ===== Vessels (generic SVG, filled by clip-path; level 0..1) ===== */
+const VESSELS = {
+  potion(level){ // round-bottom flask, pixel-ish
+    const h=150, top=h*(1-level);
+    return `<svg viewBox="0 0 120 150" shape-rendering="crispEdges">
+      <defs><clipPath id="vc"><path d="M48 6h24v10h-6v34c16 8 28 24 28 44 0 26-20 46-34 46S26 120 26 94c0-20 12-36 28-44V16h-6z"/></clipPath></defs>
+      <path d="M48 6h24v10h-6v34c16 8 28 24 28 44 0 26-20 46-34 46S26 120 26 94c0-20 12-36 28-44V16h-6z" fill="var(--surface-2)"/>
+      <g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="var(--accent)" style="transform:translateY(${top.toFixed(1)}px)"/>
+        <g class="fill" style="transform:translateY(${top.toFixed(1)}px)"><path class="wave" d="M-40 6 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 v-12 h-160z" fill="var(--ink)" opacity=".55"/></g>
+        <rect x="34" y="70" width="6" height="40" fill="#fff" opacity=".25"/></g>
+      <path d="M48 6h24v10h-6v34c16 8 28 24 28 44 0 26-20 46-34 46S26 120 26 94c0-20 12-36 28-44V16h-6z" fill="none" stroke="var(--line)" stroke-width="3"/>
+      <rect x="44" y="2" width="32" height="8" fill="var(--line)"/></svg>`;
+  },
+  ring(level){ // activity-style ring around a tall tumbler
+    const r=54, c=2*Math.PI*r, off=c*(1-level), h=150, top=32+86*(1-level);
+    return `<svg viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="12"/>
+      <circle class="ring" cx="75" cy="75" r="${r}" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 75 75)"/>
+      <defs><clipPath id="vc"><path d="M58 32h34l-4 86H62z"/></clipPath></defs>
+      <path d="M58 32h34l-4 86H62z" fill="var(--surface-2)"/>
+      <g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="150" height="${h}" fill="var(--accent)" style="transform:translateY(${top.toFixed(1)}px)"/></g>
+      <path d="M58 32h34l-4 86H62z" fill="none" stroke="var(--line)" stroke-width="2"/>
+      <path d="M54 30h42" stroke="var(--line)" stroke-width="4" stroke-linecap="round"/></svg>`;
+  },
+  mug(level){ // coffee mug with handle
+    const top=40+92*(1-level);
+    return `<svg viewBox="0 0 130 150">
+      <defs><clipPath id="vc"><rect x="22" y="40" width="70" height="92" rx="8"/></clipPath></defs>
+      <path d="M92 58h14a14 14 0 0 1 0 28H92" fill="none" stroke="var(--line)" stroke-width="8"/>
+      <rect x="22" y="40" width="70" height="92" rx="8" fill="var(--surface-2)"/>
+      <g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="130" height="150" fill="var(--accent)" style="transform:translateY(${top.toFixed(1)}px)"/>
+        <g class="fill" style="transform:translateY(${top.toFixed(1)}px)"><path class="wave" d="M-40 4 q10 -5 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 v-10 h-160z" fill="var(--ink)" opacity=".5"/></g></g>
+      <rect x="22" y="40" width="70" height="92" rx="8" fill="none" stroke="var(--line)" stroke-width="3"/>
+      <path d="M40 26c0-8 8-8 8-16M56 26c0-8 8-8 8-16" stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/></svg>`;
+  },
+  cup(level){ // clear measuring cup with graduation lines
+    const top=30+104*(1-level);
+    const marks=[0.25,0.5,0.75,1].map(f=>{ const y=134-104*f; return `<line x1="24" x2="${f===1||f===0.5?44:36}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-width="2"/><text x="48" y="${y+4}" font-size="11" fill="var(--muted)" font-family="system-ui">${Math.round(S.budget*f)}</text>`; }).join('');
+    return `<svg viewBox="0 0 130 150">
+      <defs><clipPath id="vc"><path d="M20 30h90l-8 104H28z"/></clipPath></defs>
+      <path d="M20 30h90l-8 104H28z" fill="var(--surface-2)"/>
+      <g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="130" height="150" fill="var(--accent)" opacity=".9" style="transform:translateY(${top.toFixed(1)}px)"/></g>
+      ${marks}
+      <path d="M20 30h90l-8 104H28z" fill="none" stroke="var(--text)" stroke-width="3"/>
+      <path d="M110 40h10v14h-11" fill="none" stroke="var(--text)" stroke-width="3"/></svg>`;
+  }
+};
+
+/* ===== Today ===== */
 function renderToday(){
+  applyTheme();
+  const A=C.tiers_age[S.age||'young'], R=C.regions[S.region];
   const today=S.days[dayKey(new Date())]||{n:0,s1:0,s2:0}; const t=today.s1+today.s2;
+  const pct=Math.min(1,t/S.budget);
+  $('vessel').innerHTML=VESSELS[A.vessel](pct);
   $('todayMl').textContent=fmt(t); $('todayEq').textContent=t>0?`≈ ${equiv(t)}`:'No prompts yet today';
-  const pct=Math.min(1,t/S.budget); $('dropFill').style.transform=`translateY(${130*(1-pct)}px)`;
   $('todayBudget').innerHTML=t>S.budget?`<span class="pill warn">Over budget</span> ${fmt(t-S.budget)} mL past your ${S.budget} mL`:`${Math.round(pct*100)}% of your ${S.budget} mL budget`;
+  const st=C.stress[R.stress];
+  $('stressPill').hidden=!(S.stress&&st); $('todayStress').hidden=!(S.stress&&st);
+  if(S.stress&&st){ $('stressPill').className='pill stress-'+st.id; $('stressPill').textContent=`${st.label} water stress`;
+    $('todayStress').innerHTML=`In a <b>${st.label.toLowerCase()}</b>-stress region (${st.band} withdrawn). Weighted for local scarcity ≈ <b>${fmt(t*st.weight)} mL</b> <span class="conf">illustrative</span>`; }
   $('tPrompts').textContent=today.n;
   const keys=last7(); let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
   $('tWeek').textContent=fmt(w)+' mL'; $('tYear').textContent=fmt(w/7*365/1000,1)+' L'; $('tSaved').textContent=fmt(S.saved)+' mL';
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15; $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=Math.round(p1*100)+'%'; $('p2').textContent=Math.round((1-p1)*100)+'%';
-  $('regionPill').textContent=C.regions[S.region].label;
-  $('todayNudge').innerHTML=t>S.budget?`<span>⚠️</span><span>You're over today's budget. Try a <b>lighter model</b> for quick questions — it uses about 5× less water.</span>`:`<span>💧</span><span>${today.n?`Nice — ${fmt(S.budget-t)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
+  $('l1').textContent=A.scope[0]; $('l2').textContent=A.scope[1];
+  $('regionPill').textContent=R.short+(S.hydro?'':' · no hydro');
+  $('whyBox').innerHTML=A.why;
+  $('todayNudge').innerHTML=t>S.budget?`<span>⚠️</span><span>You're over today's budget. ${A.nudgeLight}</span>`:`<span>💧</span><span>${today.n?`Nice — ${fmt(S.budget-t)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
 }
+$('whyBtn').onclick=()=>{ const b=$('whyBox'); b.hidden=!b.hidden; $('whyBtn').setAttribute('aria-expanded',String(!b.hidden)); };
 
+/* ===== Log ===== */
 function fillModels(){ $('modelSel').innerHTML=C.models[vendor].map(([n,t])=>`<option value="${t}">${n} · ${C.tiers[t].label}</option>`).join(''); }
 $('vendorSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; vendor=b.dataset.v; [...$('vendorSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); fillModels(); renderEst(); };
 $('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('lenWrap').hidden=task==='image'; renderEst(); };
 $('lenRange').oninput=e=>{ chars=+e.target.value; $('promptBox').value=''; renderEst(); };
 $('promptBox').oninput=e=>{ chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,chars)); renderEst(); };
 $('modelSel').onchange=renderEst;
-function current(){ return estimate({tier:$('modelSel').value,task,region:S.region,inputTokens:tok(chars)}); }
+function current(){ return estimate({tier:$('modelSel').value,task,inputTokens:tok(chars),params:params()}); }
 function renderEst(){
-  const tier=$('modelSel').value, e=current();
+  const tier=$('modelSel').value, e=current(), A=C.tiers_age[S.age||'young'];
   $('lenLabel').textContent=`· ${chars.toLocaleString()} characters ≈ ${tok(chars)} tokens`;
   $('estMl').textContent=fmt(e.total,e.total<10?2:1);
   $('estRange').textContent=`Best estimate · likely between ${fmt(e.total*C.range.low,2)} and ${fmt(e.total*C.range.high,1)} mL · ≈ ${equiv(e.total)}`;
   $('estEnergy').textContent=`${fmt(e.energyWh,2)} Wh`; $('estTokens').textContent=e.tokens?`${e.tokens} tokens in+out`:'per image';
+  $('estSplit').textContent=`${Math.round(e.s1/e.total*100)}% cooling · ${Math.round(e.s2/e.total*100)}% grid`;
   const n=$('nudge');
-  if(task==='image'){ const ref=estimate({tier:'standard',task:'text',region:S.region,inputTokens:100}).total; n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One image ≈ <b>${Math.round(e.total/ref)} text prompts</b>. Worth it? Go for it — just know the cost.</span>`; n.dataset.save=0; return; }
+  if(task==='image'){ const ref=estimate({tier:'standard',task:'text',inputTokens:100,params:params()}).total; n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One image ≈ <b>${Math.round(e.total/ref)} text prompts</b>. Worth it? Go for it — just know the cost.</span>`; return; }
   const alt=tier==='reasoning'?'standard':(tier==='standard'?'lightweight':null);
-  if(alt){ const a=estimate({tier:alt,task,region:S.region,inputTokens:tok(chars)}); const sv=e.total-a.total; n.className='nudge'; n.innerHTML=`<span>🔁</span><span>Simple task? Switching to a <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(sv,sv<10?2:1)} mL</b> on this prompt.</span>`; n.dataset.save=sv; }
-  else { n.className='nudge quiet'; n.innerHTML=`<span>✅</span><span>Already the lightest option for this task.</span>`; n.dataset.save=0; }
+  if(alt){ const a=estimate({tier:alt,task,inputTokens:tok(chars),params:params()}); const sv=e.total-a.total; n.className='nudge'; n.innerHTML=`<span>🔁</span><span>Switching to a <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(sv,sv<10?2:1)} mL</b> on this prompt (≈ ${equiv(sv)}).</span>`; }
+  else { n.className='nudge quiet'; n.innerHTML=`<span>✅</span><span>Already the lightest option for this task.</span>`; }
 }
 $('logBtn').onclick=()=>{ const e=current(); record(e,$('modelSel').value,task); save(); toast(`Logged · ${fmt(e.total,2)} mL`); };
 
+/* ===== Trends ===== */
 function renderTrends(){
   const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
   $('bars').innerHTML=keys.map((k,i)=>{const d=new Date(k+'T12:00:00'); const cls=i===6?'today':(vals[i]>avg*1.6?'spike':''); return `<div class="bar"><i class="${cls}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][d.getDay()]}</em></div>`;}).join('');
   const spikes=vals.filter(v=>v>avg*1.6).length; $('trendPill').className='pill '+(spikes?'warn':'good'); $('trendPill').textContent=spikes?`${spikes} spike day${spikes>1?'s':''}`:'Steady';
   const tier={},tk={}; keys.forEach(k=>{const b=S.days[k]; if(!b) return; for(const t in b.tier) tier[t]=(tier[t]||0)+b.tier[t]; for(const t in b.task) tk[t]=(tk[t]||0)+b.task[t];});
   const tot=Object.values(tier).reduce((a,b)=>a+b,0)||1;
-  $('byTier').innerHTML=Object.entries(tier).sort((a,b)=>b[1]-a[1]).map(([t,v])=>`<div class="it"><span>${C.tiers[t].label} models</span><span>${fmt(v)} mL · ${Math.round(v/tot*100)}%</span></div>`).join('')||'<div class="it"><span>No data yet</span></div>';
+  $('byTier').innerHTML=Object.entries(tier).sort((a,b)=>b[1]-a[1]).map(([t,v])=>`<div class="it"><span>${C.tiers[t].label} models</span><span>${fmt(v)} mL · ${Math.round(v/tot*100)}% · ${equiv(v)}</span></div>`).join('')||'<div class="it"><span>No data yet</span></div>';
   $('byTask').innerHTML=Object.entries(tk).sort((a,b)=>b[1]-a[1]).map(([t,v])=>`<div class="it"><span>${C.tasks[t].label}</span><span>${fmt(v)} mL · ${Math.round(v/tot*100)}%</span></div>`).join('')||'<div class="it"><span>No data yet</span></div>';
 }
-$('exportBtn').onclick=async()=>{ const rows=[['date','prompts','scope1_cooling_ml','scope2_grid_ml','total_ml','constants_version']]; Object.keys(S.days).sort().forEach(k=>{const b=S.days[k]; rows.push([k,b.n,b.s1.toFixed(3),b.s2.toFixed(3),(b.s1+b.s2).toFixed(3),C.version]);}); const csv=rows.map(r=>r.join(',')).join('\n'); try{ await navigator.clipboard.writeText(csv); toast('CSV copied to clipboard'); }catch(e){ prompt('Copy this CSV:',csv); } };
+$('exportBtn').onclick=async()=>{
+  const P=params();
+  const rows=[['date','prompts','scope1_cooling_ml','scope2_grid_ml','total_ml','region','pue','wue_site_l_per_kwh','ewif_grid_l_per_kwh','hydro_included','constants_version']];
+  Object.keys(S.days).sort().forEach(k=>{const b=S.days[k]; rows.push([k,b.n,b.s1.toFixed(3),b.s2.toFixed(3),(b.s1+b.s2).toFixed(3),S.region,P.pue,P.site,P.grid,S.hydro,C.version]);});
+  const csv=rows.map(r=>r.join(',')).join('\n'); try{ await navigator.clipboard.writeText(csv); toast('CSV copied to clipboard'); }catch(e){ prompt('Copy this CSV:',csv); } };
 
-$('budgetIn').value=S.budget; $('regionSel').value=S.region;
+/* ===== Settings ===== */
+function ageButtons(container){
+  container.innerHTML=Object.entries(C.tiers_age).map(([id,a])=>`<button data-age="${id}" aria-pressed="${S.age===id}"><span><b>${a.title}</b></span><small>ages ${a.label} · ${a.units[a.units.length-1][2]}</small></button>`).join('');
+  container.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.age=b.dataset.age; save(); applyTheme(); renderSettings(); renderEst(); $('ageSheet').classList.remove('open'); toast(`${C.tiers_age[S.age].title} on`); };
+}
+function renderSettings(){
+  ageButtons($('ageCards'));
+  $('largeToggle').checked=!!S.large;
+  $('budgetIn').value=S.budget;
+  $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
+  const R=C.regions[S.region], P=params(); const dot=c=>`<i class="${c}"></i>`;
+  $('regionConf').innerHTML=`PUE ${R.pue} ${dot(R.conf.pue)} · cooling ${P.site} L/kWh ${dot(S.cooling==='reported'?R.conf.wueSite:C.cooling[S.cooling].conf)} · grid ${P.grid} L/kWh ${dot(S.hydro?R.conf.ewifIncl:R.conf.ewifExcl)} &nbsp;<span>${dot('high')}high ${dot('medium')}medium ${dot('low')}low confidence</span>`;
+  $('coolingSel').innerHTML=Object.entries(C.cooling).map(([id,c])=>`<option value="${id}">${c.label}${c.wue!=null?` · ${c.wue} L/kWh`:` · ${R.wueSite} L/kWh`}</option>`).join(''); $('coolingSel').value=S.cooling;
+  $('hydroToggle').checked=!!S.hydro; $('stressToggle').checked=!!S.stress;
+  $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('');
+  $('cVersion').textContent=C.version;
+}
+$('largeToggle').onchange=e=>{ S.large=e.target.checked; save(); applyTheme(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
-$('regionSel').onchange=e=>{ S.region=e.target.value; save(); renderEst(); toast('Region saved'); };
-$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ S={budget:S.budget,region:S.region,saved:0,days:{},sample:false,wiped:true}; save(); toast('Cleared'); show('today'); } };
+$('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.region].defaultCooling||'reported'; save(); renderSettings(); renderEst(); toast('Region saved'); };
+$('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); };
+$('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
+$('stressToggle').onchange=e=>{ S.stress=e.target.checked; save(); };
+$('hydroTip').onclick=e=>{ e.preventDefault(); alert('Hydropower reservoirs evaporate water. The standard method (WRI 2020, used by most studies) counts all of that evaporation against the electricity, which makes hydro-heavy grids such as Norway look thirstier than coal grids. Newer research argues net evaporation in cold climates is far smaller. Turn this off to see the lower bound.'); };
+$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ S={...S,saved:0,days:{},sample:false,wiped:true}; save(); toast('Cleared'); show('today'); } };
 $('sampleBtn').onclick=()=>{ S.wiped=false; loadSample(); toast('Sample week loaded'); show('today'); };
 
-fillModels(); renderEst(); renderToday();
+/* ===== Boot ===== */
+applyTheme(); fillModels(); renderEst(); renderToday();
+if(!S.age){ ageButtons($('ageCardsSheet')); $('ageSheet').classList.add('open'); }
 </script>
 </body>
 </html>
