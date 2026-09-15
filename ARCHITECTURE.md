@@ -51,6 +51,26 @@ Defaults (US): PUE 1.15, WUE_site 0.55, WUE_grid 3.142 (Li et al. 2023). Standar
 
 **Flag:** PROJECT.txt cites "3–5 mL per standard prompt". Current constants give ~1.3 mL. The 3–5 mL figure matches GPT-3-era estimates (Li et al. 2023: ~10–50 mL per response); 2025 vendor disclosures are lower (0.26–0.32 mL, though those exclude grid water). Decide which methodology to adopt — it only changes `models.json`, not code.
 
+### 3a. Regional constants (prototype v2, constants 2026-09-15)
+
+Formula unchanged: Scope 1 = E × PUE × WUE_site; Scope 2 = E × PUE × EWIF_grid (WRI 2020 method; Li et al. 2023). Confidence: **H** published for exactly this quantity · **M** published, adapted · **L** derived from published components.
+
+| Preset | PUE | WUE_site L/kWh | EWIF incl. hydro | EWIF excl. hydro | Aqueduct stress | Main sources |
+|---|---|---|---|---|---|---|
+| US hyperscale | 1.17 H | 0.55 H | 3.142 H | 1.67 L | Low–medium M | Li et al. Table 1 (Microsoft US); WRI 2020 App. 2/4/6 |
+| US Texas (ERCOT) | 1.28 H | 0.25 H | 1.287 H | 1.22 L | High L | Li et al.; WRI eGRID ERCT |
+| EU average | 1.16 H | 0.03 H | 3.95 L | 1.9 L | Medium–high M (varies by country) | Microsoft EMEA FY25; WRI country factors, generation-weighted |
+| Nordic | 1.12 H | 0.05 H | 6.00 L | 1.12 L | Low M | Li et al. (MS Sweden/Finland); WRI NO/SE/FI; Bakken 2017 |
+| India | 1.43 M | 2.0 L | 3.44 H | 2.25 L | Extremely high M | WRI India; CSE 2021 (CEA norms); Microsoft India |
+| Singapore | 1.28 H | 2.2 M | 0.75 L | 0.40 L | Extremely high H | EMA fuel mix; Macknick NGCC; IMDA 2024 |
+| Japan | 1.10 H | 0.32 L | 2.31 H | 1.50 L | not verified | WRI Japan; Google Inzai PUE |
+
+Cooling overrides (WUE_site): towers 1.8 (M), adiabatic 0.32 (H, LBNL 2024), dry/free-air 0.03 (H). Water stress is context only: the headline mL never changes; the "weighted" line uses an illustrative multiplier (band midpoint ÷ 20 %).
+
+**Known divergence:** `app/assets/calc/models.json` still uses PUE 1.15 for `us_default`; the prototype uses Li's 1.170. Golden tests must be re-derived when models.json is synced (ISSUES I-16).
+
+**Methodological caveats to surface in any report:** WRI EWIFs reflect ~2016 mixes and allocate 100 % of gross reservoir evaporation to hydropower; Google's 0.26 mL/prompt is on-site only, Mistral's 45 mL is full life-cycle, OpenAI's 0.32 mL has no stated scope — not comparable.
+
 ## 4. Privacy boundary
 
 `PromptEvent` is the only type allowed across the native→Dart boundary. It contains `char_count`, `vendor`, `model_hint`, `task`, `attachment_count`, `ts`. `PromptEvent.fromJson` fails closed if any text-bearing key is present. Native shells must discard text before serialising. The iOS keyboard extension runs **without** the Full Access entitlement (no network possible by construction).
@@ -103,6 +123,7 @@ Flutter (BSD-3), flutter_riverpod (MIT), drift (MIT, sqlite counters), flutter_l
 | 1 | Web prototype (standalone HTML) | `prototype/sipcount.html` → https://mouliarya.github.io/sipcount/sipcount.html |
 | 2 | Chrome MV3 extension (no network permission) | `browser_extension/` |
 | 3 | Android app: Flutter shell (Today + Settings, dark), `PromptAccessibilityService`, pending-event queue, aggregate counters, CI-built APK | `app/`, `.github/workflows/android-apk.yml` → release tag `android-latest` |
+| 3b | Prototype v2 (partner feedback 2026-09-15): 7 regional presets with confidence labels, cooling-tech and hydro toggles, water-stress context, 4 age-adaptive metaphor modes with generic animated vessels, senior large-print/AAA mode, per-tier micro-copy, editable `SIPCOUNT_CONFIG` | `prototype/sipcount.html` → live link |
 
 ### Increment 3 decisions (2026-09-14)
 

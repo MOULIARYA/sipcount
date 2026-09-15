@@ -13,11 +13,13 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 | I-7 | Image *generation* not distinguished from a text prompt | Open | Needs a UI cue per app ("Create image" mode). |
 | I-8 | Browser extension (Increment 2) never tested on live sites | Open | Selectors may need adjusting. |
 | I-9 | Extension has canvas-drawn icon, no real PNG icons | Open | Needs a shell (sandbox still broken by Windows update). |
-| I-10 | **Partner feedback — engine: regional presets (EU, Nordic hydro, US-ERCOT, India, APAC) + water-stress (WRI Aqueduct) toggle** | Open — questions pending | Formula already is Li et al. dual-scope (Scope 1 = E×PUE×WUE_site, Scope 2 = E×PUE×EWIF). Missing: sourced regional constants, cooling-tech variants, stress index. Several regional EWIFs are not published at grid level → will carry "low confidence" labels. |
-| I-11 | **Partner feedback — age-adaptive visual metaphors & units (10–17 / 18–35 / 36–59 / 60–100)** | Open — questions pending | Brand-specific visuals (Minecraft, Stanley, Hydro Flask, Apple Health rings) cannot be reproduced; generic equivalents proposed (pixel bucket, big tumbler, insulated bottle, progress ring). |
-| I-12 | **Partner feedback — senior accessibility: large print, WCAG 2.1 AAA contrast, ≥48 px touch targets, no jargon** | Open | Applies to prototype first, Flutter app after. |
+| I-10 | **Partner feedback — engine: regional presets + water-stress toggle** | Done in prototype v2 (2026-09-15) | 7 presets (US, ERCOT, EU, Nordic, India, Singapore, Japan) with per-field confidence; cooling-tech override; hydro incl/excl toggle; stress shown as context (Madhur's decision), not multiplied into the headline. Android port = I-16. |
+| I-11 | **Partner feedback — age-adaptive visual metaphors & units** | Done in prototype v2 | 4 modes (Gamer / Everyday / Professional / Clear) with generic animated vessels (potion flask, ring + tumbler, mug, measuring cup) and real-volume units. Brand items (Minecraft, Stanley, Hydro Flask, Apple rings) deliberately not reproduced. |
+| I-12 | **Partner feedback — senior accessibility** | Done in prototype v2 | Clear mode / "Large print" toggle: 19 px base, ≥48 px targets, measured contrast 9.9–17.7:1 (AAA ≥7:1). Flutter app still to do. |
 | I-13 | Possible false positive: clearing a typed prompt with select-all + delete counts as a send | Open | Inherent to text-clear detection; measure frequency in testing before mitigating. |
 | I-14 | GitHub MCP connector not available in Cowork (only "GitHub Integration" for Projects) | Open (process) | Ask Xebia admin to enable the GitHub connector; until then pushes go through Chrome web upload. |
+| I-16 | Android `models.json` (PUE 1.15, 2 regions) out of sync with prototype v2 constants (PUE 1.17, 7 regions, hydro toggle) | Open | Port `SIPCOUNT_CONFIG.regions` to models.json; re-derive the 7 golden test values; add cooling/hydro settings to the Flutter Settings page. |
+| I-17 | Partner deliverable 3 (micro-copy) is per-tier in the prototype but the Android app has none | Open | Port after I-16. |
 | I-15 | Sandbox shell broken by Windows update (2026-09-08) → no local compile/test, no zip, no keytool | Open (environment) | All verification is by review + CI. |
 
 ## Partner feedback (received 2026-09-15) — summary
