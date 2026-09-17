@@ -3,40 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0D1321" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#F6F8FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Sipcount</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 /* =====================================================================================
-   Sipcount prototype v4 — single file, organised as modules:
-     [Config]      SIPCOUNT_CONFIG — constants, regions, metaphors, flora, charities, copy
-     [Engine]      estimate() — same math as the Flutter WaterCalculator
-     [App]         boot, system theme (prefers-color-scheme only), routing, storage
-     [Dashboard]   Today: water-drop hero + mL, contextual plant, 7-day chart, insights, actions
-     [Toasts]      milestone / per-prompt slide-in alerts using the chosen metaphor
-     [Plant]       species × season × health engine (SVG), endangered mode
-     [Insights]    brand-level daily/weekly analysis with counterfactual saving
-     [ShareModal]  9:16 story export (canvas PNG, Web Share)
-     [Neutralize]  "Neutralize my water footprint" → link-out to water charities (honest copy)
-     [Leaderboard] grove (MOCK DATA)   [Log]   [Settings]
-   Theme follows the OS, no toggle (D-8). No onboarding, no age (round-3 feedback).
+   Sipcount prototype v5 — single file, modules:
+     [Config]     constants, regions, metaphors, facts (all sourced), charities, copy
+     [Engine]     estimate() — same math as the Flutter WaterCalculator
+     [App]        boot, age splash → mode (edu 13–17 / minimal 18+), routing, storage
+     [Dashboard]  water-drop hero + mL · Dynamic Plant · 7-day chart · Insights · actions
+     [Toasts]     Educational Mode only: sourced water facts (open + every 5 prompts, max 3/day)
+                  and cup milestone alerts. Minimalist Mode: none.
+     [Plant]      single standardised plant, health only (thriving → drooping → wilting)
+     [Insights]   brand × tier analysis with counterfactual saving
+     [ShareModal] 9:16 story (canvas PNG)   [Neutralize] water-project link-outs   [Grove] mock
+   Aesthetic (round 4): performance-tracker look — true black, flat dark grey cards,
+   stark white metrics, one neon green for action/progress/thriving. Dark-only by design.
    ===================================================================================== */
 :root{
-  --ink:#0D1321; --surface:#161F31; --surface-2:#1E2A40; --line:#2C3A54;
-  --text:#F2F6FB; --muted:#B6C2D6; --water:#7CC8FF; --water-deep:#3A9BE0; --water-soft:rgba(124,200,255,.14);
-  --warn:#FFA07A; --good:#8BE7B4; --accent:var(--water); --soil:#6B4B2A; --sky:transparent;
-  --display:'Unbounded',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
-  --fs:15px; --tap:44px; --radius:18px; --gap:18px;
+  --ink:#000000; --surface:#1A1A1A; --surface-2:#262626; --line:#333333;
+  --text:#FFFFFF; --muted:#A6A6A6; --dim:#6E6E6E;
+  --green:#00F0A0; --green-deep:#00B877; --green-soft:rgba(0,240,160,.12);
+  --amber:#FFB020; --red:#FF4D5E; --soil:#3A3A3A;
+  --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
+  --fs:15px; --tap:44px; --radius:16px; --gap:16px;
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){
-  :root{ --ink:#F6F8FB; --surface:#FFFFFF; --surface-2:#E9EFF6; --line:#B9C6D8; --text:#0B1220; --muted:#3D4A60; --water:#0B5CAB; --water-deep:#083F75; --water-soft:rgba(11,92,171,.10); --warn:#9A3B0C; --good:#0F6A3A; --soil:#7A5230; color-scheme:light; }
-}
-:root[data-size="dense"]{ --fs:14px; --tap:40px; --radius:16px; --gap:14px; }
-:root[data-size="large"]{ --fs:19px; --tap:52px; --radius:14px; --gap:20px; --text:#FFFFFF; --muted:#CFD8E6; --ink:#05080F; --surface:#111827; --surface-2:#1B2436; --line:#465475; }
-@media (prefers-color-scheme: light){ :root[data-size="large"]{ --ink:#FFFFFF; --surface:#F4F7FB; --surface-2:#E6EDF6; --line:#8A9BB5; --text:#000000; --muted:#2E3B4E; --water:#094A8A; --water-deep:#06315C; } }
+:root[data-size="dense"]{ --fs:14px; --tap:40px; --gap:12px; }
+:root[data-size="large"]{ --fs:19px; --tap:52px; --gap:20px; --muted:#C9C9C9; }
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -46,11 +42,11 @@ body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);fo
 .screen{flex:1;padding:20px 18px 12px;display:none;flex-direction:column;gap:var(--gap)}
 .screen.active{display:flex}
 h1,h2,h3{margin:0;text-wrap:balance}
-h1{font-family:var(--display);font-size:1.35em;font-weight:700;letter-spacing:-.01em}
-h2{font-family:var(--body);font-size:.87em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.eyebrow{font-size:.8em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.big{font-family:var(--display);font-size:3em;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.big small{font-size:.4em;font-weight:500;color:var(--muted);margin-left:4px}
+h1{font-family:var(--display);font-size:1.3em;font-weight:700;letter-spacing:-.01em}
+h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-size:.75em;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.big{font-family:var(--display);font-size:3.4em;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.big small{font-size:.36em;font-weight:600;color:var(--muted);margin-left:5px;letter-spacing:0}
 .sub{color:var(--muted);font-size:.93em}
 .row{display:flex;gap:12px;align-items:center}
 .between{justify-content:space-between}
@@ -58,61 +54,64 @@ h2{font-family:var(--body);font-size:.87em;font-weight:700;letter-spacing:.08em;
 .stack{display:flex;flex-direction:column;gap:6px}
 .panel{background:var(--surface);border-radius:var(--radius);padding:16px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{background:var(--surface);border-radius:14px;padding:12px 14px}
-.tile .v{font-family:var(--display);font-size:1.3em;font-weight:500;font-variant-numeric:tabular-nums}
-.tile .l{font-size:.8em;color:var(--muted);margin-top:2px}
+.tile{background:var(--surface);border-radius:14px;padding:14px}
+.tile .v{font-family:var(--display);font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .l{font-size:.78em;color:var(--muted);margin-top:2px;letter-spacing:.02em}
 .hero{display:flex;gap:18px;align-items:center}
-.drop{width:104px;height:130px;flex:none}
+.drop{width:96px;height:120px;flex:none}
 .drop svg{width:100%;height:100%;display:block}
 .fill{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
-.plantcard{display:grid;grid-template-columns:1fr 1.1fr;gap:12px;align-items:center}
-.plantbox{height:180px}
+.plantcard{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center}
+.plantbox{height:170px}
 .plantbox svg{width:100%;height:100%;display:block;overflow:visible}
-.scopebar{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex}
+.ring{width:100%;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.ring i{display:block;height:100%;background:var(--green);transition:width .6s}
+.scopebar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex}
 .scopebar i{display:block;height:100%;transition:width .6s}
-.legend{display:flex;gap:14px;font-size:.8em;color:var(--muted);flex-wrap:wrap}
+.legend{display:flex;gap:14px;font-size:.78em;color:var(--muted);flex-wrap:wrap}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
-label.f{display:flex;flex-direction:column;gap:6px;font-size:.87em;color:var(--muted);font-weight:700}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:.85em;color:var(--muted);font-weight:700}
 select,input[type=number],textarea,input[type=text]{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-height:var(--tap)}
 textarea{resize:vertical;min-height:88px;font-size:.93em}
-input[type=range]{width:100%;accent-color:var(--accent);min-height:var(--tap)}
+input[type=range]{width:100%;accent-color:var(--green);min-height:var(--tap)}
 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:.87em;padding:9px 6px;border-radius:9px;cursor:pointer;min-height:calc(var(--tap) - 8px);min-width:64px}
-.seg button[aria-pressed=true]{background:var(--accent);color:var(--ink)}
-button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.btn{border:0;font:inherit;font-weight:800;font-size:1em;padding:14px;border-radius:14px;cursor:pointer;background:var(--accent);color:var(--ink);width:100%;min-height:var(--tap);text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.seg button[aria-pressed=true]{background:var(--green);color:#000}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.btn{border:0;font:inherit;font-weight:800;font-size:1em;padding:14px;border-radius:14px;cursor:pointer;background:var(--green);color:#000;width:100%;min-height:var(--tap);text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.01em}
 .btn.ghost{background:var(--surface-2);color:var(--text)}
-.btn.danger{background:transparent;color:var(--warn);border:1px solid var(--line)}
+.btn.line{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--line)}
 .btn.small{width:auto;padding:10px 14px;font-size:.87em}
-.btn.good{background:var(--good);color:var(--ink)}
-.result{background:linear-gradient(160deg,var(--surface),var(--surface-2));border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px}
+.result{background:var(--surface);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
 .range{font-size:.87em;color:var(--muted)}
-.nudge{background:var(--water-soft);border-radius:14px;padding:12px 14px;font-size:.93em;display:flex;gap:10px;align-items:flex-start}
-.nudge b{color:var(--accent)}
-.nudge.quiet{background:var(--surface-2);color:var(--muted)}
-.pill{font-size:.73em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.pill.warn{background:rgba(255,160,122,.18);color:var(--warn)}
-.pill.good{background:rgba(139,231,180,.18);color:var(--good)}
+.nudge{background:var(--surface);border-radius:14px;padding:12px 14px;font-size:.93em;display:flex;gap:10px;align-items:flex-start;border-left:3px solid var(--green)}
+.nudge b{color:var(--green)}
+.nudge.quiet{border-left-color:var(--line);color:var(--muted)}
+.pill{font-size:.7em;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--green-soft);color:var(--green)}
+.pill.warn{background:rgba(255,176,32,.15);color:var(--amber)}
+.pill.bad{background:rgba(255,77,94,.15);color:var(--red)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:.87em;border-radius:99px;padding:8px 12px;cursor:pointer;min-height:var(--tap);display:inline-flex;align-items:center;gap:6px}
-.chip[aria-pressed=true]{border-color:var(--accent);background:var(--water-soft)}
-.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:120px;padding-top:6px}
+.chip[aria-pressed=true]{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:110px;padding-top:6px}
 .bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-.bar i{display:block;width:100%;border-radius:8px 8px 4px 4px;background:var(--water-deep);min-height:3px;position:relative}
-.bar i.today{background:var(--accent)}
-.bar i.spike{background:var(--warn)}
-.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.73em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-.bar em{font-style:normal;font-size:.73em;color:var(--muted)}
+.bar i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--surface-2);min-height:3px;position:relative}
+.bar i.today{background:var(--green)}
+.bar i.spike{background:var(--amber)}
+.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.72em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar em{font-style:normal;font-size:.72em;color:var(--dim)}
 .list{display:flex;flex-direction:column}
 .list .it{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.93em;align-items:center}
 .list .it:last-child{border-bottom:0}
 .list .it .r{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
-.rank{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--surface-2);align-items:center;justify-content:center;font-weight:800;font-size:.8em;margin-right:10px}
-.brand{display:flex;gap:10px;align-items:center;padding:8px 0}
-.brand .bar2{flex:1;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.brand .bar2 i{display:block;height:100%;background:var(--water-deep)}
+.rank{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--surface-2);align-items:center;justify-content:center;font-weight:800;font-size:.78em;margin-right:10px}
+.brand{display:flex;gap:10px;align-items:center;padding:7px 0}
+.brand .bar2{flex:1;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.brand .bar2 i{display:block;height:100%;background:var(--green-deep)}
 .brand .nm{width:74px;font-weight:700;font-size:.87em}
-.brand .v{width:70px;text-align:right;font-size:.8em;color:var(--muted);font-variant-numeric:tabular-nums}
+.brand .v{width:78px;text-align:right;font-size:.78em;color:var(--muted);font-variant-numeric:tabular-nums}
 details{background:var(--surface);border-radius:14px;padding:0 14px}
 summary{cursor:pointer;padding:13px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;min-height:var(--tap);align-items:center}
 summary::after{content:"+";color:var(--muted)}
@@ -121,39 +120,47 @@ details p,details ul{color:var(--muted);font-size:.87em;margin:0 0 12px}
 details ul{padding-left:18px}
 code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
 .toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;min-height:var(--tap);font-size:.93em}
-.toggle input{width:44px;height:26px;accent-color:var(--accent)}
+.toggle input{width:44px;height:26px;accent-color:var(--green)}
 .conf{font-size:.73em;color:var(--muted)}
 .conf i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.conf .high{background:var(--good)} .conf .medium{background:#E0B341} .conf .low{background:var(--warn)}
-nav{display:flex;border-top:1px solid var(--line);background:var(--surface);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.7em;font-weight:700;padding:8px 2px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
+.conf .high{background:var(--green)} .conf .medium{background:var(--amber)} .conf .low{background:var(--red)}
+nav{display:flex;border-top:1px solid var(--line);background:#0A0A0A;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;border:0;background:transparent;color:var(--dim);font:inherit;font-size:.68em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav button[aria-current=page]{color:var(--accent)}
-/* Zomato-style in-app alerts: slide in from the top of the phone frame */
+nav button[aria-current=page]{color:var(--green)}
+/* in-app slide-in alerts (Educational Mode only) */
 .alerts{position:absolute;top:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
-.alert{background:var(--surface);color:var(--text);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:16px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px rgba(0,0,0,.35);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em}
+.alert{background:var(--surface);color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px rgba(0,0,0,.6);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em}
 .alert.in{transform:translateY(0);opacity:1}
-.alert .ic{font-size:1.7em;line-height:1}
-.alert b{font-family:var(--display);font-weight:700;font-size:.95em;display:block}
+.alert .ic{font-size:1.6em;line-height:1}
+.alert b{font-family:var(--display);font-weight:700;font-size:.92em;display:block}
 .alert small{color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--accent);color:var(--ink);padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:5}
+.alert.fact{border-left-color:var(--amber)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:5}
 .toast.show{opacity:1;transform:translateX(-50%)}
-.demo{font-size:.8em;color:var(--muted);text-align:center;margin:0}
-.sheet{position:fixed;inset:0;background:rgba(5,8,15,.8);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
+.demo{font-size:.78em;color:var(--dim);text-align:center;margin:0}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
 .sheet.open{display:flex}
-.sheet .card{background:var(--surface);border-radius:24px;padding:22px 18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto}
-/* Plant transitions (3 s; .fast = .9 s) */
-.plant .leafy,.plant .trunk,.plant .bloom,.plant .drop-leaf,.plant .water,.plant .reed{transition:transform 3s cubic-bezier(.4,0,.2,1),fill 3s ease,opacity 3s ease;transform-box:view-box}
-.plant.fast .leafy,.plant.fast .trunk,.plant.fast .bloom,.plant.fast .drop-leaf,.plant.fast .water,.plant.fast .reed{transition-duration:.9s}
-.story{aspect-ratio:9/16;width:100%;max-width:270px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(160deg,#0D1321,#1E2A40 60%,#3A9BE0);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;font-family:var(--body)}
-.story .hl{font-family:var(--display);font-size:1.15em;font-weight:700;line-height:1.2}
-.story .num{font-family:var(--display);font-size:3.2em;font-weight:700;line-height:1}
-.story .wm{font-size:.7em;opacity:.85;letter-spacing:.06em;text-transform:uppercase;font-weight:800}
+.sheet .card{background:var(--surface);border-radius:22px;padding:22px 18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto;border:1px solid var(--line)}
+/* Age splash */
+.splash{display:none;flex:1;flex-direction:column;gap:26px;align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+.splash.active{display:flex}
+.splash h1{font-size:1.9em;font-weight:800;letter-spacing:-.02em}
+.splash input{font-family:var(--display);font-size:2.6em;font-weight:800;text-align:center;width:170px;padding:12px;border-radius:20px;border-color:var(--green)}
+.splash .mark{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#000;font-size:1.8em}
+/* plant transitions */
+.plant .leafy,.plant .stem,.plant .bud{transition:transform 3s cubic-bezier(.4,0,.2,1),fill 3s ease,stroke 3s ease,opacity 3s ease;transform-box:view-box}
+.plant.fast .leafy,.plant.fast .stem,.plant.fast .bud{transition-duration:.9s}
+.story{aspect-ratio:9/16;width:100%;max-width:270px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(170deg,#000 0%,#111 70%,#0b3b2b 100%);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;font-family:var(--body)}
+.story .hl{font-family:var(--display);font-size:1.1em;font-weight:700;line-height:1.2}
+.story .num{font-family:var(--display);font-size:3.2em;font-weight:800;line-height:1;letter-spacing:-.03em}
+.story .num small{font-size:.35em;color:var(--green)}
+.story .wm{font-size:.68em;opacity:.85;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--green)}
 .story .art{height:38%;display:flex;align-items:center;justify-content:center}
 .story .art svg{height:100%}
 .charity{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line)}
 .charity:last-child{border-bottom:0}
-.charity a{color:var(--accent);font-weight:800;text-decoration:none}
+.charity a{color:var(--green);font-weight:800;text-decoration:none}
 .charity small{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -162,11 +169,22 @@ nav button[aria-current=page]{color:var(--accent)}
 <div class="phone">
   <div class="alerts" id="alerts" aria-live="polite"></div>
 
+  <!-- ============ AGE SPLASH ============ -->
+  <section class="splash" id="s-splash">
+    <div class="mark" aria-hidden="true">💧</div>
+    <div class="stack" style="align-items:center;gap:10px">
+      <h1>How old are you?</h1>
+      <p class="sub" style="margin:0;max-width:300px">One question, then straight in. We keep only the mode it picks — never the number — and nothing leaves this device.</p>
+    </div>
+    <input type="number" id="ageIn" inputmode="numeric" min="5" max="120" placeholder="18" aria-label="Your age">
+    <button class="btn" id="ageGo" style="max-width:260px">Continue</button>
+  </section>
+
   <!-- ============ DASHBOARD ============ -->
-  <section class="screen active" id="s-today">
+  <section class="screen" id="s-today">
     <div class="row between wrap">
       <h1>Sipcount</h1>
-      <div class="row" style="gap:6px"><span class="pill" id="regionPill">US</span><span class="pill" id="plantPill">Thriving</span></div>
+      <div class="row" style="gap:6px"><span class="pill" id="modePill"></span><span class="pill good" id="plantPill">Thriving</span></div>
     </div>
 
     <div class="panel">
@@ -175,19 +193,17 @@ nav button[aria-current=page]{color:var(--accent)}
           <svg viewBox="0 0 100 130">
             <defs><clipPath id="dropClip"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs>
             <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="var(--surface-2)"/>
-            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--accent)" style="transform:translateY(130px)"/></g>
+            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--green)" style="transform:translateY(130px)"/></g>
             <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="var(--line)" stroke-width="1.5"/>
           </svg>
         </div>
-        <div class="stack">
-          <span class="eyebrow">Today</span>
+        <div class="stack" style="flex:1">
+          <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
           <div class="sub" id="todayEq">—</div>
-          <div class="sub" id="todayBudget">—</div>
+          <div class="ring" style="margin-top:6px"><i id="budgetRing" style="width:0%"></i></div>
+          <div class="sub" id="todayBudget" style="font-size:.8em">—</div>
         </div>
-      </div>
-      <div class="row" style="margin-top:14px;gap:8px">
-        <button class="btn good" id="neutralBtn">💧 Neutralize my water footprint</button>
       </div>
     </div>
 
@@ -195,11 +211,10 @@ nav button[aria-current=page]{color:var(--accent)}
       <div class="plantcard">
         <div class="plantbox" id="plantBox" aria-hidden="true"></div>
         <div class="stack">
-          <span class="eyebrow" id="plantEyebrow">Your plant</span>
-          <h3 id="plantName" style="font-family:var(--display);font-size:1em"></h3>
-          <div class="sub" id="plantSeason"></div>
-          <div class="sub" id="plantFact"></div>
-          <div class="row" style="gap:6px;margin-top:6px"><button class="btn ghost small" id="simBtn">⚡ Simulate</button><button class="btn ghost small" id="plantPick">Change</button></div>
+          <span class="eyebrow">Dynamic plant</span>
+          <h3 id="plantState" style="font-family:var(--display);font-size:1.4em;font-weight:800"></h3>
+          <div class="sub" id="plantLine"></div>
+          <button class="btn line small" id="simBtn" style="margin-top:8px">⚡ Simulate heavy query</button>
         </div>
       </div>
     </div>
@@ -209,24 +224,24 @@ nav button[aria-current=page]{color:var(--accent)}
       <div class="bars" id="bars"></div>
     </div>
 
-    <div class="panel stack" id="insightCard">
-      <div class="row between"><h2>Insights</h2><span class="sub" id="insightScope">today</span></div>
+    <div class="panel stack">
+      <div class="row between"><h2>Insights</h2><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
       <div id="insightText" style="line-height:1.5"></div>
       <div id="brandBars"></div>
     </div>
 
     <div class="tiles">
-      <div class="tile"><div class="v" id="tPrompts">0</div><div class="l">prompts today</div></div>
-      <div class="tile"><div class="v" id="tImages">0</div><div class="l">images today</div></div>
-      <div class="tile"><div class="v" id="tWeek">0 mL</div><div class="l">last 7 days</div></div>
-      <div class="tile"><div class="v" id="tStreak">0</div><div class="l">days plant kept alive</div></div>
+      <div class="tile"><div class="v" id="tPrompts">0</div><div class="l">Prompts today</div></div>
+      <div class="tile"><div class="v" id="tImages">0</div><div class="l">Images today</div></div>
+      <div class="tile"><div class="v" id="tWeek">0 mL</div><div class="l">Last 7 days</div></div>
+      <div class="tile"><div class="v" id="tStreak">0</div><div class="l">Days plant alive</div></div>
     </div>
     <div class="stack">
       <h2>Where the water goes</h2>
-      <div class="scopebar"><i id="sb1" style="width:15%;background:var(--accent)"></i><i id="sb2" style="width:85%;background:var(--water-deep)"></i></div>
-      <div class="legend"><span><b style="background:var(--accent)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--water-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
+      <div class="scopebar"><i id="sb1" style="width:15%;background:var(--green)"></i><i id="sb2" style="width:85%;background:var(--green-deep)"></i></div>
+      <div class="legend"><span><b style="background:var(--green)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--green-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
     </div>
-    <div class="row" style="gap:8px"><button class="btn ghost" id="shareBtn">Share story</button></div>
+    <div class="row" style="gap:8px"><button class="btn" id="neutralBtn">Neutralize my water footprint</button><button class="btn ghost small" id="shareBtn">Share</button></div>
     <div class="nudge" id="todayNudge"></div>
     <p class="demo" id="demoNote"></p>
   </section>
@@ -234,14 +249,14 @@ nav button[aria-current=page]{color:var(--accent)}
   <!-- ============ LOG ============ -->
   <section class="screen" id="s-log">
     <h1>Log a prompt</h1>
-    <p class="sub" style="margin:-8px 0 0">In the real app this happens automatically when you hit send. Here you simulate it — and trigger the alerts.</p>
+    <p class="sub" style="margin:-8px 0 0">In the real app this happens automatically when you hit send. Here you simulate it.</p>
     <div class="seg" id="vendorSeg" role="group" aria-label="AI tool">
       <button aria-pressed="true" data-v="openai">ChatGPT</button>
       <button aria-pressed="false" data-v="anthropic">Claude</button>
       <button aria-pressed="false" data-v="google">Gemini</button>
     </div>
     <label class="f">Model<select id="modelSel"></select></label>
-    <div class="stack"><span class="eyebrow">What kind of task?</span>
+    <div class="stack"><span class="eyebrow">Task</span>
       <div class="seg" id="taskSeg" role="group" aria-label="Task type">
         <button aria-pressed="true" data-t="text">Text</button>
         <button aria-pressed="false" data-t="code">Code</button>
@@ -258,20 +273,20 @@ nav button[aria-current=page]{color:var(--accent)}
       <span class="eyebrow">This prompt</span>
       <div class="big"><span id="estMl">0</span><small>mL</small></div>
       <div class="range" id="estRange">—</div>
-      <div class="row wrap" style="font-size:.87em;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span><span id="estSplit"></span></div>
+      <div class="row wrap" style="font-size:.85em;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span><span id="estSplit"></span></div>
     </div>
     <div class="nudge" id="nudge"></div>
     <button class="btn" id="logBtn">Log it</button>
     <button class="btn ghost" id="logTen">Log 10 quick prompts (demo)</button>
   </section>
 
-  <!-- ============ LEADERBOARD (mock) ============ -->
+  <!-- ============ GROVE (mock) ============ -->
   <section class="screen" id="s-grove">
     <div class="row between wrap"><h1>Grove</h1><span class="pill">Demo data</span></div>
     <div class="panel">
       <div class="row between"><div><span class="eyebrow">Your group</span><h3 style="font-family:var(--display);font-size:1.1em;margin-top:4px">Campus demo grove</h3></div><span class="pill good">Alive 12 days</span></div>
       <div id="groveArt" style="height:120px;margin-top:8px" aria-hidden="true"></div>
-      <p class="sub" style="margin:8px 0 0">Digital sobriety: the group whose shared grove stays green the longest wins. Everyone's daily water counts against one plant.</p>
+      <p class="sub" style="margin:8px 0 0">Digital sobriety: the group whose shared plant stays green the longest wins. Everyone's daily water counts against one plant.</p>
     </div>
     <div class="stack"><h2>Groups this week</h2><div class="panel list" id="groupList"></div></div>
     <div class="stack"><h2>In your group</h2><div class="panel list" id="memberList"></div></div>
@@ -282,21 +297,18 @@ nav button[aria-current=page]{color:var(--accent)}
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="s-settings">
     <h1>Settings</h1>
+    <div class="panel stack">
+      <div class="row between"><span><b id="modeLabel"></b><br><span class="sub" id="modeSub"></span></span><button class="btn ghost small" id="redoAge">Change age</button></div>
+    </div>
     <div class="stack">
       <h2>Count my water in…</h2>
       <div class="chips" id="metaChips" role="group" aria-label="Choose your unit"></div>
       <span class="sub" id="metaNote"></span>
     </div>
-    <div class="stack">
-      <h2>My plant</h2>
-      <label class="f">Species<select id="speciesSel"></select></label>
-      <label class="toggle"><span>Show an endangered species from my region<br><small class="sub">Plants threatened by water abstraction or drought</small></span><input type="checkbox" id="endangeredToggle"></label>
-      <label class="f">Season<select id="seasonSel"><option value="auto">Automatic (from date &amp; region)</option><option value="spring">Spring</option><option value="summer">Summer</option><option value="autumn">Autumn</option><option value="winter">Winter</option></select></label>
-    </div>
     <label class="f">Text size<select id="sizeSel"><option value="standard">Standard</option><option value="dense">Compact</option><option value="large">Large print</option></select></label>
     <label class="f">Daily water budget (mL)<input type="number" id="budgetIn" min="10" step="10"></label>
     <div class="stack">
-      <label class="f">Where your AI runs (data-centre region — also sets your plant)<select id="regionSel"></select></label>
+      <label class="f">Where your AI runs (data-centre region)<select id="regionSel"></select></label>
       <div class="conf" id="regionConf"></div>
     </div>
     <details><summary>Advanced assumptions</summary>
@@ -314,17 +326,16 @@ nav button[aria-current=page]{color:var(--accent)}
       </ul>
       <p>Range shown spans vendor-reported lows (≈0.2×) to 2023 academic highs (≈3.9×). Constants <code id="cVersion"></code>. Sources in <code>ARCHITECTURE.md</code>.</p>
     </details>
-    <details><summary>Sources for this region &amp; plant</summary><ul id="regionSources"></ul></details>
-    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. We keep daily totals (mL per AI brand, model type and task) and your display preferences on this device. No age, no location — your plant comes from the region you pick. Clear everything below.</p></details>
+    <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
+    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. We keep daily totals (mL per AI brand, model type and task) and your display preferences on this device. Not your age — only the mode it picked. Clear everything below.</p></details>
     <button class="btn danger" id="wipeBtn">Clear all my data</button>
     <button class="btn ghost" id="sampleBtn">Load sample week (for demos)</button>
-    <p class="demo">Tip: dark mode on an OLED screen uses less energy — Sipcount follows your phone's setting.</p>
   </section>
 
   <nav aria-label="Sections" id="nav">
     <button data-s="today" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/></svg>Today</button>
     <button data-s="log"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Log</button>
-    <button data-s="grove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
+    <button data-s="grove" id="navGrove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
 </div>
@@ -337,7 +348,7 @@ nav button[aria-current=page]{color:var(--accent)}
     <div class="story" id="storyPreview"></div>
     <div class="chips" id="copyChips" role="group" aria-label="Choose a caption"></div>
     <div class="row" style="gap:8px"><button class="btn" id="shareNative">Share</button><button class="btn ghost" id="shareSave">Save image</button></div>
-    <p class="sub" style="margin:0;text-align:center">9:16 · 1080×1920 · made on your device</p>
+    <p class="sub" style="margin:0;text-align:center;font-size:.8em">9:16 · 1080×1920 · made on your device</p>
     <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
   </div>
 </div>
@@ -352,56 +363,31 @@ nav button[aria-current=page]{color:var(--accent)}
   </div>
 </div>
 
-<!-- ============ PLANT PICKER ============ -->
-<div class="sheet" id="plantSheet" role="dialog" aria-modal="true" aria-labelledby="plantTitle">
-  <div class="card">
-    <div class="row between"><h1 id="plantTitle" style="font-size:1.1em">Choose your plant</h1><button class="btn ghost small" id="plantClose" aria-label="Close">✕</button></div>
-    <div class="chips" id="speciesChips"></div>
-    <label class="toggle"><span>Endangered species mode</span><input type="checkbox" id="endangeredToggle2"></label>
-    <p class="sub" id="speciesInfo" style="margin:0"></p>
-  </div>
-</div>
-
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-15c',
+  version: '2026-09-17',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
   range: { low:0.2, high:3.9 },
   brands: { openai:'ChatGPT', anthropic:'Claude', google:'Gemini', unknown:'Other' },
-  cooling: {
-    reported:{ label:'As reported for this region' },
-    tower:{ wue:1.80, label:'Evaporative cooling towers', conf:'medium' },
-    adiabatic:{ wue:0.32, label:'Air-side economiser + adiabatic', conf:'high' },
-    dry:{ wue:0.03, label:'Closed-loop / dry / free-air', conf:'high' }
-  },
-  stress: [
-    { id:0, label:'Low', band:'<10 % of supply withdrawn' }, { id:1, label:'Low–medium', band:'10–20 %' }, { id:2, label:'Medium–high', band:'20–40 %' }, { id:3, label:'High', band:'40–80 %' }, { id:4, label:'Extremely high', band:'>80 %' }
-  ],
+  cooling: { reported:{label:'As reported for this region'}, tower:{wue:1.80,label:'Evaporative cooling towers',conf:'medium'}, adiabatic:{wue:0.32,label:'Air-side economiser + adiabatic',conf:'high'}, dry:{wue:0.03,label:'Closed-loop / dry / free-air',conf:'high'} },
+  stress: [ {id:0,label:'Low',band:'<10 % of supply withdrawn'}, {id:1,label:'Low–medium',band:'10–20 %'}, {id:2,label:'Medium–high',band:'20–40 %'}, {id:3,label:'High',band:'40–80 %'}, {id:4,label:'Extremely high',band:'>80 %'} ],
   regions: {
-    us_hyperscale:{ label:'United States', short:'US', pue:1.17, wueSite:0.55, ewif:{incl:3.142,excl:1.67}, stress:1, defaultCooling:'reported', species:'maple', endangered:'water_umbel', conf:{pue:'high',wueSite:'high',ewifIncl:'high',ewifExcl:'low'},
-      note:'PUE 1.17 & WUE 0.55 = Microsoft US average (Li et al. Table 1). EWIF 3.142 = WRI US national incl. hydro; excl-hydro derived.', sources:['Li et al. 2023/25, Table 1','WRI 2020, Appendix 2/4/6'] },
-    us_ercot:{ label:'United States · Texas', short:'Texas', pue:1.28, wueSite:0.25, ewif:{incl:1.287,excl:1.22}, stress:3, defaultCooling:'reported', species:'liveoak', endangered:'wild_rice', conf:{pue:'high',wueSite:'high',ewifIncl:'high',ewifExcl:'low'},
-      note:'Gas-heavy grid → low grid water. PUE/WUE = Microsoft San Antonio. EWIF = WRI eGRID ERCT.', sources:['Li et al. 2023/25','WRI 2020, Appendix 1'] },
-    eu_average:{ label:'Europe · EU average', short:'EU', pue:1.16, wueSite:0.03, ewif:{incl:3.95,excl:1.9}, stress:2, defaultCooling:'reported', species:'oak', endangered:'donana_grass', conf:{pue:'high',wueSite:'high',ewifIncl:'low',ewifExcl:'low'},
-      note:'Microsoft EMEA FY25 (free-air). EWIF = generation-weighted mean of 26 WRI country factors (2016 mix).', sources:['Microsoft efficiency page FY25','WRI 2020 (derived)'] },
-    nordic:{ label:'Nordics · Norway / Sweden / Finland', short:'Nordic', pue:1.12, wueSite:0.05, ewif:{incl:6.00,excl:1.12}, stress:0, defaultCooling:'reported', species:'birch', endangered:null, conf:{pue:'high',wueSite:'high',ewifIncl:'low',ewifExcl:'low'},
-      note:'Hydro/nuclear/wind grid. With hydro ON the WRI method counts gross reservoir evaporation — contested for cold climates (Bakken 2017).', sources:['Li et al. Table 1','WRI 2020 (derived)','Bakken 2017'] },
-    india:{ label:'India', short:'India', pue:1.43, wueSite:2.0, ewif:{incl:3.44,excl:2.25}, stress:4, defaultCooling:'reported', species:'neem', endangered:'marsh_nut', conf:{pue:'medium',wueSite:'low',ewifIncl:'high',ewifExcl:'low'},
-      note:'Coal ≈75 %. EWIF 3.44 = WRI India. PUE = Microsoft India (projected). WUE 2.0 = typical tower-cooled DC (derived).', sources:['WRI 2020','CSE 2021 (CEA norms)','WRI Aqueduct: extremely high'] },
-    singapore:{ label:'Singapore', short:'SG', pue:1.28, wueSite:2.2, ewif:{incl:0.75,excl:0.40}, stress:4, defaultCooling:'reported', species:'tembusu', endangered:'cryptocoryne', conf:{pue:'high',wueSite:'medium',ewifIncl:'low',ewifExcl:'low'},
-      note:'94 % gas, largely seawater-cooled → low freshwater EWIF (derived). WUE 2.2 = IMDA median 2021.', sources:['EMA 2024','Macknick 2011','IMDA 2024'] },
-    japan:{ label:'Japan', short:'JP', pue:1.10, wueSite:0.32, ewif:{incl:2.31,excl:1.50}, stress:-1, defaultCooling:'adiabatic', species:'sakura', endangered:null, conf:{pue:'high',wueSite:'low',ewifIncl:'high',ewifExcl:'low'},
-      note:'EWIF = WRI Japan. PUE = Google Inzai. No published site WUE → adiabatic default assumed.', sources:['WRI 2020','Google PUE page 2026','LBNL 2024'] }
+    us_hyperscale:{ label:'United States', short:'US', pue:1.17, wueSite:0.55, ewif:{incl:3.142,excl:1.67}, stress:1, defaultCooling:'reported', conf:{pue:'high',wueSite:'high',ewifIncl:'high',ewifExcl:'low'}, note:'PUE 1.17 & WUE 0.55 = Microsoft US average (Li et al. Table 1). EWIF 3.142 = WRI US national incl. hydro; excl-hydro derived.', sources:['Li et al. 2023/25, Table 1','WRI 2020, Appendix 2/4/6'] },
+    us_ercot:{ label:'United States · Texas', short:'Texas', pue:1.28, wueSite:0.25, ewif:{incl:1.287,excl:1.22}, stress:3, defaultCooling:'reported', conf:{pue:'high',wueSite:'high',ewifIncl:'high',ewifExcl:'low'}, note:'Gas-heavy grid → low grid water. PUE/WUE = Microsoft San Antonio. EWIF = WRI eGRID ERCT.', sources:['Li et al. 2023/25','WRI 2020, Appendix 1'] },
+    eu_average:{ label:'Europe · EU average', short:'EU', pue:1.16, wueSite:0.03, ewif:{incl:3.95,excl:1.9}, stress:2, defaultCooling:'reported', conf:{pue:'high',wueSite:'high',ewifIncl:'low',ewifExcl:'low'}, note:'Microsoft EMEA FY25 (free-air). EWIF = generation-weighted mean of 26 WRI country factors (2016 mix).', sources:['Microsoft efficiency page FY25','WRI 2020 (derived)'] },
+    nordic:{ label:'Nordics · Norway / Sweden / Finland', short:'Nordic', pue:1.12, wueSite:0.05, ewif:{incl:6.00,excl:1.12}, stress:0, defaultCooling:'reported', conf:{pue:'high',wueSite:'high',ewifIncl:'low',ewifExcl:'low'}, note:'Hydro/nuclear/wind grid. With hydro ON the WRI method counts gross reservoir evaporation — contested for cold climates (Bakken 2017).', sources:['Li et al. Table 1','WRI 2020 (derived)','Bakken 2017'] },
+    india:{ label:'India', short:'India', pue:1.43, wueSite:2.0, ewif:{incl:3.44,excl:2.25}, stress:4, defaultCooling:'reported', conf:{pue:'medium',wueSite:'low',ewifIncl:'high',ewifExcl:'low'}, note:'Coal ≈75 %. EWIF 3.44 = WRI India. PUE = Microsoft India (projected). WUE 2.0 = typical tower-cooled DC (derived).', sources:['WRI 2020','CSE 2021 (CEA norms)','WRI Aqueduct: extremely high'] },
+    singapore:{ label:'Singapore', short:'SG', pue:1.28, wueSite:2.2, ewif:{incl:0.75,excl:0.40}, stress:4, defaultCooling:'reported', conf:{pue:'high',wueSite:'medium',ewifIncl:'low',ewifExcl:'low'}, note:'94 % gas, largely seawater-cooled → low freshwater EWIF (derived). WUE 2.2 = IMDA median 2021.', sources:['EMA 2024','Macknick 2011','IMDA 2024'] },
+    japan:{ label:'Japan', short:'JP', pue:1.10, wueSite:0.32, ewif:{incl:2.31,excl:1.50}, stress:-1, defaultCooling:'adiabatic', conf:{pue:'high',wueSite:'low',ewifIncl:'high',ewifExcl:'low'}, note:'EWIF = WRI Japan. PUE = Google Inzai. No published site WUE → adiabatic default assumed.', sources:['WRI 2020','Google PUE page 2026','LBNL 2024'] }
   },
   models: {
     openai:[['GPT-5','standard'],['GPT-5 mini','lightweight'],['o3','reasoning'],['GPT-4o','standard']],
     anthropic:[['Claude Sonnet','standard'],['Claude Opus','standard'],['Claude Opus (extended thinking)','reasoning'],['Claude Haiku','lightweight']],
     google:[['Gemini Pro','standard'],['Gemini Flash','lightweight'],['Gemini Pro (Deep Think)','reasoning'],['Gemini Flash-Lite','lightweight']]
   },
-  /* Metaphor library — all available to everyone (round-3). Volumes are assumptions to confirm. */
   metaphors: {
     bucket:  { label:'Pixel bucket', one:'bucket', many:'buckets', ml:1000, emoji:'🪣', done:'Another bucket bites the dust!' },
     milk:    { label:'Milk glass', one:'glass of milk', many:'glasses of milk', ml:250, emoji:'🥛', done:'Glass of milk — gone!' },
@@ -413,50 +399,46 @@ const SIPCOUNT_CONFIG = {
     mug:     { label:'Coffee mug', one:'coffee mug', many:'coffee mugs', ml:240, emoji:'☕', done:'One coffee mug down the drain.' }
   },
   plant: { thriving:0.5, drooping:1.0 },
-  /* Flora — verified 2026-09-15 (see ISSUES.md round 3 + ARCHITECTURE.md §3b). All Northern hemisphere. */
-  species: {
-    maple:  { name:'Sugar maple', latin:'Acer saccharum', region:'US', type:'deciduous', bloom:[4,5], fall:[9,10], colors:{leaf:'#4FAE5F', spring:'#8FD37F', autumn:'#E8622C', bloom:'#D8E39A'}, shape:'round', fact:'Native to eastern North America; famous for its red-orange autumn colour.' },
-    liveoak:{ name:'Live oak', latin:'Quercus virginiana', region:'Texas', type:'evergreen', bloom:[3,4], colors:{leaf:'#3F8F55', bloom:'#C9D77A'}, shape:'wide', fact:'Texas’ evergreen oak; the Treaty Oak in Austin is ~500 years old.' },
-    oak:    { name:'Pedunculate oak', latin:'Quercus robur', region:'EU', type:'deciduous', bloom:[4,5], fall:[10,11], colors:{leaf:'#4E9A4A', spring:'#9CD87C', autumn:'#A8742E', bloom:'#CFDD8C'}, shape:'round', fact:'Native across most of Europe; national tree of several EU countries.' },
-    birch:  { name:'Silver birch', latin:'Betula pendula', region:'Nordic', type:'deciduous', bloom:[4,5], fall:[9,10], colors:{leaf:'#6DBF6A', spring:'#A9E39A', autumn:'#F2C23E', bloom:'#D9E6A1', trunk:'#E9ECEF'}, shape:'tall', fact:'Finland’s national tree; turns gold in the Lapland autumn (ruska).' },
-    neem:   { name:'Neem', latin:'Azadirachta indica', region:'India', type:'evergreen', bloom:[3,4,5], colors:{leaf:'#3D9B58', bloom:'#F6F1D6'}, shape:'round', fact:'Native to the Indian subcontinent; fragrant white flowers March–May.' },
-    tembusu:{ name:'Tembusu', latin:'Cyrtophyllum fragrans', region:'SG', type:'evergreen', bloom:[5,6,10,11], colors:{leaf:'#2F8A4A', bloom:'#F3E27A'}, shape:'wide', fact:'Singapore native and Heritage Tree — the tree on the S$5 note. Flowers twice a year.' },
-    sakura: { name:'Yoshino cherry', latin:'Prunus × yedoensis', region:'JP', type:'deciduous', bloom:[3,4], fall:[11], colors:{leaf:'#5FB463', spring:'#F7B7D2', autumn:'#E07A3A', bloom:'#F7B7D2'}, shape:'round', fact:'The iconic sakura; a cultivated hybrid of Japanese origin that blooms before its leaves open.' },
-    flower: { name:'Garden flower', latin:'', region:'', type:'flower', bloom:[1,2,3,4,5,6,7,8,9,10,11,12], colors:{leaf:'#5FCF7F', bloom:'#FFB7D5'}, shape:'flower', fact:'The original Sipcount plant.' }
-  },
-  endangered: {
-    water_umbel:{ name:'Huachuca water-umbel', latin:'Lilaeopsis schaffneriana recurva', status:'Endangered (US ESA, 1997)', threat:'Aquatic habitat "in danger of being lost to groundwater pumping or drought" (US FWS).', region:'US Southwest', source:'fws.gov' },
-    wild_rice:  { name:'Texas wild-rice', latin:'Zizania texana', status:'Endangered (US ESA, 1978)', threat:'"Reduced spring flow is the greatest threat" — driven by Edwards Aquifer pumping (US FWS).', region:'San Marcos River, Texas', source:'fws.gov' },
-    donana_grass:{ name:'Doñana pond grass', latin:'Micropyropsis tuberosa', status:'Endangered (IUCN)', threat:'Endemic to Doñana temporary ponds; 59 % of ponds have dried, linked to groundwater abstraction (Nature Ecol. Evol. 2022).', region:'Doñana, Spain', source:'IUCN; Nature 2022' },
-    marsh_nut:  { name:'Kathalekan marsh nut', latin:'Semecarpus kathalekanensis', status:'Critically Endangered (IUCN 2021)', threat:'Fewer than 120 mature trees; swamp water diverted for agriculture (IUCN assessment).', region:'Western Ghats, India', source:'IUCN e.T175212A1419302' },
-    cryptocoryne:{ name:'Bukit Timah cryptocoryne', latin:'Cryptocoryne × timahensis', status:'Critically Endangered (Singapore Red Data Book)', threat:'Known from a single pool; "extremely vulnerable to any change in the hydrological situation".', region:'Bukit Timah, Singapore', source:'cryptocoryneworld.org' }
-  },
-  /* Water charities — link-out only, no in-app payment (Apple 3.2.2 / Play payments policy). Figures are the organisations' own. */
+  /* Educational Mode facts — each figure read on the cited source page (verified 2026-09-17). */
+  facts: [
+    { t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School' },
+    { t:'Power plants pulled 41% of all water withdrawn in the US in 2015 — more than any other use.', e:'🔌', s:'USGS, Thermoelectric water use' },
+    { t:'Making 1 kWh of US electricity used about 57 litres of water in 2015. Your charger has a water bill.', e:'⚡', s:'USGS 2015' },
+    { t:'US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.', e:'🖥️', s:'LBNL 2024 report' },
+    { t:'Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.', e:'🌡️', s:'Li et al. 2023, Making AI Less Thirsty' },
+    { t:'A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.', e:'🤖', s:'Google 2025' },
+    { t:'2.2 billion people still lacked safely managed drinking water in 2022 — more than 1 in 4 humans.', e:'🚱', s:'WHO/UNICEF JMP 2023' },
+    { t:'25 countries — home to 1 in 4 people — use up almost their entire water supply every year.', e:'🌍', s:'WRI Aqueduct 4.0' },
+    { t:'About 4 billion people live under severe water stress for at least one month a year.', e:'📅', s:'WRI Aqueduct 4.0' },
+    { t:'Nearly 600 million Indians face high-to-extreme water stress.', e:'🇮🇳', s:'NITI Aayog CWMI 2018' },
+    { t:'5 of the world’s 20 largest water-stressed cities are in India — Delhi is number two.', e:'🏙️', s:'NITI Aayog CWMI 2.0' },
+    { t:'Farms use 72% of all the freshwater humans take from rivers and aquifers.', e:'🌾', s:'FAO' },
+    { t:'Groundwater is 99% of Earth’s liquid freshwater — and half the water people use at home.', e:'🕳️', s:'UN WWDR 2022' },
+    { t:'Pumping has drained about 1,000 km³ of US groundwater since 1900.', e:'🚜', s:'USGS' },
+    { t:'Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.', e:'🏜️', s:'USGS Utah' },
+    { t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network' }
+  ],
+  factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3 },
   charities: [
     { name:'charity: water', url:'https://www.charitywater.org/donate', line:'≈ 1,100 litres of clean water per $1 (their published hand-pump average); 100 % of public donations fund projects.', per_l_usd:1/1100 },
     { name:'Water.org', url:'https://water.org/donate/', line:'$5 reaches one person with safe water or sanitation (their FY2020–24 average).' },
     { name:'WaterAid India', url:'https://www.wateraid.org/in/donate/clean-water', line:'Clean water and sanitation programmes across 13 Indian states; donations in INR, 80G tax deductible.' },
-    { name:'BEF Water Restoration Certificates', url:'https://www.b-e-f.org/programs/water-restoration-certificates/', line:'$4 restores 1,000 US gallons (3,785 L) of river flow in a stressed basin — labelled a restoration certificate, not an offset.', per_l_usd:4/3785 }
+    { name:'BEF Water Restoration Certificates', url:'https://www.b-e-f.org/programs/water-restoration-certificates/', line:'$4 restores 1,000 US gallons (3,785 L) of river flow in a stressed basin — a restoration certificate, not an offset.' }
   ],
   storyCopy: [
-    (n,m,d)=>`My AI drank ${n} ${m} today. Can your ${d.plant} survive finals week?`,
-    (n,m,d)=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} and consumed ${n} ${m} of water.`:`${d.prompts} prompts, ${n} ${m} of water. My ${d.plant} is ${d.state.toLowerCase()}.`,
-    (n,m,d)=>`Digital sobriety check: ${n} ${m} of water for ${d.prompts} AI prompts. ${d.plant} status: ${d.state}.`
+    (n,m,d)=>`My AI drank ${n} ${m} today. Can your plant survive finals week?`,
+    (n,m,d)=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} and consumed ${n} ${m} of water.`:`${d.prompts} prompts, ${n} ${m} of water. Plant status: ${d.state}.`,
+    (n,m,d)=>`Digital sobriety check: ${n} ${m} of water for ${d.prompts} AI prompts. Plant is ${d.state.toLowerCase()}.`
   ]
 };
 const C = SIPCOUNT_CONFIG;
 
 /* ===================================================================================== [Engine] */
-function regionParams(regionId, coolingId, hydro){
-  const R=C.regions[regionId]; const site = coolingId==='reported' ? R.wueSite : C.cooling[coolingId].wue;
-  return { pue:R.pue, site, grid: hydro ? R.ewif.incl : R.ewif.excl };
-}
+function regionParams(regionId, coolingId, hydro){ const R=C.regions[regionId]; const site = coolingId==='reported' ? R.wueSite : C.cooling[coolingId].wue; return { pue:R.pue, site, grid: hydro ? R.ewif.incl : R.ewif.excl }; }
 function estimate({tier,task,inputTokens,items=1,params}){
-  const T=C.tiers[tier], K=C.tasks[task], P=params;
-  let energy, tokens;
+  const T=C.tiers[tier], K=C.tasks[task], P=params; let energy, tokens;
   if(K.fixed!=null){ energy=K.fixed*items; tokens=0; } else { tokens=inputTokens+K.out; energy=T.wh1k*tokens/1000; }
-  const f=energy*P.pue;
-  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), tokens };
+  const f=energy*P.pue; return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), tokens };
 }
 const tok=ch=>ch<=0?0:Math.ceil(ch/C.charsPerToken);
 const fmt=(n,d)=>n.toLocaleString(undefined,{maximumFractionDigits:d??(n<10?1:0),minimumFractionDigits:0});
@@ -465,14 +447,14 @@ function equivParts(ml, m=metaphor()){ const n=ml/m.ml; const s=n===0?'0':n<0.09
 function equiv(ml){ const e=equivParts(ml); return `${e.n} ${e.unit}`; }
 
 /* ===================================================================================== [App] state */
-const KEY='sipcount.v4';
-const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; // local calendar day
+const KEY='sipcount.v5';
+const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let S=load();
 function load(){
-  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.species||='auto'; j.season||='auto'; j.size||='standard'; j.metaphor||='boba'; return j; } }catch(e){}
-  let days={}, sample=false, budget=100, region='us_hyperscale';
-  for(const k of ['sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; sample=!!old.sample; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
-  return { budget, region, cooling:'reported', hydro:true, size:'standard', metaphor:'boba', species:'auto', endangered:false, season:'auto', saved:0, days, sample, streak:12, milestones:{} };
+  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.facts||={}; return j; } }catch(e){}
+  let days={}, sample=false, budget=100, region='us_hyperscale', metaphorId='boba';
+  for(const k of ['sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; sample=!!old.sample; budget=old.budget||100; region=C.regions[old.region]?old.region:region; if(C.metaphors[old.metaphor]) metaphorId=old.metaphor; break; } }catch(e){} }
+  return { budget, region, cooling:'reported', hydro:true, size:'standard', metaphor:metaphorId, mode:null, social:true, saved:0, days, sample, streak:12, milestones:{}, facts:{} };
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function bucket(k){ const b=(S.days[k] ||= {n:0,img:0,s1:0,s2:0,tier:{},task:{},vendor:{}}); b.tier||={}; b.task||={}; b.vendor||={}; b.img||=0; return b; }
@@ -496,8 +478,12 @@ function loadSample(){
 if(!Object.keys(S.days).length && !S.wiped) loadSample();
 
 const $=id=>document.getElementById(id);
-function applyTheme(){ document.documentElement.dataset.size=S.size||'standard'; }
+const isEdu=()=>S.mode==='edu';
+function applyMode(){ document.documentElement.dataset.size=S.size||'standard'; $('navGrove').hidden=!S.social; $('nav').hidden=!S.mode; }
+function applyAge(age){ S.mode = age>=18?'min':'edu'; S.social = age>=13; resetMilestoneBaseline(); save(); applyMode(); }
+function resetMilestoneBaseline(){ S.milestones[dayKey(new Date())]=Math.floor(todayStats().total/metaphor().ml); }
 function show(id){
+  $('s-splash').classList.toggle('active', id==='splash'); $('nav').hidden = id==='splash' || !S.mode;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id));
   document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   if(id==='today') renderToday(); if(id==='settings') renderSettings(); if(id==='grove') renderGrove();
@@ -508,174 +494,119 @@ function last7(){ return [...Array(7)].map((_,i)=>{const d=new Date(); d.setDate
 function todayStats(){ const t=S.days[dayKey(new Date())]||{n:0,img:0,s1:0,s2:0,vendor:{},tier:{}}; return {...t, total:t.s1+t.s2, pct:(t.s1+t.s2)/S.budget}; }
 function plantState(pct){ return pct>C.plant.drooping?'Wilting':pct>C.plant.thriving?'Drooping':'Thriving'; }
 
-/* ===================================================================================== [Toasts] milestone alerts */
-function alertCard(icon, title, sub){
-  const el=document.createElement('div'); el.className='alert'; el.innerHTML=`<span class="ic">${icon}</span><div><b>${title}</b><small>${sub||''}</small></div>`;
+/* ===================================================================================== [Toasts] Educational Mode only */
+function alertCard(icon, title, sub, cls=''){
+  while($('alerts').children.length>=3) $('alerts').firstChild.remove();
+  const el=document.createElement('div'); el.className='alert '+cls; el.innerHTML=`<span class="ic">${icon}</span><div><b>${title}</b><small>${sub||''}</small></div>`;
   $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
-  setTimeout(()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),500); }, 3800);
+  setTimeout(()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),500); }, 4500);
+}
+function showFact(reason){
+  if(!isEdu()) return;
+  const k=dayKey(new Date()), f=(S.facts[k] ||= {shown:[], count:0, prompts:0});
+  if(f.count>=C.factCadence.maxPerDay) return;
+  const pool=C.facts.map((_,i)=>i).filter(i=>!f.shown.includes(i)); if(!pool.length) return;
+  const i=pool[Math.floor(Math.random()*pool.length)], fact=C.facts[i];
+  f.shown.push(i); f.count++; save();
+  alertCard(fact.e, fact.t, `Source: ${fact.s}`, 'fact');
 }
 function checkMilestones(promptMl){
+  if(!isEdu()) return;   // Minimalist Mode: no alerts of any kind
   const m=metaphor(), T=todayStats(), k=dayKey(new Date());
   const before=S.milestones[k]||0, now=Math.floor(T.total/m.ml);
   if(promptMl>=m.ml){ const u=equivParts(promptMl); alertCard(m.emoji, `${u.n} ${u.unit} of water just evaporated for that prompt!`, 'Heavy one. Lighter model next time?'); }
-  if(now>before){ const total=now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`; alertCard(m.emoji, m.done, total); }
-  S.milestones[k]=now; save();
+  if(now>before){ alertCard(m.emoji, m.done, now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`); }
+  S.milestones[k]=now;
+  const f=(S.facts[k] ||= {shown:[], count:0, prompts:0}); f.prompts++; save();
+  if(f.prompts % C.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);
 }
 
-/* ===================================================================================== [Plant] species × season × health */
-function seasonFor(regionId){
-  if(S.season!=='auto') return S.season;
-  const mo=new Date().getMonth()+1; if(regionId==='singapore') return 'summer';
-  return mo>=3&&mo<=5?'spring':mo>=6&&mo<=8?'summer':mo>=9&&mo<=11?'autumn':'winter';
-}
-function currentSpecies(){ const R=C.regions[S.region]; if(S.endangered && R.endangered) return {endangered:C.endangered[R.endangered]}; const id=S.species==='auto'?R.species:S.species; return {species:C.species[id]||C.species.flower, id}; }
+/* ===================================================================================== [Plant] single standardised plant */
 function plantSVG(){
-  const cur=currentSpecies();
-  if(cur.endangered) return wetlandSVG();
-  const sp=cur.species; if(sp.shape==='flower') return flowerSVG();
-  const trunk=sp.colors.trunk||'#6B4B2A';
-  const blobs = sp.shape==='tall' ? [[80,62,26,38],[70,92,24,30],[92,96,22,28]] : sp.shape==='wide' ? [[80,88,60,30],[52,78,30,26],[110,76,30,26],[80,64,34,26]] : [[80,80,44,36],[56,94,30,26],[106,92,30,26],[80,56,28,24]];
-  return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190" data-species="${cur.id}">
-    <ellipse cx="80" cy="178" rx="52" ry="9" fill="var(--soil)" opacity=".9"/>
-    <path class="trunk" d="M74 176 L76 118 Q80 96 84 118 L86 176 Z" fill="${trunk}" style="transform-origin:80px 176px"/>
-    <g class="canopy">${blobs.map(([x,y,rx,ry],i)=>`<ellipse class="leafy" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${sp.colors.leaf}" style="transform-origin:${x}px ${y+ry}px" data-i="${i}"/>`).join('')}</g>
-    <g class="blooms">${[[62,72],[96,64],[80,52],[110,90],[50,96],[84,98]].map(([x,y],i)=>`<circle class="bloom" cx="${x}" cy="${y}" r="4.5" fill="${sp.colors.bloom}" style="transform-origin:${x}px ${y}px" data-i="${i}"/>`).join('')}</g>
-    <g class="fallen">${[30,58,102,128].map((x,i)=>`<ellipse class="drop-leaf" cx="${x}" cy="172" rx="5" ry="2.5" fill="${sp.colors.autumn||sp.colors.leaf}" opacity="0" data-i="${i}"/>`).join('')}</g>
-  </svg>`;
-}
-function flowerSVG(){
-  return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190" data-species="flower">
-    <ellipse cx="80" cy="176" rx="46" ry="10" fill="var(--soil)" opacity=".9"/><path d="M40 150h80l-8 26H48z" fill="var(--soil)"/>
-    <path class="trunk" d="M80 150 C80 120 78 95 80 60" stroke="#2E9C57" stroke-width="6" fill="none" stroke-linecap="round" style="transform-origin:80px 150px"/>
-    <path class="leafy" d="M80 128 C60 128 40 112 38 92 C58 92 78 106 80 128z" fill="#5FCF7F" style="transform-origin:80px 128px" data-i="0"/>
-    <path class="leafy" d="M80 112 C100 112 120 96 122 76 C102 76 82 90 80 112z" fill="#5FCF7F" style="transform-origin:80px 112px" data-i="1"/>
-    <path class="leafy" d="M80 96 C62 96 46 82 44 64 C62 64 78 78 80 96z" fill="#5FCF7F" style="transform-origin:80px 96px" data-i="2"/>
-    <g class="bloom" style="transform-origin:80px 56px">${[0,60,120,180,240,300].map(a=>`<ellipse cx="80" cy="42" rx="7" ry="13" fill="#FFB7D5" transform="rotate(${a} 80 56)"/>`).join('')}<circle cx="80" cy="56" r="8" fill="#FFD66B"/></g>
-  </svg>`;
-}
-function wetlandSVG(){ // endangered aquatic/wetland species: reeds standing in a pool whose level tracks the budget
-  return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190" data-species="wetland">
-    <ellipse cx="80" cy="172" rx="66" ry="14" fill="var(--soil)"/>
-    <ellipse class="water" cx="80" cy="168" rx="58" ry="10" fill="var(--accent)" opacity=".85" style="transform-origin:80px 168px"/>
-    ${[52,66,80,94,108].map((x,i)=>`<path class="reed" d="M${x} 166 Q${x+(i%2?6:-6)} 120 ${x+(i%2?2:-2)} 78" stroke="#4FAE5F" stroke-width="4" fill="none" stroke-linecap="round" style="transform-origin:${x}px 166px" data-i="${i}"/>`).join('')}
-    ${[60,88].map((x,i)=>`<ellipse class="leafy" cx="${x}" cy="150" rx="16" ry="6" fill="#6DBF6A" style="transform-origin:${x}px 156px" data-i="${i}"/>`).join('')}
-    <circle class="bloom" cx="79" cy="76" r="4" fill="#F3E27A" style="transform-origin:79px 76px"/>
+  return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190">
+    <ellipse cx="80" cy="178" rx="48" ry="8" fill="var(--soil)"/>
+    <path d="M44 150h72l-7 26H51z" fill="#2A2A2A"/>
+    <path class="stem" d="M80 150 C80 122 78 96 80 62" stroke="var(--green-deep)" stroke-width="5" fill="none" stroke-linecap="round" style="transform-origin:80px 150px"/>
+    <path class="leafy" d="M80 130 C60 130 42 116 40 96 C60 96 78 108 80 130z" fill="var(--green)" style="transform-origin:80px 130px" data-i="0"/>
+    <path class="leafy" d="M80 114 C100 114 118 100 120 80 C100 80 82 92 80 114z" fill="var(--green)" style="transform-origin:80px 114px" data-i="1"/>
+    <path class="leafy" d="M80 98 C64 98 48 86 46 68 C64 68 78 80 80 98z" fill="var(--green)" style="transform-origin:80px 98px" data-i="2"/>
+    <g class="bud" style="transform-origin:80px 58px"><ellipse cx="80" cy="50" rx="9" ry="14" fill="var(--green)"/><ellipse cx="80" cy="50" rx="4" ry="9" fill="#000" opacity=".25"/></g>
   </svg>`;
 }
 function setPlant(pct, fast=false, svg=$('plantSvg')){
   if(!svg) return; svg.classList.toggle('fast',fast);
-  const t=Math.min(1,Math.max(0,(pct-C.plant.thriving)/(C.plant.drooping-C.plant.thriving)));
-  const w=Math.min(1,Math.max(0,(pct-C.plant.drooping)/0.5));
-  const cur=currentSpecies(), season=seasonFor(S.region), kind=svg.dataset.species;
-  if(kind==='wetland'){
-    svg.querySelector('.water').style.transform=`scale(${1-t*0.35-w*0.6}, ${1-t*0.4-w*0.6})`;
-    svg.querySelectorAll('.reed').forEach((r,i)=>{ r.style.transform=`rotate(${(i%2?1:-1)*(t*12+w*40)}deg) scaleY(${1-w*0.3})`; r.style.stroke=w>0?mix('#B9C94A','#8A5A2B',w):mix('#4FAE5F','#B9C94A',t); });
-    svg.querySelectorAll('.leafy').forEach(l=>{ l.style.fill=w>0?mix('#B9C94A','#8A5A2B',w):mix('#6DBF6A','#B9C94A',t); l.style.opacity=String(1-w*0.6); });
-    svg.querySelector('.bloom').style.opacity=String(1-t*0.6-w*0.4); return;
-  }
-  const sp=kind==='flower'?C.species.flower:(cur.species||C.species.flower);
-  const droop=t*14+w*30, lean=t*3+w*8;
-  // season → base leaf colour, bloom visibility, leaf-fall
-  let base=sp.colors.leaf, bloomOn=(sp.bloom||[]).includes(new Date().getMonth()+1), fallen=0, leafScale=1;
-  if(sp.type==='deciduous'){
-    if(season==='spring'){ base=sp.colors.spring||base; bloomOn=true; }
-    else if(season==='autumn'){ base=sp.colors.autumn||base; fallen=0.6; bloomOn=false; }
-    else if(season==='winter'){ base=sp.colors.autumn||base; fallen=1; leafScale=0.25; bloomOn=false; }
-  } else if(sp.type==='evergreen'){ if(S.season!=='auto') bloomOn = season==='spring'; }
-  if(kind==='flower'){ bloomOn=true; base='#5FCF7F'; }
-  const leafColor = w>0 ? mix('#B9C94A','#8A5A2B',w) : mix(base,'#B9C94A',t*0.7);
-  svg.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i%2?-1:1; l.style.transform=`rotate(${dir*droop*(0.6+i*0.15)}deg) scale(${leafScale*(1-w*0.35)}, ${leafScale*(1-w*0.45)})`; l.style.fill=leafColor; l.style.opacity=String(kind==='flower'?1:Math.max(.25,1-w*0.5)); });
-  const tr=svg.querySelector('.trunk'); if(tr){ tr.style.transform=`rotate(${lean}deg)`; if(kind==='flower') tr.style.stroke=w>0?mix('#2E9C57','#6B4B2A',w):'#2E9C57'; }
-  svg.querySelectorAll('.bloom').forEach((b,i)=>{ b.style.opacity=String(bloomOn?Math.max(0,1-t*0.5-w):0); b.style.transform=kind==='flower'?`rotate(${lean*2.5}deg) scale(${1-t*0.25-w*0.5})`:`scale(${bloomOn?1:0.2})`; });
-  svg.querySelectorAll('.drop-leaf').forEach((d,i)=>{ d.style.opacity=String(Math.max(fallen, w)*0.9); d.style.fill=w>0?'#8A5A2B':(sp.colors.autumn||sp.colors.leaf); });
+  const t=Math.min(1,Math.max(0,(pct-C.plant.thriving)/(C.plant.drooping-C.plant.thriving)));   // 0 → 1 up to the limit
+  const w=Math.min(1,Math.max(0,(pct-C.plant.drooping)/0.5));                                       // 0 → 1 fully wilted
+  const droop=t*32+w*40, lean=t*6+w*14;
+  const leaf = w>0 ? mix('#FFB020','#5A4A3A',w) : mix('#00F0A0','#FFB020',t);
+  svg.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-w*0.35})`; l.style.fill=leaf; l.style.opacity=String(1-w*0.35); });
+  const st=svg.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-w*0.18})`; st.style.stroke=w>0?mix('#00B877','#5A4A3A',w):mix('#00B877','#B88A20',t*0.6);
+  const bud=svg.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-t*0.3-w*0.6})`; bud.style.opacity=String(1-w*0.9);
 }
 function mix(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
 let simTimer=null;
 function simulateHeavyQuery(){
   if(simTimer) return; toast('Simulating a heavy day…');
-  setPlant(1.5); $('plantPill').textContent='Wilting'; $('plantPill').className='pill warn';
+  setPlant(1.5); $('plantPill').textContent='Wilting'; $('plantPill').className='pill bad'; $('plantState').textContent='Wilting';
   simTimer=setTimeout(()=>{ renderToday(); simTimer=null; },5500);
-}
-function plantMeta(){
-  const cur=currentSpecies(); if(cur.endangered){ const e=cur.endangered; return { name:e.name, latin:e.latin, sub:`${e.status} · ${e.region}`, fact:e.threat, eyebrow:'Endangered by water stress' }; }
-  const sp=cur.species, season=seasonFor(S.region); const seasonTxt = sp.type==='flower'?'':sp.type==='evergreen'?`Evergreen · ${season}`:`${season[0].toUpperCase()+season.slice(1)}${season==='autumn'&&sp.colors.autumn?' colour':season==='winter'?' — bare':''}`;
-  return { name:sp.name, latin:sp.latin, sub:seasonTxt, fact:sp.fact, eyebrow:sp.region?`Native to ${sp.region==='US'?'the US':sp.region==='EU'?'Europe':sp.region==='SG'?'Singapore':sp.region==='JP'?'Japan':sp.region}`:'Your plant' };
 }
 
 /* ===================================================================================== [Insights] */
 function insights(){
   const keys=last7(), agg={vendor:{},tiers:{},n:0,ml:0}, T=todayStats();
-  const src = T.n?{...T}:null; const scope = src?'today':'this week';
-  const days = src?[dayKey(new Date())]:keys;
-  days.forEach(k=>{ const b=S.days[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in b.vendor[v].tiers){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
+  const scope = T.n?'today':'this week'; const days = T.n?[dayKey(new Date())]:keys;
+  days.forEach(k=>{ const b=S.days[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in (b.vendor[v].tiers||{})){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
   const brands=Object.entries(agg.vendor).sort((a,b)=>b[1].ml-a[1].ml);
   if(!agg.n || !brands.length) return { scope, text: agg.n?'Older data has no brand breakdown yet — new prompts will show which AI you used.':'Log a prompt and the insights appear here.', brands:[] };
   const [topV, top]=brands[0]; const topTier=Object.entries(top.tiers||{}).sort((a,b)=>b[1].ml-a[1].ml)[0]?.[0] ?? 'standard';
   const lightN=Object.values(agg.vendor).reduce((s,v)=>s+((v.tiers.lightweight?.n||0)+(v.tiers.standard?.n||0)),0);
-  const share=Math.round(lightN/agg.n*100);
-  // counterfactual: what light+standard prompts would have cost on the heaviest tier used (or reasoning if none)
   const heaviest = agg.tiers.reasoning?'reasoning':agg.tiers.standard?'standard':'lightweight';
   let saved=0; for(const v of Object.values(agg.vendor)) for(const t of ['lightweight','standard']){ const x=v.tiers[t]; if(x && t!==heaviest) saved += x.ml*(C.tiers[heaviest].wh1k/C.tiers[t].wh1k) - x.ml; }
   const efficientBrand = brands.find(([v,a])=>(a.tiers.standard?.n||0)+(a.tiers.lightweight?.n||0)>0);
-  const parts=[];
-  parts.push(`You leaned on <b>${C.brands[topV]||topV}</b> ${scope} — mostly its <b>${C.tiers[topTier].label.toLowerCase()} model</b> (${fmt(top.ml)} mL, ${Math.round(top.ml/agg.ml*100)}% of your water).`);
-  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> compared with running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?' Great job keeping the plant green!':''}`); }
-  else if(agg.tiers.reasoning && share<50) parts.push(`Most of your prompts hit a reasoning model (≈10× the water). Try a standard model first — it handles most questions.`);
+  const parts=[`You leaned on <b>${C.brands[topV]||topV}</b> ${scope} — mostly its <b>${C.tiers[topTier].label.toLowerCase()} model</b> (${fmt(top.ml)} mL, ${Math.round(top.ml/agg.ml*100)}% of your water).`];
+  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?' Plant stays green.':''}`); }
+  else if(agg.tiers.reasoning && lightN/agg.n<0.5) parts.push(`Most prompts hit a reasoning model (≈10× the water). Try a standard model first.`);
   if(T.img) parts.push(`${T.img} image${T.img>1?'s':''} today ≈ ${Math.round(T.img*12.5/1.3)} text prompts' worth of water.`);
   return { scope, text:parts.join(' '), brands:brands.map(([v,a])=>[C.brands[v]||v, a.ml, a.n]), total:agg.ml };
 }
 
 /* ===================================================================================== [Dashboard] */
 function renderToday(){
-  applyTheme();
-  const T=todayStats(), R=C.regions[S.region], state=plantState(T.pct), m=metaphor();
+  applyMode();
+  const T=todayStats(), state=plantState(T.pct);
+  $('modePill').textContent=isEdu()?'Educational':'Minimal';
   $('todayMl').textContent=fmt(T.total); $('dropFill').style.transform=`translateY(${130*(1-Math.min(1,T.pct))}px)`;
   $('todayEq').textContent=T.n?`≈ ${equiv(T.total)}`:'No prompts yet today';
-  $('todayBudget').innerHTML=T.total>S.budget?`<span class="pill warn">Over budget</span> ${fmt(T.total-S.budget)} mL past your ${S.budget} mL`:`${Math.round(T.pct*100)}% of your ${S.budget} mL budget`;
-  $('plantPill').textContent=state; $('plantPill').className='pill '+(state==='Thriving'?'good':state==='Wilting'?'warn':'');
-  // plant
-  const cur=currentSpecies(); const want=cur.endangered?'wetland':(cur.id||'flower'); const have=$('plantSvg');
-  if(!have || have.dataset.species!==want){ $('plantBox').innerHTML=plantSVG(); }
+  $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').style.background=T.pct>1?'var(--red)':T.pct>0.5?'var(--amber)':'var(--green)';
+  $('todayBudget').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over your ${S.budget} mL budget`:`${Math.round(T.pct*100)}% of ${S.budget} mL budget`;
+  $('plantPill').textContent=state; $('plantPill').className='pill '+(state==='Thriving'?'good':state==='Wilting'?'bad':'warn');
+  $('plantState').textContent=state; $('plantState').style.color=state==='Thriving'?'var(--green)':state==='Wilting'?'var(--red)':'var(--amber)';
+  $('plantLine').textContent = state==='Thriving'?`${fmt(S.budget*C.plant.thriving-T.total)} mL until it starts to droop.`:state==='Drooping'?`${fmt(S.budget-T.total)} mL until it wilts.`:`${fmt(T.total-S.budget)} mL past the limit.`;
+  if(!$('plantSvg')) $('plantBox').innerHTML=plantSVG();
   requestAnimationFrame(()=>setPlant(T.pct));
-  const pm=plantMeta(); $('plantEyebrow').textContent=pm.eyebrow; $('plantName').innerHTML=`${pm.name}${pm.latin?` <i class="sub" style="font-weight:400">${pm.latin}</i>`:''}`; $('plantSeason').textContent=pm.sub; $('plantFact').textContent=pm.fact;
-  // 7-day chart
   const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
   $('bars').innerHTML=keys.map((k,i)=>{const d=new Date(k+'T12:00:00'); const cls=i===6?'today':(vals[i]>avg*1.6?'spike':''); return `<div class="bar"><i class="${cls}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][d.getDay()]}</em></div>`;}).join('');
   const spikes=vals.filter(v=>v>avg*1.6).length; $('trendPill').className='pill '+(spikes?'warn':'good'); $('trendPill').textContent=spikes?`${spikes} spike day${spikes>1?'s':''}`:'Steady';
-  // insights
   const I=insights(); $('insightScope').textContent=I.scope; $('insightText').innerHTML=I.text;
   $('brandBars').innerHTML=I.brands.map(([n,ml,cnt])=>`<div class="brand"><span class="nm">${n}</span><div class="bar2"><i style="width:${Math.round(ml/(I.total||1)*100)}%"></i></div><span class="v">${fmt(ml)} mL · ${cnt}</span></div>`).join('');
-  // tiles etc
   $('tPrompts').textContent=T.n; $('tImages').textContent=T.img||0;
   let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
   $('tWeek').textContent=fmt(w)+' mL'; $('tStreak').textContent=state==='Wilting'?0:S.streak;
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15; $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=Math.round(p1*100)+'%'; $('p2').textContent=Math.round((1-p1)*100)+'%';
-  $('regionPill').textContent=R.short;
   const light='Short prompt? A <b>lighter model</b> does it for about a fifth of the water.';
-  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>Your ${pm.name.toLowerCase()} is wilting — ${fmt(T.total-S.budget)} mL over. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Getting thirsty. ${fmt(S.budget-T.total)} mL left before it wilts. ${light}</span>` : `<span>🌿</span><span>${T.n?`Thriving — ${fmt(S.budget-T.total)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
+  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':'');
+  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>Plant is wilting — ${fmt(T.total-S.budget)} mL over. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Getting thirsty. ${fmt(S.budget-T.total)} mL left before it wilts. ${light}</span>` : `<span>🌿</span><span>${T.n?`On track — ${fmt(S.budget-T.total)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
 }
 $('simBtn').onclick=simulateHeavyQuery;
 
-/* ===================================================================================== [Plant picker] */
-function renderPlantPicker(){
-  const R=C.regions[S.region];
-  $('speciesChips').innerHTML=`<button class="chip" data-sp="auto" aria-pressed="${S.species==='auto'}">✨ Auto (${C.species[R.species].name})</button>`+Object.entries(C.species).map(([id,s])=>`<button class="chip" data-sp="${id}" aria-pressed="${S.species===id}">${s.name}</button>`).join('');
-  $('endangeredToggle2').checked=!!S.endangered; $('endangeredToggle2').disabled=!R.endangered;
-  const pm=plantMeta(); $('speciesInfo').textContent = R.endangered ? `${pm.name} · ${pm.sub}. ${pm.fact}` : `${pm.name} · ${pm.sub}. ${pm.fact} (No verified water-threatened species listed for this region yet.)`;
-}
-$('plantPick').onclick=()=>{ renderPlantPicker(); $('plantSheet').classList.add('open'); };
-$('plantClose').onclick=()=>{ $('plantSheet').classList.remove('open'); renderToday(); };
-$('speciesChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.species=b.dataset.sp; S.endangered=false; save(); renderPlantPicker(); renderToday(); };
-$('endangeredToggle2').onchange=e=>{ S.endangered=e.target.checked; save(); renderPlantPicker(); renderToday(); };
-
 /* ===================================================================================== [ShareModal] */
 let copyIdx=0;
-function storyData(){ const T=todayStats(); const e=equivParts(T.total); return { n:e.n, unit:e.unit, prompts:T.n, images:T.img||0, state:plantState(T.pct), ml:fmt(T.total), pct:T.pct, plant:plantMeta().name.toLowerCase() }; }
+function storyData(){ const T=todayStats(); const e=equivParts(T.total); return { n:e.n, unit:e.unit, prompts:T.n, images:T.img||0, state:plantState(T.pct), ml:fmt(T.total), pct:T.pct }; }
 function storyText(i=copyIdx){ const d=storyData(); return C.storyCopy[i](d.n,d.unit,d); }
 function renderShare(){
   const d=storyData();
-  $('storyPreview').innerHTML=`<div class="wm">Sipcount</div><div class="art">${plantSVG().replace('id="plantSvg"','id="plantShare"')}</div><div><div class="num">${d.ml}<span style="font-size:.35em;opacity:.8"> mL</span></div><div class="hl">${storyText()}</div></div><div class="wm">Sipcount • Track your AI footprint</div>`;
+  $('storyPreview').innerHTML=`<div class="wm">Sipcount</div><div class="art">${plantSVG().replace('id="plantSvg"','id="plantShare"')}</div><div><div class="num">${d.ml}<small> mL</small></div><div class="hl">${storyText()}</div></div><div class="wm">Sipcount • Track your AI footprint</div>`;
   const sp=$('plantShare'); if(sp){ sp.classList.add('fast'); requestAnimationFrame(()=>setPlant(d.pct,true,sp)); }
   $('copyChips').innerHTML=C.storyCopy.map((_,i)=>`<button class="chip" data-i="${i}" aria-pressed="${i===copyIdx}">Caption ${i+1}</button>`).join('');
 }
@@ -684,17 +615,17 @@ $('shareBtn').onclick=()=>{ renderShare(); $('shareSheet').classList.add('open')
 $('shareClose').onclick=()=>$('shareSheet').classList.remove('open');
 function drawStory(){
   const c=$('storyCanvas'), x=c.getContext('2d'), d=storyData(), W=1080, H=1920;
-  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#0D1321'); g.addColorStop(.6,'#1E2A40'); g.addColorStop(1,'#3A9BE0'); x.fillStyle=g; x.fillRect(0,0,W,H);
-  x.fillStyle='rgba(255,255,255,.85)'; x.font='800 40px Manrope, system-ui'; x.fillText('SIPCOUNT', 80, 140);
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#000000'); g.addColorStop(.7,'#111111'); g.addColorStop(1,'#0b3b2b'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='#00F0A0'; x.font='800 40px Manrope, system-ui'; x.fillText('SIPCOUNT', 80, 140);
   const wilt=d.pct>1?Math.min(1,(d.pct-1)/0.5):0, droop=d.pct>0.5?Math.min(1,(d.pct-0.5)/0.5):0;
-  const leaf = wilt?mix('#B9C94A','#8A5A2B',wilt):mix('#5FCF7F','#B9C94A',droop*0.8);
-  x.save(); x.translate(540,900); x.fillStyle='#6B4B2A'; x.beginPath(); x.ellipse(0,60,180,40,0,0,7); x.fill();
-  x.fillStyle=wilt?mix('#6B4B2A','#4a3418',wilt):'#6B4B2A'; x.fillRect(-22,-260,44,320);
-  x.fillStyle=leaf; for(const [cx,cy,r] of [[0,-300,150],[-120,-220,110],[120,-230,110],[0,-180,130]]){ x.save(); x.translate(cx,cy+wilt*80); x.scale(1-wilt*.35,1-wilt*.5-droop*.1); x.beginPath(); x.arc(0,0,r,0,7); x.fill(); x.restore(); }
+  const leaf = wilt?mix('#FFB020','#5A4A3A',wilt):mix('#00F0A0','#FFB020',droop);
+  x.save(); x.translate(540,940); x.fillStyle='#2A2A2A'; x.beginPath(); x.moveTo(-150,0); x.lineTo(150,0); x.lineTo(120,120); x.lineTo(-120,120); x.fill();
+  x.strokeStyle=wilt?mix('#00B877','#5A4A3A',wilt):'#00B877'; x.lineWidth=20; x.lineCap='round'; x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(droop*60+wilt*120,-200, wilt*160+droop*40,-380+wilt*140); x.stroke();
+  x.fillStyle=leaf; for(const [sx,sy,dir] of [[-1,-90,1],[1,-170,-1],[-1,-250,1]]){ x.save(); x.translate(0,sy+wilt*60); x.rotate(dir*(droop*0.5+wilt*0.9)); x.beginPath(); x.ellipse(sx*110,0,120,45,sx*-0.4,0,Math.PI*2); x.fill(); x.restore(); }
   x.restore();
-  x.fillStyle='#fff'; x.font='700 150px Unbounded, system-ui'; x.fillText(d.ml, 80, 1330); x.font='500 56px Unbounded, system-ui'; x.fillStyle='rgba(255,255,255,.8)'; x.fillText('mL of water today', 80, 1400);
-  x.fillStyle='#fff'; x.font='700 60px Unbounded, system-ui'; wrapText(x, storyText(), 80, 1520, 920, 76);
-  x.font='800 34px Manrope, system-ui'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText('SIPCOUNT • TRACK YOUR AI FOOTPRINT', 80, 1840);
+  x.fillStyle='#fff'; x.font='800 150px Sora, system-ui'; x.fillText(d.ml, 80, 1330); x.font='600 56px Sora, system-ui'; x.fillStyle='#00F0A0'; x.fillText('mL of water today', 80, 1400);
+  x.fillStyle='#fff'; x.font='700 60px Sora, system-ui'; wrapText(x, storyText(), 80, 1520, 920, 76);
+  x.font='800 34px Manrope, system-ui'; x.fillStyle='#00F0A0'; x.fillText('SIPCOUNT • TRACK YOUR AI FOOTPRINT', 80, 1840);
   return c;
 }
 function wrapText(x,text,px,py,maxW,lh){ const words=text.split(' '); let line=''; for(const w of words){ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ x.fillText(line,px,py); line=w; py+=lh; } else line=t; } x.fillText(line,px,py); }
@@ -704,15 +635,15 @@ $('shareNative').onclick=async()=>{ const b=await storyBlob(); const file=new Fi
 
 /* ===================================================================================== [Neutralize] */
 function renderNeutral(){
-  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0), T=todayStats();
+  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
   const L=wk/1000; const cents=Math.max(1, Math.round(L*C.charities[0].per_l_usd*100));
-  $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">≈ ${equiv(wk)} · about ${fmt(L,2)} litres of water. At charity: water's published rate that's under <b>${cents}¢</b> — so most people round up to $1, which funds ≈ 1,100 litres.</div>`;
+  $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">≈ ${equiv(wk)} · about ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
   $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
 }
 $('neutralBtn').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };
 $('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
 
-/* ===================================================================================== [Leaderboard] MOCK */
+/* ===================================================================================== [Grove] MOCK */
 const GROVE_MOCK = {
   groups:[['IIT Delhi · Hostel 7',1840,'Thriving',12],['Design Society',2210,'Thriving',9],['Xebia · Pune office',2670,'Drooping',5],['Manipal CS 2nd year',3120,'Drooping',3],['Startup Weekend crew',4410,'Wilting',0],['Bangalore run club',4980,'Wilting',0]],
   members:[['You',0,''],['aanya_k',310,'Thriving'],['rohan.dev',420,'Thriving'],['maya',615,'Drooping'],['dhruv',890,'Wilting']]
@@ -755,36 +686,37 @@ $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } t
 
 /* ===================================================================================== [Settings] */
 function renderSettings(){
+  $('modeLabel').textContent = isEdu()?'Educational Mode (13–17)':'Minimalist Mode (18+)';
+  $('modeSub').textContent = isEdu()?`Water facts and cup alerts on${S.social?'':' · social features off'}`:'No alerts. Data only.';
   $('metaChips').innerHTML=Object.entries(C.metaphors).map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===S.metaphor}">${x.emoji} ${x.label}</button>`).join('');
-  const m=metaphor(); $('metaNote').textContent=`1 ${m.one} = ${m.ml} mL. Alerts pop up each time your day passes another ${m.one}.`;
+  const m=metaphor(); $('metaNote').textContent=`1 ${m.one} = ${m.ml} mL.${isEdu()?` An alert pops up each time your day passes another ${m.one}.`:''}`;
+  $('sizeSel').value=S.size; $('budgetIn').value=S.budget;
   const R=C.regions[S.region];
-  $('speciesSel').innerHTML=`<option value="auto">Automatic — ${C.species[R.species].name} (${R.short})</option>`+Object.entries(C.species).map(([id,s])=>`<option value="${id}">${s.name}${s.latin?` · ${s.latin}`:''}</option>`).join(''); $('speciesSel').value=S.species;
-  $('endangeredToggle').checked=!!S.endangered; $('endangeredToggle').disabled=!R.endangered;
-  $('seasonSel').value=S.season; $('sizeSel').value=S.size; $('budgetIn').value=S.budget;
   $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
   const P=params(); const dot=c=>`<i class="${c}"></i>`;
   $('regionConf').innerHTML=`PUE ${R.pue} ${dot(R.conf.pue)} · cooling ${P.site} L/kWh ${dot(S.cooling==='reported'?R.conf.wueSite:C.cooling[S.cooling].conf)} · grid ${P.grid} L/kWh ${dot(S.hydro?R.conf.ewifIncl:R.conf.ewifExcl)} &nbsp;<span>${dot('high')}high ${dot('medium')}medium ${dot('low')}low confidence</span>`;
   $('coolingSel').innerHTML=Object.entries(C.cooling).map(([id,c])=>`<option value="${id}">${c.label}${c.wue!=null?` · ${c.wue} L/kWh`:` · ${R.wueSite} L/kWh`}</option>`).join(''); $('coolingSel').value=S.cooling;
   $('hydroToggle').checked=!!S.hydro;
   const st=C.stress[R.stress]; $('stressNote').textContent = st ? `${R.short}: ${st.label} water stress (${st.band}).` : `${R.short}: water-stress class not verified.`;
-  const e=R.endangered?C.endangered[R.endangered]:null;
-  $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('')+`<li>Plant: ${C.species[R.species].name} (${C.species[R.species].latin}) — nativity checked against Kew / USDA / NParks / EUFORGEN.</li>`+(e?`<li>Endangered: ${e.name} — ${e.status}; source ${e.source}.</li>`:'');
+  $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('');
   $('cVersion').textContent=C.version;
 }
-$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.metaphor=b.dataset.m; S.milestones={}; save(); renderSettings(); toast(`Counting in ${metaphor().many}`); };
-$('speciesSel').onchange=e=>{ S.species=e.target.value; S.endangered=false; save(); renderSettings(); };
-$('endangeredToggle').onchange=e=>{ S.endangered=e.target.checked; save(); };
-$('seasonSel').onchange=e=>{ S.season=e.target.value; save(); };
-$('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyTheme(); };
+$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.metaphor=b.dataset.m; resetMilestoneBaseline(); save(); renderSettings(); toast(`Counting in ${metaphor().many}`); };
+$('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyMode(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
 $('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.region].defaultCooling||'reported'; save(); renderSettings(); renderEst(); toast('Region saved'); };
 $('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); };
 $('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
-$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,milestones:{}}; save(); toast('Cleared'); show('today'); } };
+$('redoAge').onclick=()=>show('splash');
+$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,milestones:{},facts:{}}; save(); toast('Cleared'); show('today'); } };
 $('sampleBtn').onclick=()=>{ S.wiped=false; loadSample(); toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [App] boot */
-applyTheme(); fillModels(); renderEst(); renderToday();
+$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast(isEdu()?'Educational Mode':'Minimalist Mode'); if(isEdu()&&C.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
+$('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
+fillModels(); renderEst(); applyMode();
+if(!S.mode){ show('splash'); }
+else { show('today'); if(isEdu()&&C.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); }
 </script>
 </body>
 </html>

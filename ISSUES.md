@@ -45,6 +45,13 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 4 (received 2026-09-17, on prototype v4)
+
+**Spec:** performance-tracker aesthetic (true black, flat #1A1A1A cards, white metrics, neon green accent); scrap the native-tree engine → one standardised Dynamic Plant; bring back the age splash; split into Educational Mode (13–17: sourced water-fact toasts) and Minimalist Mode (18+: no toasts, data only).
+**Decisions (Madhur, 2026-09-17):** D-16 dark-only (light mode removed) · D-17 adults keep Neutralize, Share, Grove; lose cup milestone alerts · D-18 under-13 → Educational Mode with social off (13+ rating stands) · D-19 facts: one on open + one every 5 prompts, max 3/day, no repeats per day.
+**Delivered as prototype v5.** 16 facts, each figure read on its source page (USGS, WRI Aqueduct 4.0, WHO/UNICEF JMP 2023, NITI Aayog, FAO, UN WWDR 2022, LBNL 2024, Li et al. 2023, Google 2025, Water Footprint Network); the "less than 1 % accessible freshwater" line was rewritten to USGS's own phrasing (2.5 % fresh, 1.2 % of that surface water). Flora/endangered research from round 3 is retained in ARCHITECTURE.md §3b for possible later use.
+**Note to partner:** rounds 3→4 reversed two round-3 decisions (onboarding, plant); each reversal ≈ a day. Suggest freezing the shell after v5 and iterating on copy/data.
+
 ## Partner feedback round 3 (received 2026-09-15, on prototype v3)
 
 **Accepted as mandatory:**
