@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 5 (received 2026-09-18, on prototype v5) — all accepted, no decisions needed
+
+Traffic-light thresholds (<50 % green, 50–69 % amber, ≥70 % red) applied to drop fill, budget bar, status text, plant label, nudge; drop card dominant and the drop now **drains from full**; plant card compact; plant degrades **continuously** with 0–100 % (colour green→amber→red, posture droops), collapsing past 100 %; Insights moved above the 7-day chart. Delivered as v5.1 (constants 2026-09-18).
+
 ## Partner feedback round 4 (received 2026-09-17, on prototype v4)
 
 **Spec:** performance-tracker aesthetic (true black, flat #1A1A1A cards, white metrics, neon green accent); scrap the native-tree engine → one standardised Dynamic Plant; bring back the age splash; split into Educational Mode (13–17: sourced water-fact toasts) and Minimalist Mode (18+: no toasts, data only).

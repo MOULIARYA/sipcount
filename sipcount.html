@@ -57,12 +57,13 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .tile{background:var(--surface);border-radius:14px;padding:14px}
 .tile .v{font-family:var(--display);font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .tile .l{font-size:.78em;color:var(--muted);margin-top:2px;letter-spacing:.02em}
-.hero{display:flex;gap:18px;align-items:center}
-.drop{width:96px;height:120px;flex:none}
+.hero{display:flex;gap:20px;align-items:center}
+.hero-card{padding:22px 18px;border:1px solid var(--line)}
+.drop{width:124px;height:156px;flex:none}
 .drop svg{width:100%;height:100%;display:block}
-.fill{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
-.plantcard{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center}
-.plantbox{height:170px}
+.fill{transition:transform .9s cubic-bezier(.2,.8,.2,1),fill .6s}
+.plantcard{display:flex;gap:12px;align-items:center;padding:12px 16px}
+.plantbox{height:104px;width:96px;flex:none}
 .plantbox svg{width:100%;height:100%;display:block;overflow:visible}
 .ring{width:100%;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
 .ring i{display:block;height:100%;background:var(--green);transition:width .6s}
@@ -187,13 +188,14 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="row" style="gap:6px"><span class="pill" id="modePill"></span><span class="pill good" id="plantPill">Thriving</span></div>
     </div>
 
-    <div class="panel">
+    <!-- Dominant card: the daily budget as a drop that DRAINS as prompts are logged (round 5) -->
+    <div class="panel hero-card">
       <div class="hero">
         <div class="drop" aria-hidden="true">
           <svg viewBox="0 0 100 130">
             <defs><clipPath id="dropClip"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs>
             <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="var(--surface-2)"/>
-            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--green)" style="transform:translateY(130px)"/></g>
+            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--green)" style="transform:translateY(0px)"/></g>
             <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="var(--line)" stroke-width="1.5"/>
           </svg>
         </div>
@@ -201,33 +203,32 @@ nav button[aria-current=page]{color:var(--green)}
           <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
           <div class="sub" id="todayEq">—</div>
-          <div class="ring" style="margin-top:6px"><i id="budgetRing" style="width:0%"></i></div>
-          <div class="sub" id="todayBudget" style="font-size:.8em">—</div>
+          <div class="ring" style="margin-top:8px"><i id="budgetRing" style="width:0%"></i></div>
+          <div class="sub" id="todayBudget" style="font-size:.85em;font-weight:700">—</div>
+          <div class="sub" id="todayLeft" style="font-size:.8em">—</div>
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="plantcard">
-        <div class="plantbox" id="plantBox" aria-hidden="true"></div>
-        <div class="stack">
-          <span class="eyebrow">Dynamic plant</span>
-          <h3 id="plantState" style="font-family:var(--display);font-size:1.4em;font-weight:800"></h3>
-          <div class="sub" id="plantLine"></div>
-          <button class="btn line small" id="simBtn" style="margin-top:8px">⚡ Simulate heavy query</button>
-        </div>
+    <!-- Secondary module: the plant, compact -->
+    <div class="panel plantcard">
+      <div class="plantbox" id="plantBox" aria-hidden="true"></div>
+      <div class="stack" style="flex:1">
+        <span class="eyebrow">Dynamic plant</span>
+        <div class="row between wrap"><h3 id="plantState" style="font-family:var(--display);font-size:1.15em;font-weight:800"></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
+        <div class="sub" id="plantLine" style="font-size:.85em"></div>
       </div>
-    </div>
-
-    <div class="panel">
-      <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
-      <div class="bars" id="bars"></div>
     </div>
 
     <div class="panel stack">
       <div class="row between"><h2>Insights</h2><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
       <div id="insightText" style="line-height:1.5"></div>
       <div id="brandBars"></div>
+    </div>
+
+    <div class="panel">
+      <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
+      <div class="bars" id="bars"></div>
     </div>
 
     <div class="tiles">
@@ -366,7 +367,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-17',
+  version: '2026-09-18',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -398,7 +399,9 @@ const SIPCOUNT_CONFIG = {
     espresso:{ label:'Espresso', one:'espresso shot', many:'espresso shots', ml:30, emoji:'☕', done:'1 espresso shot of water just evaporated!' },
     mug:     { label:'Coffee mug', one:'coffee mug', many:'coffee mugs', ml:240, emoji:'☕', done:'One coffee mug down the drain.' }
   },
-  plant: { thriving:0.5, drooping:1.0 },
+  /* Traffic-light thresholds (round 5): <50 % green, 50–69 % amber, ≥70 % red — bars, text, plant label. */
+  zones: { green:0.5, amber:0.7 },
+  plant: { thriving:0.5, drooping:0.7 },
   /* Educational Mode facts — each figure read on the cited source page (verified 2026-09-17). */
   facts: [
     { t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School' },
@@ -492,7 +495,10 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.
 function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
 function last7(){ return [...Array(7)].map((_,i)=>{const d=new Date(); d.setDate(d.getDate()-(6-i)); return dayKey(d);}); }
 function todayStats(){ const t=S.days[dayKey(new Date())]||{n:0,img:0,s1:0,s2:0,vendor:{},tier:{}}; return {...t, total:t.s1+t.s2, pct:(t.s1+t.s2)/S.budget}; }
-function plantState(pct){ return pct>C.plant.drooping?'Wilting':pct>C.plant.thriving?'Drooping':'Thriving'; }
+function plantState(pct){ return pct>=C.plant.drooping?'Wilting':pct>=C.plant.thriving?'Drooping':'Thriving'; }
+const zone=pct=>pct<C.zones.green?'green':pct<C.zones.amber?'amber':'red';
+const zoneVar=pct=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[zone(pct)];
+const zonePill=pct=>({green:'good',amber:'warn',red:'bad'})[zone(pct)];
 
 /* ===================================================================================== [Toasts] Educational Mode only */
 function alertCard(icon, title, sub, cls=''){
@@ -533,15 +539,17 @@ function plantSVG(){
     <g class="bud" style="transform-origin:80px 58px"><ellipse cx="80" cy="50" rx="9" ry="14" fill="var(--green)"/><ellipse cx="80" cy="50" rx="4" ry="9" fill="#000" opacity=".25"/></g>
   </svg>`;
 }
+/* Continuous degradation (round 5): colour and posture map directly to 0–100 % of budget;
+   beyond 100 % the plant collapses further and browns out. */
 function setPlant(pct, fast=false, svg=$('plantSvg')){
   if(!svg) return; svg.classList.toggle('fast',fast);
-  const t=Math.min(1,Math.max(0,(pct-C.plant.thriving)/(C.plant.drooping-C.plant.thriving)));   // 0 → 1 up to the limit
-  const w=Math.min(1,Math.max(0,(pct-C.plant.drooping)/0.5));                                       // 0 → 1 fully wilted
-  const droop=t*32+w*40, lean=t*6+w*14;
-  const leaf = w>0 ? mix('#FFB020','#5A4A3A',w) : mix('#00F0A0','#FFB020',t);
-  svg.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-w*0.35})`; l.style.fill=leaf; l.style.opacity=String(1-w*0.35); });
-  const st=svg.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-w*0.18})`; st.style.stroke=w>0?mix('#00B877','#5A4A3A',w):mix('#00B877','#B88A20',t*0.6);
-  const bud=svg.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-t*0.3-w*0.6})`; bud.style.opacity=String(1-w*0.9);
+  const t=Math.min(1,Math.max(0,pct));                  // 0 → 1 across the whole budget
+  const w=Math.min(1,Math.max(0,(pct-1)/0.5));          // 0 → 1 past the limit
+  const droop=t*45+w*30, lean=t*8+w*12;
+  const leaf = w>0 ? mix('#FF4D5E','#5A4A3A',w) : t<0.5 ? mix('#00F0A0','#FFB020',t/0.5) : mix('#FFB020','#FF4D5E',(t-0.5)/0.5);
+  svg.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-t*0.15-w*0.3})`; l.style.fill=leaf; l.style.opacity=String(1-t*0.15-w*0.3); });
+  const st=svg.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-t*0.08-w*0.15})`; st.style.stroke=w>0?mix('#8A5A2B','#5A4A3A',w):mix('#00B877','#8A5A2B',t);
+  const bud=svg.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-t*0.5-w*0.5})`; bud.style.opacity=String(1-t*0.5-w*0.5);
 }
 function mix(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
 let simTimer=null;
@@ -575,13 +583,17 @@ function renderToday(){
   applyMode();
   const T=todayStats(), state=plantState(T.pct);
   $('modePill').textContent=isEdu()?'Educational':'Minimal';
-  $('todayMl').textContent=fmt(T.total); $('dropFill').style.transform=`translateY(${130*(1-Math.min(1,T.pct))}px)`;
+  const col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total);
+  $('todayMl').textContent=fmt(T.total);
+  // drop starts FULL and drains as the budget is consumed (round 5)
+  $('dropFill').style.transform=`translateY(${130*Math.min(1,T.pct)}px)`; $('dropFill').style.fill=col;
   $('todayEq').textContent=T.n?`≈ ${equiv(T.total)}`:'No prompts yet today';
-  $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').style.background=T.pct>1?'var(--red)':T.pct>0.5?'var(--amber)':'var(--green)';
-  $('todayBudget').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over your ${S.budget} mL budget`:`${Math.round(T.pct*100)}% of ${S.budget} mL budget`;
-  $('plantPill').textContent=state; $('plantPill').className='pill '+(state==='Thriving'?'good':state==='Wilting'?'bad':'warn');
-  $('plantState').textContent=state; $('plantState').style.color=state==='Thriving'?'var(--green)':state==='Wilting'?'var(--red)':'var(--amber)';
-  $('plantLine').textContent = state==='Thriving'?`${fmt(S.budget*C.plant.thriving-T.total)} mL until it starts to droop.`:state==='Drooping'?`${fmt(S.budget-T.total)} mL until it wilts.`:`${fmt(T.total-S.budget)} mL past the limit.`;
+  $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').style.background=col;
+  $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL budget used`; $('todayBudget').style.color=col;
+  $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
+  $('plantPill').textContent=state; $('plantPill').className='pill '+zonePill(T.pct);
+  $('plantState').textContent=state; $('plantState').style.color=col;
+  $('plantLine').textContent = T.pct>=1?`${fmt(T.total-S.budget)} mL past the limit.`:`Health ${Math.max(0,Math.round((1-T.pct)*100))}% — fades with every prompt.`;
   if(!$('plantSvg')) $('plantBox').innerHTML=plantSVG();
   requestAnimationFrame(()=>setPlant(T.pct));
   const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
@@ -594,8 +606,8 @@ function renderToday(){
   $('tWeek').textContent=fmt(w)+' mL'; $('tStreak').textContent=state==='Wilting'?0:S.streak;
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15; $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=Math.round(p1*100)+'%'; $('p2').textContent=Math.round((1-p1)*100)+'%';
   const light='Short prompt? A <b>lighter model</b> does it for about a fifth of the water.';
-  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':'');
-  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>Plant is wilting — ${fmt(T.total-S.budget)} mL over. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Getting thirsty. ${fmt(S.budget-T.total)} mL left before it wilts. ${light}</span>` : `<span>🌿</span><span>${T.n?`On track — ${fmt(S.budget-T.total)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
+  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=col;
+  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
 }
 $('simBtn').onclick=simulateHeavyQuery;
