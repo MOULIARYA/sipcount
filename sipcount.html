@@ -207,7 +207,9 @@ nav button[aria-current=page]{color:var(--green)}
   <!-- ============ AGE SPLASH ============ -->
   <section class="splash" id="s-splash">
     <div class="mark" aria-hidden="true">💧</div>
-    <div class="stack" style="align-items:center;gap:10px">
+    <div class="stack" style="align-items:center;gap:4px">
+      <span class="eyebrow" style="color:var(--green)">Sipcount</span>
+      <p style="margin:0 0 14px;font-family:var(--display);font-weight:600;color:var(--muted)">See what your AI drinks.</p>
       <h1>How old are you?</h1>
       <p class="sub" style="margin:0;max-width:300px">One question, then straight in. We keep only the mode it picks — never the number — and nothing leaves this device.</p>
     </div>
@@ -338,16 +340,16 @@ nav button[aria-current=page]{color:var(--green)}
   <!-- ============ ABOUT — "Behind the Cloud" (copy supplied by product owner, verbatim) ============ -->
   <section class="screen" id="s-about">
     <div class="about">
-      <span class="eyebrow">About Sipcount</span>
+      <span class="eyebrow">Sipcount · See what your AI drinks.</span>
       <h1>Behind the Cloud</h1>
       <h3>The "Cloud" is on the Ground</h3>
       <p class="lede">Generative AI feels like magic. You type a prompt, and a server in the cloud instantly writes code, drafts essays, or renders artwork. But the cloud isn't in the sky—it's massive, hyper-heated physical infrastructure sitting right here on earth.</p>
       <h3>The Hidden Cost of Computing</h3>
       <p>Every AI query requires intense computational power. To keep these hyperscale server racks from melting, data centers evaporate millions of liters of freshwater daily through cooling towers. Meanwhile, the regional power grids feeding them consume even more water to generate that electricity.</p>
-      <p>We are trading our most vital physical resource for digital convenience. As global economies push for aggressive 7-8% GDP growth, balancing this massive industrial resource drain against municipal water stress is a math problem that simply doesn't add up.</p>
-      <h3>Why Sipcount Exists</h3>
-      <p>You can't manage what you don't measure. Sipcount strips away the abstraction of server telemetry and translates your estimated AI water footprint into tangible, everyday metrics—down to the milliliter.</p>
-      <p>We are building a movement of <b>digital sobriety</b>. By seeing the actual cost of your prompts, you can write smarter, more efficient queries, choose lighter AI models for simple tasks, and hold tech infrastructure accountable.</p>
+      <p>We are trading our most vital physical resource for digital convenience. As global economies push for aggressive GDP growth, balancing this massive industrial resource drain against municipal water stress is a math problem that simply doesn't add up.</p>
+      <h3>Screen Time for Generative AI</h3>
+      <p>You wouldn't use your phone without checking your screen time or battery level. Sipcount applies that same visibility to your AI usage. We serve as your native Screen Time for Generative AI, stripping away the abstraction of server telemetry and translating your estimated water footprint into tangible, everyday metrics—down to the milliliter.</p>
+      <p>We are building a movement of <b>digital sobriety</b>. By seeing the actual cost of your prompts, you can write smarter queries, choose lighter models for simple tasks, and hold tech infrastructure accountable.</p>
       <p><b>Stop guessing your impact. Start tracking your sips.</b></p>
       <button class="btn" id="neutralBtn2" style="margin-top:8px">Neutralize My Water Footprint</button>
       <p class="demo" style="text-align:left">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How we calculate.</p>
@@ -435,7 +437,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-19d',
+  version: '2026-09-19e',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },

@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 10 (received 2026-09-19) — About copy v2, "Screen Time for Generative AI" positioning; delivered as v6.4
+
+New copy injected verbatim except one word: her text again says "your **exact** water footprint"; kept **"estimated"** per Madhur's 2026-09-19 decision (estimates with stated confidence). Partner should be told explicitly so the two of them settle it. "7-8%" GDP figure dropped as per her new text. **Tagline approved (Madhur, 2026-09-19): "See what your AI drinks."** — shown on the age splash and as the About eyebrow; to be used as the store subtitle. Positioning note: "Screen Time" is Apple's feature name — fine as a descriptive comparison in copy; avoid using it as a product name or in store listings.
+
 ## Partner feedback round 9 (received 2026-09-19) — "Lifetime Footprint"; delivered as v6.3
 
 All-time impact card below the 7-day chart: darker (#0C0C0C) muted card; total since install auto-scales mL → L (≥1,000 mL) → m³ (≥1,000 L); macro-metaphor subtext (largest unit with count ≥ 1: Olympic pools / fire trucks / bathtubs / standard water bottles); "Tracking since Sep 2026" from the earliest recorded day (kept on wipe of totals). **I-26 (open):** macro volumes are assumptions — bottle 500 mL, bathtub 150 L, fire truck 2,500 L, Olympic pool 2,500,000 L — confirm with partner alongside I-25.
