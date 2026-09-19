@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 7 (received 2026-09-19, on v6) — accepted; delivered as v6.1
+
+Metaphor subtext condensed to one muted, non-wrapping line "≈ 0.10 Smoothies" under the mL figure; baseline volume and formula removed from the frontend entirely (Settings helper text no longer shows volumes either; volumes remain in the config for the maths). Facts: timed text-heavy card → **persistent teaser** (icon + 3–5-word hook + "Tap to read ›", no auto-dismiss, one at a time) that opens a readable modal with the full fact, context and source link, plus Close. Redundant in-card "✓ Optimal" badge removed; the top-right pill remains the single status indicator (icon + label kept for colour-blind safety).
+
 ## Partner feedback round 6 (received 2026-09-19, on v5.1) — accepted; delivered as v6
 
 Facts now for **all** users (revises D-17: cup milestone alerts stay Educational-only; educational facts universal); cards last 9 s, hover/press-and-hold pauses and expands to full context with a source link, ✕ dismiss. Metaphor units always two decimals with baseline footnote ("1 smoothie = 350 mL · units = mL ÷ 350") and animated counting. New **About** tab "Behind the Cloud" with the supplied copy verbatim + CTA; a one-line estimate disclaimer added beneath (not inside) the copy. Palette tightened (#000 / #141414 cards / #262626 borders / #333 tracks; green #00F076, amber #FFB800, red #FF3B30). Colour-blind-safe status: ✓ Optimal / ⚠ Elevated / ✖ **Limit Exceeded** labels + striped (amber) and cross-hatched (red) bar fills. Hierarchy unchanged from v5.1 (drop › plant › insights › chart).

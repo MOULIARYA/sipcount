@@ -154,6 +154,11 @@ nav button[aria-current=page]{color:var(--green)}
 .alert.fact{border-left-color:var(--amber)} .alert.fact .timer{background:var(--amber)}
 .alert .hint{color:var(--dim);font-size:.75em;margin-top:4px}
 .alert.open .hint{display:none}
+/* Fact teaser: compact, persistent, tappable */
+.alert.teaser{padding:10px 14px;align-items:center;cursor:pointer;font:inherit;text-align:left;width:auto;align-self:flex-start;gap:10px;border-left-color:var(--amber)}
+.alert.teaser b{font-size:.9em;white-space:nowrap}
+.alert.teaser .tap{color:var(--amber);font-weight:800;font-size:.78em;white-space:nowrap;margin-left:4px}
+.alert.teaser:hover{background:#1E1E1E}
 /* About */
 .about{max-width:60ch;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .about h1{font-size:1.7em;font-weight:800;letter-spacing:-.02em}
@@ -225,11 +230,9 @@ nav button[aria-current=page]{color:var(--green)}
         <div class="stack" style="flex:1">
           <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
-          <div style="font-family:var(--display);font-weight:700;font-size:1.1em;font-variant-numeric:tabular-nums"><span id="metaCount">0.00</span> <span id="metaUnit" style="font-weight:600;color:var(--muted);font-size:.85em"></span></div>
-          <div class="sub" id="metaBase" style="font-size:.78em;color:var(--dim)">—</div>
-          <div class="ring" style="margin-top:8px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
-          <div class="row between wrap" style="margin-top:6px"><span class="status z-green" id="statusBadge"><span class="ico">✓</span><span id="statusLabel">Optimal</span></span><span class="sub" id="todayBudget" style="font-size:.8em">—</span></div>
-          <div class="sub" id="todayLeft" style="font-size:.8em">—</div>
+          <div class="metaline" style="font-size:.85em;color:#A3A3A3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">≈ <span id="metaCount">0.00</span> <span id="metaUnit"></span></div>
+          <div class="ring" style="margin-top:10px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
+          <div class="row between wrap" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span><span class="sub" id="todayLeft" style="font-size:.8em">—</span></div>
         </div>
       </div>
     </div>
@@ -398,6 +401,14 @@ nav button[aria-current=page]{color:var(--green)}
   </div>
 </div>
 
+<!-- ============ FACT MODAL ============ -->
+<div class="sheet" id="factSheet" role="dialog" aria-modal="true" aria-labelledby="factTitle">
+  <div class="card">
+    <div class="row between"><span class="eyebrow" id="factTitle">Water fact</span><button class="btn ghost small" id="factClose" aria-label="Close">Close</button></div>
+    <div id="factBody"></div>
+  </div>
+</div>
+
 <!-- ============ NEUTRALIZE MODAL ============ -->
 <div class="sheet" id="neutralSheet" role="dialog" aria-modal="true" aria-labelledby="neutralTitle">
   <div class="card">
@@ -411,7 +422,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-19',
+  version: '2026-09-19b',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -449,22 +460,22 @@ const SIPCOUNT_CONFIG = {
   /* Educational Mode facts — each figure read on the cited source page (verified 2026-09-17). */
   /* Environmental facts — shown to ALL users (round 6). `t` = card line, `full` = expanded context. Each figure verified on the source page. */
   facts: [
-    { t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School', full:'Of all water on Earth, about 2.5% is freshwater. Of that, 68.7% is locked in ice and snow and 30.1% is groundwater; only around 1.2% is surface water such as rivers, lakes and swamps — the part people and ecosystems can most easily use.', url:'https://www.usgs.gov/special-topics/water-science-school/science/where-earths-water' },
-    { t:'Power plants pulled 41% of all water withdrawn in the US in 2015 — more than any other use.', e:'🔌', s:'USGS, Thermoelectric water use', full:'Thermoelectric power plants withdrew about 133 billion gallons a day in 2015 — 41% of all US withdrawals and 34% of freshwater withdrawals — mainly to cool the steam that spins the generators.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
-    { t:'Making 1 kWh of US electricity used about 57 litres of water in 2015. Your charger has a water bill.', e:'⚡', s:'USGS 2015', full:'US power plants withdrew about 15 gallons (57 litres) of water per kilowatt-hour generated in 2015, down from roughly 19 gallons in 2010. Most is returned to the source warmer; a share evaporates.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
-    { t:'US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.', e:'🖥️', s:'LBNL 2024 report', full:'Lawrence Berkeley National Laboratory estimates US data centres consumed 176 TWh in 2023 (4.4% of national electricity) and could reach 325–580 TWh by 2028 — 6.7% to 12% — driven largely by AI hardware.', url:'https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf' },
-    { t:'Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.', e:'🌡️', s:'Li et al. 2023, Making AI Less Thirsty', full:'Researchers estimate training GPT-3 in Microsoft’s US data centres directly evaporated about 700,000 litres of freshwater for cooling. The same study projects global AI water withdrawal of 4.2–6.6 billion cubic metres in 2027.', url:'https://arxiv.org/abs/2304.03271' },
-    { t:'A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.', e:'🤖', s:'Google 2025', full:'Google measured a median Gemini Apps text prompt at 0.24 Wh of electricity and 0.26 mL of water consumed for data-centre cooling (August 2025). That figure excludes the water used to generate the electricity — which Sipcount adds as Scope 2.', url:'https://arxiv.org/abs/2508.15734' },
-    { t:'2.2 billion people still lacked safely managed drinking water in 2022 — more than 1 in 4 humans.', e:'🚱', s:'WHO/UNICEF JMP 2023', full:'The WHO/UNICEF Joint Monitoring Programme reports that in 2022, 2.2 billion people lacked safely managed drinking water, including 115 million who drank untreated surface water.', url:'https://www.unwater.org/publications/who/unicef-joint-monitoring-program-update-report-2023' },
-    { t:'25 countries — home to 1 in 4 people — use up almost their entire water supply every year.', e:'🌍', s:'WRI Aqueduct 4.0', full:'WRI’s Aqueduct 4.0 (2023) finds 25 countries, housing a quarter of the world’s population, face extremely high water stress — regularly using more than 80% of their renewable supply each year.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
-    { t:'About 4 billion people live under severe water stress for at least one month a year.', e:'📅', s:'WRI Aqueduct 4.0', full:'At least half of the world’s population — around 4 billion people — live under highly water-stressed conditions for at least one month every year, according to WRI Aqueduct 4.0.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
-    { t:'Nearly 600 million Indians face high-to-extreme water stress.', e:'🇮🇳', s:'NITI Aayog CWMI 2018', full:'NITI Aayog’s Composite Water Management Index (2018) found nearly 600 million Indians facing high to extreme water stress, and ranked India 120th of 122 countries on water quality.', url:'https://www.pib.gov.in/newsite/PrintRelease.aspx?relid=195635' },
-    { t:'5 of the world’s 20 largest water-stressed cities are in India — Delhi is number two.', e:'🏙️', s:'NITI Aayog CWMI 2.0', full:'The Composite Water Management Index 2.0 (2019) notes that five of the 20 largest cities under water stress worldwide are in India, with Delhi second, and that about 70% of India’s surface water is contaminated.', url:'https://www.niti.gov.in/sites/default/files/2019-08/CWMI-2.0-latest.pdf' },
-    { t:'Farms use 72% of all the freshwater humans take from rivers and aquifers.', e:'🌾', s:'FAO', full:'The FAO puts agriculture at 72% of global freshwater withdrawals, mostly for irrigation — the largest single human use of water.', url:'https://www.fao.org/land-water/water/agricultural-water-management/en' },
-    { t:'Groundwater is 99% of Earth’s liquid freshwater — and half the water people use at home.', e:'🕳️', s:'UN WWDR 2022', full:'The UN World Water Development Report 2022 states groundwater makes up about 99% of all liquid freshwater, supplies around half of domestic water withdrawals and a quarter of irrigation water.', url:'https://www.unwater.org/publications/un-world-water-development-report-2022' },
-    { t:'Pumping has drained about 1,000 km³ of US groundwater since 1900.', e:'🚜', s:'USGS', full:'USGS estimates cumulative US groundwater depletion from 1900 to 2008 at about 1,000 cubic kilometres. In parts of the High Plains aquifer, water levels have fallen more than 100 feet.', url:'https://www.usgs.gov/special-topics/water-science-school/science/groundwater-decline-and-depletion' },
-    { t:'Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.', e:'🏜️', s:'USGS Utah', full:'The Great Salt Lake covered about 2,300 square miles at its 1986 high and fell below 1,000 square miles in 2022, reaching a record-low elevation of 4,188.5 ft on 7 November 2022.', url:'https://www.usgs.gov/centers/utah-water-science-center/science/great-salt-lake-elevations-and-areal-extent' },
-    { t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network', full:'The Water Footprint Network estimates the water behind 200 g of beef equals about 47 eight-minute showers, and that the average consumer “eats” roughly 5,000 litres of hidden water a day through food and goods.', url:'https://www.waterfootprint.org/time-for-action/what-can-consumers-do/' }
+    { hook:"How much water is drinkable?", t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School', full:'Of all water on Earth, about 2.5% is freshwater. Of that, 68.7% is locked in ice and snow and 30.1% is groundwater; only around 1.2% is surface water such as rivers, lakes and swamps — the part people and ecosystems can most easily use.', url:'https://www.usgs.gov/special-topics/water-science-school/science/where-earths-water' },
+    { hook:'The thirstiest thing in America', t:'Power plants pulled 41% of all water withdrawn in the US in 2015 — more than any other use.', e:'🔌', s:'USGS, Thermoelectric water use', full:'Thermoelectric power plants withdrew about 133 billion gallons a day in 2015 — 41% of all US withdrawals and 34% of freshwater withdrawals — mainly to cool the steam that spins the generators.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
+    { hook:'Your charger has a water bill', t:'Making 1 kWh of US electricity used about 57 litres of water in 2015. Your charger has a water bill.', e:'⚡', s:'USGS 2015', full:'US power plants withdrew about 15 gallons (57 litres) of water per kilowatt-hour generated in 2015, down from roughly 19 gallons in 2010. Most is returned to the source warmer; a share evaporates.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
+    { hook:'Data centres are growing fast', t:'US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.', e:'🖥️', s:'LBNL 2024 report', full:'Lawrence Berkeley National Laboratory estimates US data centres consumed 176 TWh in 2023 (4.4% of national electricity) and could reach 325–580 TWh by 2028 — 6.7% to 12% — driven largely by AI hardware.', url:'https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf' },
+    { hook:'What training GPT-3 drank', t:'Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.', e:'🌡️', s:'Li et al. 2023, Making AI Less Thirsty', full:'Researchers estimate training GPT-3 in Microsoft’s US data centres directly evaporated about 700,000 litres of freshwater for cooling. The same study projects global AI water withdrawal of 4.2–6.6 billion cubic metres in 2027.', url:'https://arxiv.org/abs/2304.03271' },
+    { hook:'Five drops per prompt', t:'A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.', e:'🤖', s:'Google 2025', full:'Google measured a median Gemini Apps text prompt at 0.24 Wh of electricity and 0.26 mL of water consumed for data-centre cooling (August 2025). That figure excludes the water used to generate the electricity — which Sipcount adds as Scope 2.', url:'https://arxiv.org/abs/2508.15734' },
+    { hook:'1 in 4 people…', t:'2.2 billion people still lacked safely managed drinking water in 2022 — more than 1 in 4 humans.', e:'🚱', s:'WHO/UNICEF JMP 2023', full:'The WHO/UNICEF Joint Monitoring Programme reports that in 2022, 2.2 billion people lacked safely managed drinking water, including 115 million who drank untreated surface water.', url:'https://www.unwater.org/publications/who/unicef-joint-monitoring-program-update-report-2023' },
+    { hook:'25 countries running dry', t:'25 countries — home to 1 in 4 people — use up almost their entire water supply every year.', e:'🌍', s:'WRI Aqueduct 4.0', full:'WRI’s Aqueduct 4.0 (2023) finds 25 countries, housing a quarter of the world’s population, face extremely high water stress — regularly using more than 80% of their renewable supply each year.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
+    { hook:'Half the world, one dry month', t:'About 4 billion people live under severe water stress for at least one month a year.', e:'📅', s:'WRI Aqueduct 4.0', full:'At least half of the world’s population — around 4 billion people — live under highly water-stressed conditions for at least one month every year, according to WRI Aqueduct 4.0.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
+    { hook:'India’s water stress, in one number', t:'Nearly 600 million Indians face high-to-extreme water stress.', e:'🇮🇳', s:'NITI Aayog CWMI 2018', full:'NITI Aayog’s Composite Water Management Index (2018) found nearly 600 million Indians facing high to extreme water stress, and ranked India 120th of 122 countries on water quality.', url:'https://www.pib.gov.in/newsite/PrintRelease.aspx?relid=195635' },
+    { hook:'Delhi is number two', t:'5 of the world’s 20 largest water-stressed cities are in India — Delhi is number two.', e:'🏙️', s:'NITI Aayog CWMI 2.0', full:'The Composite Water Management Index 2.0 (2019) notes that five of the 20 largest cities under water stress worldwide are in India, with Delhi second, and that about 70% of India’s surface water is contaminated.', url:'https://www.niti.gov.in/sites/default/files/2019-08/CWMI-2.0-latest.pdf' },
+    { hook:'Where most water really goes', t:'Farms use 72% of all the freshwater humans take from rivers and aquifers.', e:'🌾', s:'FAO', full:'The FAO puts agriculture at 72% of global freshwater withdrawals, mostly for irrigation — the largest single human use of water.', url:'https://www.fao.org/land-water/water/agricultural-water-management/en' },
+    { hook:'The invisible reservoir', t:'Groundwater is 99% of Earth’s liquid freshwater — and half the water people use at home.', e:'🕳️', s:'UN WWDR 2022', full:'The UN World Water Development Report 2022 states groundwater makes up about 99% of all liquid freshwater, supplies around half of domestic water withdrawals and a quarter of irrigation water.', url:'https://www.unwater.org/publications/un-world-water-development-report-2022' },
+    { hook:'A century of pumping', t:'Pumping has drained about 1,000 km³ of US groundwater since 1900.', e:'🚜', s:'USGS', full:'USGS estimates cumulative US groundwater depletion from 1900 to 2008 at about 1,000 cubic kilometres. In parts of the High Plains aquifer, water levels have fallen more than 100 feet.', url:'https://www.usgs.gov/special-topics/water-science-school/science/groundwater-decline-and-depletion' },
+    { hook:'A lake, half gone', t:'Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.', e:'🏜️', s:'USGS Utah', full:'The Great Salt Lake covered about 2,300 square miles at its 1986 high and fell below 1,000 square miles in 2022, reaching a record-low elevation of 4,188.5 ft on 7 November 2022.', url:'https://www.usgs.gov/centers/utah-water-science-center/science/great-salt-lake-elevations-and-areal-extent' },
+    { hook:'One burger, 47 showers', t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network', full:'The Water Footprint Network estimates the water behind 200 g of beef equals about 47 eight-minute showers, and that the average consumer “eats” roughly 5,000 litres of hidden water a day through food and goods.', url:'https://www.waterfootprint.org/time-for-action/what-can-consumers-do/' }
   ],
   factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3, seconds:9 },
   charities: [
@@ -557,7 +568,7 @@ const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠',label:'Eleva
 /* ===================================================================================== [Toasts] Educational Mode only */
 /* Slide-in card. Hover (desktop) or press-and-hold (touch) pauses the timer and expands `more`; ✕ dismisses. */
 function alertCard(icon, title, sub, cls='', more='', seconds=5){
-  while($('alerts').children.length>=3) $('alerts').firstChild.remove();
+  while($('alerts').children.length>=3){ const victim=[...$('alerts').children].find(c=>!c.classList.contains('teaser'))||$('alerts').firstChild; victim.remove(); }
   const el=document.createElement('div'); el.className='alert '+cls; el.style.setProperty('--dur', seconds+'s');
   el.innerHTML=`<span class="ic">${icon}</span><div style="flex:1"><b>${title}</b><small>${sub||''}</small>${more?`<div class="hint">Hold or hover to read more</div><div class="more">${more}</div>`:''}</div><button class="x" aria-label="Dismiss">✕</button><span class="timer"></span>`;
   $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
@@ -570,13 +581,22 @@ function alertCard(icon, title, sub, cls='', more='', seconds=5){
   el.querySelector('.x').onclick=e=>{ e.stopPropagation(); dismiss(); };
   return el;
 }
+/* Facts (round 7): a small persistent TEASER (icon + 3–5-word hook, no timer) that expands on tap into a
+   readable card with the fact, context and source, plus Close. Only one teaser waits at a time. */
 function showFact(reason){
   const k=dayKey(new Date()), f=(S.facts[k] ||= {shown:[], count:0, prompts:0});
-  if(f.count>=C.factCadence.maxPerDay) return;
+  if(f.count>=C.factCadence.maxPerDay || $('alerts').querySelector('.teaser')) return;
   const pool=C.facts.map((_,i)=>i).filter(i=>!f.shown.includes(i)); if(!pool.length) return;
   const i=pool[Math.floor(Math.random()*pool.length)], fact=C.facts[i];
   f.shown.push(i); f.count++; save();
-  alertCard(fact.e, fact.t, `Source: ${fact.s}`, 'fact', `${fact.full} <a href="${fact.url}" target="_blank" rel="noopener">Read the source ↗</a>`, C.factCadence.seconds);
+  const el=document.createElement('button'); el.className='alert fact teaser'; el.setAttribute('aria-label',`Water fact: ${fact.hook}. Tap to read`);
+  el.innerHTML=`<span class="ic">${fact.e}</span><b style="margin:0">${fact.hook}</b><span class="tap">Tap to read ›</span>`;
+  $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
+  el.onclick=()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),300); openFact(fact); };
+}
+function openFact(fact){
+  $('factBody').innerHTML=`<div style="font-size:2.2em;line-height:1">${fact.e}</div><h2 style="color:var(--green);margin-top:8px">${fact.hook}</h2><p style="margin:6px 0 0;font-family:var(--display);font-weight:700;font-size:1.1em;line-height:1.35">${fact.t}</p><p class="sub" style="margin:10px 0 0;line-height:1.55">${fact.full}</p><p style="margin:10px 0 0;font-size:.85em"><a href="${fact.url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;text-decoration:none">Source: ${fact.s} ↗</a></p>`;
+  $('factSheet').classList.add('open');
 }
 function checkMilestones(promptMl){
   const m=metaphor(), T=todayStats(), k=dayKey(new Date());
@@ -650,9 +670,8 @@ function renderToday(){
   countTo($('todayMl'), T.total, T.total<10?1:0);
   // drop starts FULL and drains as the budget is consumed (round 5)
   $('dropFill').style.transform=`translateY(${130*Math.min(1,T.pct)}px)`; $('dropFill').style.fill=col;
-  countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=e.unit; $('metaBase').textContent=`1 ${m.one} = ${m.ml} mL · units = mL ÷ ${m.ml}`;
+  countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=m.many[0].toUpperCase()+m.many.slice(1); // "≈ 0.10 Smoothies" — no maths shown on the frontend (round 7)
   $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').className='z-'+z;
-  $('statusBadge').className='status z-'+z; $('statusBadge').querySelector('.ico').textContent=ZONE_UI[z].ico; $('statusLabel').textContent=ZONE_UI[z].label;
   $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
   $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
   $('plantPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('plantPill').className='pill '+zonePill(T.pct);
@@ -717,6 +736,7 @@ function renderNeutral(){
   $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
 }
 $('neutralBtn').onclick=$('neutralBtn2').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };
+$('factClose').onclick=()=>$('factSheet').classList.remove('open');
 $('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
 
 /* ===================================================================================== [Grove] MOCK */
@@ -766,7 +786,7 @@ function renderSettings(){
   $('modeLabel').textContent = isEdu()?'Educational Mode (13–17)':'Minimalist Mode (18+)';
   $('modeSub').textContent = isEdu()?`Cup alerts on${S.social?'':' · social features off'}`:'Cup alerts off. Water facts on for everyone.';
   $('metaChips').innerHTML=Object.entries(C.metaphors).map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===S.metaphor}">${x.emoji} ${x.label}</button>`).join('');
-  const m=metaphor(); $('metaNote').textContent=`1 ${m.one} = ${m.ml} mL.${isEdu()?` An alert pops up each time your day passes another ${m.one}.`:''}`;
+  const m=metaphor(); $('metaNote').textContent=isEdu()?`An alert pops up each time your day passes another ${m.one}.`:`Your water is shown in ${m.many}.`;
   $('sizeSel').value=S.size; $('budgetIn').value=S.budget;
   const R=C.regions[S.region];
   $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
