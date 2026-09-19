@@ -23,10 +23,10 @@
    stark white metrics, one neon green for action/progress/thriving. Dark-only by design.
    ===================================================================================== */
 :root{
-  --ink:#000000; --surface:#1A1A1A; --surface-2:#262626; --line:#333333;
+  --ink:#000000; --surface:#141414; --surface-2:#1E1E1E; --line:#262626; --track:#333333;
   --text:#FFFFFF; --muted:#A6A6A6; --dim:#6E6E6E;
-  --green:#00F0A0; --green-deep:#00B877; --green-soft:rgba(0,240,160,.12);
-  --amber:#FFB020; --red:#FF4D5E; --soil:#3A3A3A;
+  --green:#00F076; --green-deep:#00B85A; --green-soft:rgba(0,240,118,.12);
+  --amber:#FFB800; --red:#FF3B30; --soil:#3A3A3A;
   --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
   --fs:15px; --tap:44px; --radius:16px; --gap:16px;
   color-scheme:dark;
@@ -52,7 +52,16 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .between{justify-content:space-between}
 .wrap{flex-wrap:wrap}
 .stack{display:flex;flex-direction:column;gap:6px}
-.panel{background:var(--surface);border-radius:var(--radius);padding:16px}
+.panel{background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--line)}
+/* Status system (round 6): never colour alone — icon + label + fill texture per zone */
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.9em;padding:6px 10px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+.status .ico{font-size:1.05em;line-height:1}
+.status.z-green{color:var(--green)} .status.z-amber{color:var(--amber)} .status.z-red{color:var(--red);font-weight:900}
+.ring{width:100%;height:8px;border-radius:99px;background:var(--track);overflow:hidden}
+.ring i{display:block;height:100%;transition:width .6s}
+.ring i.z-green{background:var(--green)}
+.ring i.z-amber{background:repeating-linear-gradient(135deg,var(--amber) 0 5px,#8a6400 5px 8px)}
+.ring i.z-red{background:repeating-linear-gradient(45deg,var(--red) 0 3px,#7a1c17 3px 5px),repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.35) 3px 5px)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tile{background:var(--surface);border-radius:14px;padding:14px}
 .tile .v{font-family:var(--display);font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
@@ -65,9 +74,7 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .plantcard{display:flex;gap:12px;align-items:center;padding:12px 16px}
 .plantbox{height:104px;width:96px;flex:none}
 .plantbox svg{width:100%;height:100%;display:block;overflow:visible}
-.ring{width:100%;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.ring i{display:block;height:100%;background:var(--green);transition:width .6s}
-.scopebar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex}
+.scopebar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex}
 .scopebar i{display:block;height:100%;transition:width .6s}
 .legend{display:flex;gap:14px;font-size:.78em;color:var(--muted);flex-wrap:wrap}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
@@ -131,12 +138,28 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 nav button[aria-current=page]{color:var(--green)}
 /* in-app slide-in alerts (Educational Mode only) */
 .alerts{position:absolute;top:12px;left:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
-.alert{background:var(--surface);color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px rgba(0,0,0,.6);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em}
+.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 40px 12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 12px 30px rgba(0,0,0,.7);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em;position:relative;cursor:default;user-select:none}
 .alert.in{transform:translateY(0);opacity:1}
-.alert .ic{font-size:1.6em;line-height:1}
+.alert .ic{font-size:1.6em;line-height:1;margin-top:2px}
 .alert b{font-family:var(--display);font-weight:700;font-size:.92em;display:block}
-.alert small{color:var(--muted)}
-.alert.fact{border-left-color:var(--amber)}
+.alert small{color:var(--muted);display:block;margin-top:2px}
+.alert .more{display:none;color:var(--text);margin-top:8px;font-size:.9em;line-height:1.45;border-top:1px solid var(--line);padding-top:8px}
+.alert .more a{color:var(--green);text-decoration:none;font-weight:700}
+.alert.open .more{display:block}
+.alert.open{background:#1E1E1E}
+.alert .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.85em;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.alert .timer{position:absolute;left:0;bottom:0;height:2px;background:var(--green);width:100%;transform-origin:left;animation:shrink var(--dur,9s) linear forwards}
+.alert.paused .timer{animation-play-state:paused}
+@keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.alert.fact{border-left-color:var(--amber)} .alert.fact .timer{background:var(--amber)}
+.alert .hint{color:var(--dim);font-size:.75em;margin-top:4px}
+.alert.open .hint{display:none}
+/* About */
+.about{max-width:60ch;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.about h1{font-size:1.7em;font-weight:800;letter-spacing:-.02em}
+.about h3{font-family:var(--display);font-size:1.05em;font-weight:700;margin-top:10px;color:var(--green)}
+.about p{margin:0;line-height:1.6;color:#E8E8E8}
+.about .lede{font-size:1.05em;color:var(--text)}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:5}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .demo{font-size:.78em;color:var(--dim);text-align:center;margin:0}
@@ -202,9 +225,10 @@ nav button[aria-current=page]{color:var(--green)}
         <div class="stack" style="flex:1">
           <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
-          <div class="sub" id="todayEq">—</div>
-          <div class="ring" style="margin-top:8px"><i id="budgetRing" style="width:0%"></i></div>
-          <div class="sub" id="todayBudget" style="font-size:.85em;font-weight:700">—</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:1.1em;font-variant-numeric:tabular-nums"><span id="metaCount">0.00</span> <span id="metaUnit" style="font-weight:600;color:var(--muted);font-size:.85em"></span></div>
+          <div class="sub" id="metaBase" style="font-size:.78em;color:var(--dim)">—</div>
+          <div class="ring" style="margin-top:8px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
+          <div class="row between wrap" style="margin-top:6px"><span class="status z-green" id="statusBadge"><span class="ico">✓</span><span id="statusLabel">Optimal</span></span><span class="sub" id="todayBudget" style="font-size:.8em">—</span></div>
           <div class="sub" id="todayLeft" style="font-size:.8em">—</div>
         </div>
       </div>
@@ -215,7 +239,7 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="plantbox" id="plantBox" aria-hidden="true"></div>
       <div class="stack" style="flex:1">
         <span class="eyebrow">Dynamic plant</span>
-        <div class="row between wrap"><h3 id="plantState" style="font-family:var(--display);font-size:1.15em;font-weight:800"></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
+        <div class="row between wrap"><h3 id="plantState" style="font-family:var(--display);font-size:1.15em;font-weight:800"><span id="plantIco"></span> <span id="plantStateTxt"></span></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
         <div class="sub" id="plantLine" style="font-size:.85em"></div>
       </div>
     </div>
@@ -295,6 +319,25 @@ nav button[aria-current=page]{color:var(--green)}
     <p class="demo">Prototype shows sample data. Real groups will be opt-in, nickname only, sharing daily totals — never prompts.</p>
   </section>
 
+  <!-- ============ ABOUT — "Behind the Cloud" (copy supplied by product owner, verbatim) ============ -->
+  <section class="screen" id="s-about">
+    <div class="about">
+      <span class="eyebrow">About Sipcount</span>
+      <h1>Behind the Cloud</h1>
+      <h3>The "Cloud" is on the Ground</h3>
+      <p class="lede">Generative AI feels like magic. You type a prompt, and a server in the cloud instantly writes code, drafts essays, or renders artwork. But the cloud isn't in the sky—it's massive, hyper-heated physical infrastructure sitting right here on earth.</p>
+      <h3>The Hidden Cost of Computing</h3>
+      <p>Every AI query requires intense computational power. To keep these hyperscale server racks from melting, data centers evaporate millions of liters of freshwater daily through cooling towers. Meanwhile, the regional power grids feeding them consume even more water to generate that electricity.</p>
+      <p>We are trading our most vital physical resource for digital convenience. As global economies push for aggressive 7-8% GDP growth, balancing this massive industrial resource drain against municipal water stress is a math problem that simply doesn't add up.</p>
+      <h3>Why Sipcount Exists</h3>
+      <p>You can't manage what you don't measure. Sipcount strips away the abstraction of server telemetry and translates your estimated AI water footprint into tangible, everyday metrics—down to the milliliter.</p>
+      <p>We are building a movement of <b>digital sobriety</b>. By seeing the actual cost of your prompts, you can write smarter, more efficient queries, choose lighter AI models for simple tasks, and hold tech infrastructure accountable.</p>
+      <p><b>Stop guessing your impact. Start tracking your sips.</b></p>
+      <button class="btn" id="neutralBtn2" style="margin-top:8px">Neutralize My Water Footprint</button>
+      <p class="demo" style="text-align:left">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How we calculate.</p>
+    </div>
+  </section>
+
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="s-settings">
     <h1>Settings</h1>
@@ -337,6 +380,7 @@ nav button[aria-current=page]{color:var(--green)}
     <button data-s="today" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/></svg>Today</button>
     <button data-s="log"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Log</button>
     <button data-s="grove" id="navGrove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
+    <button data-s="about"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.2A4 4 0 0 1 17 17z"/><path d="M12 21v-4"/></svg>About</button>
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
 </div>
@@ -367,7 +411,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-18',
+  version: '2026-09-19',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -403,25 +447,26 @@ const SIPCOUNT_CONFIG = {
   zones: { green:0.5, amber:0.7 },
   plant: { thriving:0.5, drooping:0.7 },
   /* Educational Mode facts — each figure read on the cited source page (verified 2026-09-17). */
+  /* Environmental facts — shown to ALL users (round 6). `t` = card line, `full` = expanded context. Each figure verified on the source page. */
   facts: [
-    { t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School' },
-    { t:'Power plants pulled 41% of all water withdrawn in the US in 2015 — more than any other use.', e:'🔌', s:'USGS, Thermoelectric water use' },
-    { t:'Making 1 kWh of US electricity used about 57 litres of water in 2015. Your charger has a water bill.', e:'⚡', s:'USGS 2015' },
-    { t:'US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.', e:'🖥️', s:'LBNL 2024 report' },
-    { t:'Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.', e:'🌡️', s:'Li et al. 2023, Making AI Less Thirsty' },
-    { t:'A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.', e:'🤖', s:'Google 2025' },
-    { t:'2.2 billion people still lacked safely managed drinking water in 2022 — more than 1 in 4 humans.', e:'🚱', s:'WHO/UNICEF JMP 2023' },
-    { t:'25 countries — home to 1 in 4 people — use up almost their entire water supply every year.', e:'🌍', s:'WRI Aqueduct 4.0' },
-    { t:'About 4 billion people live under severe water stress for at least one month a year.', e:'📅', s:'WRI Aqueduct 4.0' },
-    { t:'Nearly 600 million Indians face high-to-extreme water stress.', e:'🇮🇳', s:'NITI Aayog CWMI 2018' },
-    { t:'5 of the world’s 20 largest water-stressed cities are in India — Delhi is number two.', e:'🏙️', s:'NITI Aayog CWMI 2.0' },
-    { t:'Farms use 72% of all the freshwater humans take from rivers and aquifers.', e:'🌾', s:'FAO' },
-    { t:'Groundwater is 99% of Earth’s liquid freshwater — and half the water people use at home.', e:'🕳️', s:'UN WWDR 2022' },
-    { t:'Pumping has drained about 1,000 km³ of US groundwater since 1900.', e:'🚜', s:'USGS' },
-    { t:'Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.', e:'🏜️', s:'USGS Utah' },
-    { t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network' }
+    { t:"Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.", e:'💧', s:'USGS Water Science School', full:'Of all water on Earth, about 2.5% is freshwater. Of that, 68.7% is locked in ice and snow and 30.1% is groundwater; only around 1.2% is surface water such as rivers, lakes and swamps — the part people and ecosystems can most easily use.', url:'https://www.usgs.gov/special-topics/water-science-school/science/where-earths-water' },
+    { t:'Power plants pulled 41% of all water withdrawn in the US in 2015 — more than any other use.', e:'🔌', s:'USGS, Thermoelectric water use', full:'Thermoelectric power plants withdrew about 133 billion gallons a day in 2015 — 41% of all US withdrawals and 34% of freshwater withdrawals — mainly to cool the steam that spins the generators.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
+    { t:'Making 1 kWh of US electricity used about 57 litres of water in 2015. Your charger has a water bill.', e:'⚡', s:'USGS 2015', full:'US power plants withdrew about 15 gallons (57 litres) of water per kilowatt-hour generated in 2015, down from roughly 19 gallons in 2010. Most is returned to the source warmer; a share evaporates.', url:'https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use' },
+    { t:'US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.', e:'🖥️', s:'LBNL 2024 report', full:'Lawrence Berkeley National Laboratory estimates US data centres consumed 176 TWh in 2023 (4.4% of national electricity) and could reach 325–580 TWh by 2028 — 6.7% to 12% — driven largely by AI hardware.', url:'https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf' },
+    { t:'Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.', e:'🌡️', s:'Li et al. 2023, Making AI Less Thirsty', full:'Researchers estimate training GPT-3 in Microsoft’s US data centres directly evaporated about 700,000 litres of freshwater for cooling. The same study projects global AI water withdrawal of 4.2–6.6 billion cubic metres in 2027.', url:'https://arxiv.org/abs/2304.03271' },
+    { t:'A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.', e:'🤖', s:'Google 2025', full:'Google measured a median Gemini Apps text prompt at 0.24 Wh of electricity and 0.26 mL of water consumed for data-centre cooling (August 2025). That figure excludes the water used to generate the electricity — which Sipcount adds as Scope 2.', url:'https://arxiv.org/abs/2508.15734' },
+    { t:'2.2 billion people still lacked safely managed drinking water in 2022 — more than 1 in 4 humans.', e:'🚱', s:'WHO/UNICEF JMP 2023', full:'The WHO/UNICEF Joint Monitoring Programme reports that in 2022, 2.2 billion people lacked safely managed drinking water, including 115 million who drank untreated surface water.', url:'https://www.unwater.org/publications/who/unicef-joint-monitoring-program-update-report-2023' },
+    { t:'25 countries — home to 1 in 4 people — use up almost their entire water supply every year.', e:'🌍', s:'WRI Aqueduct 4.0', full:'WRI’s Aqueduct 4.0 (2023) finds 25 countries, housing a quarter of the world’s population, face extremely high water stress — regularly using more than 80% of their renewable supply each year.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
+    { t:'About 4 billion people live under severe water stress for at least one month a year.', e:'📅', s:'WRI Aqueduct 4.0', full:'At least half of the world’s population — around 4 billion people — live under highly water-stressed conditions for at least one month every year, according to WRI Aqueduct 4.0.', url:'https://www.wri.org/insights/highest-water-stressed-countries' },
+    { t:'Nearly 600 million Indians face high-to-extreme water stress.', e:'🇮🇳', s:'NITI Aayog CWMI 2018', full:'NITI Aayog’s Composite Water Management Index (2018) found nearly 600 million Indians facing high to extreme water stress, and ranked India 120th of 122 countries on water quality.', url:'https://www.pib.gov.in/newsite/PrintRelease.aspx?relid=195635' },
+    { t:'5 of the world’s 20 largest water-stressed cities are in India — Delhi is number two.', e:'🏙️', s:'NITI Aayog CWMI 2.0', full:'The Composite Water Management Index 2.0 (2019) notes that five of the 20 largest cities under water stress worldwide are in India, with Delhi second, and that about 70% of India’s surface water is contaminated.', url:'https://www.niti.gov.in/sites/default/files/2019-08/CWMI-2.0-latest.pdf' },
+    { t:'Farms use 72% of all the freshwater humans take from rivers and aquifers.', e:'🌾', s:'FAO', full:'The FAO puts agriculture at 72% of global freshwater withdrawals, mostly for irrigation — the largest single human use of water.', url:'https://www.fao.org/land-water/water/agricultural-water-management/en' },
+    { t:'Groundwater is 99% of Earth’s liquid freshwater — and half the water people use at home.', e:'🕳️', s:'UN WWDR 2022', full:'The UN World Water Development Report 2022 states groundwater makes up about 99% of all liquid freshwater, supplies around half of domestic water withdrawals and a quarter of irrigation water.', url:'https://www.unwater.org/publications/un-world-water-development-report-2022' },
+    { t:'Pumping has drained about 1,000 km³ of US groundwater since 1900.', e:'🚜', s:'USGS', full:'USGS estimates cumulative US groundwater depletion from 1900 to 2008 at about 1,000 cubic kilometres. In parts of the High Plains aquifer, water levels have fallen more than 100 feet.', url:'https://www.usgs.gov/special-topics/water-science-school/science/groundwater-decline-and-depletion' },
+    { t:'Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.', e:'🏜️', s:'USGS Utah', full:'The Great Salt Lake covered about 2,300 square miles at its 1986 high and fell below 1,000 square miles in 2022, reaching a record-low elevation of 4,188.5 ft on 7 November 2022.', url:'https://www.usgs.gov/centers/utah-water-science-center/science/great-salt-lake-elevations-and-areal-extent' },
+    { t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network', full:'The Water Footprint Network estimates the water behind 200 g of beef equals about 47 eight-minute showers, and that the average consumer “eats” roughly 5,000 litres of hidden water a day through food and goods.', url:'https://www.waterfootprint.org/time-for-action/what-can-consumers-do/' }
   ],
-  factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3 },
+  factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3, seconds:9 },
   charities: [
     { name:'charity: water', url:'https://www.charitywater.org/donate', line:'≈ 1,100 litres of clean water per $1 (their published hand-pump average); 100 % of public donations fund projects.', per_l_usd:1/1100 },
     { name:'Water.org', url:'https://water.org/donate/', line:'$5 reaches one person with safe water or sanitation (their FY2020–24 average).' },
@@ -446,7 +491,14 @@ function estimate({tier,task,inputTokens,items=1,params}){
 const tok=ch=>ch<=0?0:Math.ceil(ch/C.charsPerToken);
 const fmt=(n,d)=>n.toLocaleString(undefined,{maximumFractionDigits:d??(n<10?1:0),minimumFractionDigits:0});
 const metaphor=()=>C.metaphors[S.metaphor]||C.metaphors.boba;
-function equivParts(ml, m=metaphor()){ const n=ml/m.ml; const s=n===0?'0':n<0.095?'0.1':fmt(n,n<10?1:0); return { n:s, unit: s==='1'?m.one:m.many }; }
+/* Units = mL consumed ÷ beverage volume, always two decimals (round 6). */
+function equivParts(ml, m=metaphor()){ const n=ml/m.ml; const s=n.toFixed(2); return { n:s, raw:n, unit: s==='1.00'?m.one:m.many }; }
+/* Smooth number counting for a text node: tweens from its current value to `to`. */
+function countTo(el, to, decimals=2, ms=700){
+  const from=parseFloat((el.textContent||'0').replace(/,/g,''))||0; if(Math.abs(to-from)<1e-9){ el.textContent=decimals?to.toFixed(decimals):fmt(to); return; }
+  const t0=performance.now(); const ease=x=>1-Math.pow(1-x,3);
+  (function step(now){ const p=Math.min(1,(now-t0)/ms), v=from+(to-from)*ease(p); el.textContent=decimals?v.toFixed(decimals):fmt(v); if(p<1) requestAnimationFrame(step); })(t0);
+}
 function equiv(ml){ const e=equivParts(ml); return `${e.n} ${e.unit}`; }
 
 /* ===================================================================================== [App] state */
@@ -454,7 +506,7 @@ const KEY='sipcount.v5';
 const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let S=load();
 function load(){
-  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.facts||={}; return j; } }catch(e){}
+  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.facts||={}; if(!C.metaphors[j.metaphor]) j.metaphor='boba'; return j; } }catch(e){}
   let days={}, sample=false, budget=100, region='us_hyperscale', metaphorId='boba';
   for(const k of ['sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; sample=!!old.sample; budget=old.budget||100; region=C.regions[old.region]?old.region:region; if(C.metaphors[old.metaphor]) metaphorId=old.metaphor; break; } }catch(e){} }
   return { budget, region, cooling:'reported', hydro:true, size:'standard', metaphor:metaphorId, mode:null, social:true, saved:0, days, sample, streak:12, milestones:{}, facts:{} };
@@ -499,32 +551,43 @@ function plantState(pct){ return pct>=C.plant.drooping?'Wilting':pct>=C.plant.th
 const zone=pct=>pct<C.zones.green?'green':pct<C.zones.amber?'amber':'red';
 const zoneVar=pct=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[zone(pct)];
 const zonePill=pct=>({green:'good',amber:'warn',red:'bad'})[zone(pct)];
+/* Colour-blind-safe status: icon + label per zone (round 6) */
+const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠',label:'Elevated'}, red:{ico:'✖',label:'Limit Exceeded'} };
 
 /* ===================================================================================== [Toasts] Educational Mode only */
-function alertCard(icon, title, sub, cls=''){
+/* Slide-in card. Hover (desktop) or press-and-hold (touch) pauses the timer and expands `more`; ✕ dismisses. */
+function alertCard(icon, title, sub, cls='', more='', seconds=5){
   while($('alerts').children.length>=3) $('alerts').firstChild.remove();
-  const el=document.createElement('div'); el.className='alert '+cls; el.innerHTML=`<span class="ic">${icon}</span><div><b>${title}</b><small>${sub||''}</small></div>`;
+  const el=document.createElement('div'); el.className='alert '+cls; el.style.setProperty('--dur', seconds+'s');
+  el.innerHTML=`<span class="ic">${icon}</span><div style="flex:1"><b>${title}</b><small>${sub||''}</small>${more?`<div class="hint">Hold or hover to read more</div><div class="more">${more}</div>`:''}</div><button class="x" aria-label="Dismiss">✕</button><span class="timer"></span>`;
   $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
-  setTimeout(()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),500); }, 4500);
+  let gone=false, paused=false; const born=Date.now(); const dismiss=()=>{ if(gone) return; gone=true; el.classList.remove('in'); setTimeout(()=>el.remove(),500); };
+  let timer=setTimeout(dismiss, seconds*1000), remaining=seconds*1000, started=Date.now();
+  const pause=()=>{ if(gone||paused||Date.now()-born<600) return; paused=true; clearTimeout(timer); remaining-=Date.now()-started; el.classList.add('paused'); if(more) el.classList.add('open'); };
+  const resume=()=>{ if(gone||!paused) return; paused=false; started=Date.now(); el.classList.remove('paused'); timer=setTimeout(dismiss, Math.max(1500,remaining)); };
+  el.addEventListener('pointerenter',pause); el.addEventListener('pointerleave',resume);
+  el.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse') pause(); }); el.addEventListener('pointerup',e=>{ if(e.pointerType!=='mouse') resume(); }); el.addEventListener('pointercancel',resume);
+  el.querySelector('.x').onclick=e=>{ e.stopPropagation(); dismiss(); };
+  return el;
 }
 function showFact(reason){
-  if(!isEdu()) return;
   const k=dayKey(new Date()), f=(S.facts[k] ||= {shown:[], count:0, prompts:0});
   if(f.count>=C.factCadence.maxPerDay) return;
   const pool=C.facts.map((_,i)=>i).filter(i=>!f.shown.includes(i)); if(!pool.length) return;
   const i=pool[Math.floor(Math.random()*pool.length)], fact=C.facts[i];
   f.shown.push(i); f.count++; save();
-  alertCard(fact.e, fact.t, `Source: ${fact.s}`, 'fact');
+  alertCard(fact.e, fact.t, `Source: ${fact.s}`, 'fact', `${fact.full} <a href="${fact.url}" target="_blank" rel="noopener">Read the source ↗</a>`, C.factCadence.seconds);
 }
 function checkMilestones(promptMl){
-  if(!isEdu()) return;   // Minimalist Mode: no alerts of any kind
   const m=metaphor(), T=todayStats(), k=dayKey(new Date());
   const before=S.milestones[k]||0, now=Math.floor(T.total/m.ml);
-  if(promptMl>=m.ml){ const u=equivParts(promptMl); alertCard(m.emoji, `${u.n} ${u.unit} of water just evaporated for that prompt!`, 'Heavy one. Lighter model next time?'); }
-  if(now>before){ alertCard(m.emoji, m.done, now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`); }
+  if(isEdu()){ // cup milestone alerts stay Educational-Mode only (D-17)
+    if(promptMl>=m.ml){ const u=equivParts(promptMl); alertCard(m.emoji, `${u.n} ${u.unit} of water just evaporated for that prompt!`, 'Heavy one. Lighter model next time?'); }
+    if(now>before){ alertCard(m.emoji, m.done, now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`); }
+  }
   S.milestones[k]=now;
   const f=(S.facts[k] ||= {shown:[], count:0, prompts:0}); f.prompts++; save();
-  if(f.prompts % C.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);
+  if(f.prompts % C.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);   // facts: everyone (round 6)
 }
 
 /* ===================================================================================== [Plant] single standardised plant */
@@ -555,7 +618,7 @@ function mix(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,
 let simTimer=null;
 function simulateHeavyQuery(){
   if(simTimer) return; toast('Simulating a heavy day…');
-  setPlant(1.5); $('plantPill').textContent='Wilting'; $('plantPill').className='pill bad'; $('plantState').textContent='Wilting';
+  setPlant(1.5); $('plantPill').textContent='✖ Limit Exceeded'; $('plantPill').className='pill bad'; $('plantIco').textContent='✖'; $('plantStateTxt').textContent='Wilting';
   simTimer=setTimeout(()=>{ renderToday(); simTimer=null; },5500);
 }
 
@@ -583,16 +646,17 @@ function renderToday(){
   applyMode();
   const T=todayStats(), state=plantState(T.pct);
   $('modePill').textContent=isEdu()?'Educational':'Minimal';
-  const col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total);
-  $('todayMl').textContent=fmt(T.total);
+  const z=zone(T.pct), col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total), m=metaphor(), e=equivParts(T.total);
+  countTo($('todayMl'), T.total, T.total<10?1:0);
   // drop starts FULL and drains as the budget is consumed (round 5)
   $('dropFill').style.transform=`translateY(${130*Math.min(1,T.pct)}px)`; $('dropFill').style.fill=col;
-  $('todayEq').textContent=T.n?`≈ ${equiv(T.total)}`:'No prompts yet today';
-  $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').style.background=col;
-  $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL budget used`; $('todayBudget').style.color=col;
+  countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=e.unit; $('metaBase').textContent=`1 ${m.one} = ${m.ml} mL · units = mL ÷ ${m.ml}`;
+  $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').className='z-'+z;
+  $('statusBadge').className='status z-'+z; $('statusBadge').querySelector('.ico').textContent=ZONE_UI[z].ico; $('statusLabel').textContent=ZONE_UI[z].label;
+  $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
   $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
-  $('plantPill').textContent=state; $('plantPill').className='pill '+zonePill(T.pct);
-  $('plantState').textContent=state; $('plantState').style.color=col;
+  $('plantPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('plantPill').className='pill '+zonePill(T.pct);
+  $('plantIco').textContent=ZONE_UI[z].ico; $('plantStateTxt').textContent=state; $('plantState').style.color=col;
   $('plantLine').textContent = T.pct>=1?`${fmt(T.total-S.budget)} mL past the limit.`:`Health ${Math.max(0,Math.round((1-T.pct)*100))}% — fades with every prompt.`;
   if(!$('plantSvg')) $('plantBox').innerHTML=plantSVG();
   requestAnimationFrame(()=>setPlant(T.pct));
@@ -606,7 +670,7 @@ function renderToday(){
   $('tWeek').textContent=fmt(w)+' mL'; $('tStreak').textContent=state==='Wilting'?0:S.streak;
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15; $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=Math.round(p1*100)+'%'; $('p2').textContent=Math.round((1-p1)*100)+'%';
   const light='Short prompt? A <b>lighter model</b> does it for about a fifth of the water.';
-  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=col;
+  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
   $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
 }
@@ -652,7 +716,7 @@ function renderNeutral(){
   $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">≈ ${equiv(wk)} · about ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
   $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
 }
-$('neutralBtn').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };
+$('neutralBtn').onclick=$('neutralBtn2').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };
 $('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
 
 /* ===================================================================================== [Grove] MOCK */
@@ -695,11 +759,12 @@ function renderEst(){
 function logOne(){ const e=current(); record(e,$('modelSel').value,task,vendor); save(); checkMilestones(e.total); return e; }
 $('logBtn').onclick=()=>{ const e=logOne(); toast(`Logged · ${fmt(e.total,2)} mL`); };
 $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } toast(`Logged 10 · ${fmt(t,1)} mL`); };
+// note: the demo button can trigger two fact slots at once (prompts 5 and 10); acceptable for demos.
 
 /* ===================================================================================== [Settings] */
 function renderSettings(){
   $('modeLabel').textContent = isEdu()?'Educational Mode (13–17)':'Minimalist Mode (18+)';
-  $('modeSub').textContent = isEdu()?`Water facts and cup alerts on${S.social?'':' · social features off'}`:'No alerts. Data only.';
+  $('modeSub').textContent = isEdu()?`Cup alerts on${S.social?'':' · social features off'}`:'Cup alerts off. Water facts on for everyone.';
   $('metaChips').innerHTML=Object.entries(C.metaphors).map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===S.metaphor}">${x.emoji} ${x.label}</button>`).join('');
   const m=metaphor(); $('metaNote').textContent=`1 ${m.one} = ${m.ml} mL.${isEdu()?` An alert pops up each time your day passes another ${m.one}.`:''}`;
   $('sizeSel').value=S.size; $('budgetIn').value=S.budget;
@@ -724,11 +789,11 @@ $('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?'
 $('sampleBtn').onclick=()=>{ S.wiped=false; loadSample(); toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [App] boot */
-$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast(isEdu()?'Educational Mode':'Minimalist Mode'); if(isEdu()&&C.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
+$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast(isEdu()?'Educational Mode':'Minimalist Mode'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
 $('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
 fillModels(); renderEst(); applyMode();
 if(!S.mode){ show('splash'); }
-else { show('today'); if(isEdu()&&C.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); }
+else { show('today'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); }
 </script>
 </body>
 </html>

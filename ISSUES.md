@@ -45,6 +45,19 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 6 (received 2026-09-19, on v5.1) — accepted; delivered as v6
+
+Facts now for **all** users (revises D-17: cup milestone alerts stay Educational-only; educational facts universal); cards last 9 s, hover/press-and-hold pauses and expands to full context with a source link, ✕ dismiss. Metaphor units always two decimals with baseline footnote ("1 smoothie = 350 mL · units = mL ÷ 350") and animated counting. New **About** tab "Behind the Cloud" with the supplied copy verbatim + CTA; a one-line estimate disclaimer added beneath (not inside) the copy. Palette tightened (#000 / #141414 cards / #262626 borders / #333 tracks; green #00F076, amber #FFB800, red #FF3B30). Colour-blind-safe status: ✓ Optimal / ⚠ Elevated / ✖ **Limit Exceeded** labels + striped (amber) and cross-hatched (red) bar fills. Hierarchy unchanged from v5.1 (drop › plant › insights › chart).
+**Accuracy flag raised with Madhur:** the About copy says "your *exact* AI water footprint … down to the milliliter"; our numbers are estimates with stated confidence. Madhur changed "exact" → "estimated" in the About copy (2026-09-19); disclaimer line retained. Partner to be informed.
+
+## Roadmap decisions — 2026-09-18 (Madhur; to be raised with partner)
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| D-20 | **Desktop apps (Windows + macOS) = Increment 5** | Decided (Madhur) | Tray/menu-bar monitor for ChatGPT/Claude/Copilot desktop apps + browsers. Easier than mobile: per-process network attribution is a normal OS query; accessibility APIs may read model names with permission; no store gatekeeping for direct download. Same `PromptEvent` → same engine → same dashboard. Also the calibration bench for the mobile doorman. Sequence: after the Android spike. Variant to settle with partner: consumer tray app vs enterprise/ESG aggregate reporting. |
+| D-21 | **Optional sign-in for a 360° cross-device view** | Open — Madhur's proposal, not yet discussed with partner | Value: one believable total across phone, laptop, extension; identity for groups/leaderboard; ESG later. Cost: privacy promise shifts from "nothing leaves the device" to "only daily totals, only if you sign in"; account system, storage, support, GDPR + India DPDP (under-18 parental consent). **Recommended path:** (1) bring-your-own-cloud sync first — app writes its daily-totals file to the user's own Google Drive / iCloud app folder; Sipcount runs no server; (2) Sipcount account + aggregate backend only when groups/leaderboard are approved; (3) sign-in gated to Minimalist Mode (18+) at launch. |
+| **Architecture directive (Madhur, 2026-09-18)** | Build everything from now on so D-21 can be added later with maximum reuse and low maintenance | Standing | See ARCHITECTURE.md §9 "Sync-ready architecture rules". |
+
 ## Partner feedback round 5 (received 2026-09-18, on prototype v5) — all accepted, no decisions needed
 
 Traffic-light thresholds (<50 % green, 50–69 % amber, ≥70 % red) applied to drop fill, budget bar, status text, plant label, nudge; drop card dominant and the drop now **drains from full**; plant card compact; plant degrades **continuously** with 0–100 % (colour green→amber→red, posture droops), collapsing past 100 %; Insights moved above the 7-day chart. Delivered as v5.1 (constants 2026-09-18).

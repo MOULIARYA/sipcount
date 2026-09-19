@@ -151,6 +151,20 @@ Flutter (BSD-3), flutter_riverpod (MIT), drift (MIT, sqlite counters), flutter_l
 - **CI**: only hand-written Android files are in git. The workflow runs `flutter create --platforms=android` (never overwrites) to generate Gradle/wrapper/icons, then `analyze → test → build apk --release` (debug-key signed) and publishes to the `android-latest` pre-release.
 - **Demo mode**: "Try it" buttons on the Today screen inject synthetic PromptEvents through the real pipeline, so the app can be shown before the permission is granted.
 
+## 9. Sync-ready architecture rules (directive 2026-09-18)
+
+Optional sign-in and a 360° cross-device view (ISSUES D-21) may be added later. Every increment from now on follows these rules so that day arrives as an add-on, not a rewrite:
+
+1. **One canonical record: the `DayTotals` document.** Key `YYYY-MM-DD` (local day) → `{n, img, s1, s2, tier{}, task{}, vendor{ vendor → {n, ml, tiers{}} }}`. Counts and millilitres only. Every platform (Android, iOS, desktop, extension, prototype) must write exactly this shape; new fields are additive and optional. This document is the only thing that would ever sync.
+2. **Device-scoped totals, mergeable by addition.** Each device stores its own `DayTotals` per day under a device id; a consolidated view is the field-wise sum across devices. Addition is order-independent and idempotent per (device, day), so sync needs no conflict resolution — last-write-wins per device-day document.
+3. **Schema version on every document** (`schema: 1`) and versioned constants (`constants_version`) so old devices and new servers can coexist; migrations are pure functions in one shared module.
+4. **Storage behind an interface.** `AggregateStore` (Dart) and its JS twin expose `readAll / add / wipe` only; a `SyncProvider` interface (`push(dayDocs)`, `pull() → dayDocs`) is defined now with a `NullSyncProvider` default. Bring-your-own-cloud (Google Drive appDataFolder, iCloud) and a Sipcount backend are just implementations.
+5. **Identity is optional and separate.** No user id anywhere in the data model until sign-in exists; when it does, it is a wrapper around the same documents, gated to 18+ at launch.
+6. **Privacy boundary unchanged.** Sensors emit `PromptEvent` (counts only); the engine computes; only `DayTotals` persist. Nothing in the sync path may carry prompt text, model names beyond tier, timestamps finer than a day, or location.
+7. **Shared engine, shared constants.** `models.json` is the single source of constants for all platforms (I-16 syncs the prototype's config back into it); calibration coefficients live there too (D-3).
+8. **UI reads a `Dashboard` view-model**, never raw storage, so a consolidated multi-device view is a different data source behind the same screens.
+9. **Tech choices favour code reuse:** Flutter for phone + desktop (one engine, one UI); the extension shares `engine.js` with the prototype; Rust/Tauri only if Flutter desktop proves too heavy for a tray app.
+
 ## 8. Next steps
 
 1. User test on a real phone (ChatGPT / Claude / Gemini apps + Chrome); tune send-button and model-label heuristics from feedback.
