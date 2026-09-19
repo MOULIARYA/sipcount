@@ -422,7 +422,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-19b',
+  version: '2026-09-19c',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -601,10 +601,9 @@ function openFact(fact){
 function checkMilestones(promptMl){
   const m=metaphor(), T=todayStats(), k=dayKey(new Date());
   const before=S.milestones[k]||0, now=Math.floor(T.total/m.ml);
-  if(isEdu()){ // cup milestone alerts stay Educational-Mode only (D-17)
-    if(promptMl>=m.ml){ const u=equivParts(promptMl); alertCard(m.emoji, `${u.n} ${u.unit} of water just evaporated for that prompt!`, 'Heavy one. Lighter model next time?'); }
-    if(now>before){ alertCard(m.emoji, m.done, now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`); }
-  }
+  // Cup milestone alerts fire for ALL users (round 8 — D-17 reversed)
+  if(promptMl>=m.ml){ const u=equivParts(promptMl); alertCard(m.emoji, `${u.n} ${u.unit} of water just evaporated for that prompt!`, 'Heavy one. Lighter model next time?'); }
+  if(now>before){ alertCard(m.emoji, m.done, now===1?`That's your first ${m.one} today.`:`${now} ${m.many} so far today.`); }
   S.milestones[k]=now;
   const f=(S.facts[k] ||= {shown:[], count:0, prompts:0}); f.prompts++; save();
   if(f.prompts % C.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);   // facts: everyone (round 6)
@@ -665,12 +664,12 @@ function insights(){
 function renderToday(){
   applyMode();
   const T=todayStats(), state=plantState(T.pct);
-  $('modePill').textContent=isEdu()?'Educational':'Minimal';
+  $('modePill').hidden=true; // no mode label on the dashboard (round 8)
   const z=zone(T.pct), col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total), m=metaphor(), e=equivParts(T.total);
   countTo($('todayMl'), T.total, T.total<10?1:0);
   // drop starts FULL and drains as the budget is consumed (round 5)
   $('dropFill').style.transform=`translateY(${130*Math.min(1,T.pct)}px)`; $('dropFill').style.fill=col;
-  countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=m.many[0].toUpperCase()+m.many.slice(1); // "≈ 0.10 Smoothies" — no maths shown on the frontend (round 7)
+  countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=cap(m.many); // "≈ 0.10 Smoothies" (round 7)
   $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').className='z-'+z;
   $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
   $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
@@ -783,10 +782,10 @@ $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } t
 
 /* ===================================================================================== [Settings] */
 function renderSettings(){
-  $('modeLabel').textContent = isEdu()?'Educational Mode (13–17)':'Minimalist Mode (18+)';
-  $('modeSub').textContent = isEdu()?`Cup alerts on${S.social?'':' · social features off'}`:'Cup alerts off. Water facts on for everyone.';
+  $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
+  $('modeSub').textContent = S.social?'Alerts and water facts are on for everyone.':'Group features are off for under-13s.';
   $('metaChips').innerHTML=Object.entries(C.metaphors).map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===S.metaphor}">${x.emoji} ${x.label}</button>`).join('');
-  const m=metaphor(); $('metaNote').textContent=isEdu()?`An alert pops up each time your day passes another ${m.one}.`:`Your water is shown in ${m.many}.`;
+  const m=metaphor(); $('metaNote').textContent=`Your water is shown in ${cap(m.many)} (${m.ml.toLocaleString()} mL per unit).`;
   $('sizeSel').value=S.size; $('budgetIn').value=S.budget;
   const R=C.regions[S.region];
   $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
@@ -798,7 +797,9 @@ function renderSettings(){
   $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('');
   $('cVersion').textContent=C.version;
 }
-$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.metaphor=b.dataset.m; resetMilestoneBaseline(); save(); renderSettings(); toast(`Counting in ${metaphor().many}`); };
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+// "Cup intro" alert on selection (round 8)
+$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b||b.dataset.m===S.metaphor) return; S.metaphor=b.dataset.m; resetMilestoneBaseline(); save(); renderSettings(); const m=metaphor(); alertCard(m.emoji, `${cap(m.many)} equipped!`, `Tracking in ${m.ml.toLocaleString()} mL units.`); };
 $('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyMode(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
 $('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.region].defaultCooling||'reported'; save(); renderSettings(); renderEst(); toast('Region saved'); };
@@ -809,7 +810,7 @@ $('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?'
 $('sampleBtn').onclick=()=>{ S.wiped=false; loadSample(); toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [App] boot */
-$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast(isEdu()?'Educational Mode':'Minimalist Mode'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
+$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
 $('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
 fillModels(); renderEst(); applyMode();
 if(!S.mode){ show('splash'); }

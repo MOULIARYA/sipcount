@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 8 (received 2026-09-19, on v6.1) — accepted; delivered as v6.2
+
+Cup milestone alerts and click-to-read facts now fire for **all** users (D-17 fully reversed; age now only gates group features for under-13s). Settings top card → "Age profile · 13–17 / 18+ / Under 13" with Change age; no "alerts off" wording anywhere; dashboard mode pill removed. Settings helper reads "Your water is shown in Boba cups (500 mL per unit)." and a "Cup intro" alert fires on selection ("🍵 Matchas equipped! Tracking in 240 mL units."). Her example volumes (10,000 / 250 mL) were illustrative (Madhur, 2026-09-19); config values stand. **I-25 (open):** confirm all eight metaphor volumes with the partner once, since they are now displayed explicitly — bucket 1,000 · milk glass 250 · boba cup 500 · milkshake 400 · smoothie 350 · matcha 240 · espresso 30 · coffee mug 240 mL.
+
 ## Partner feedback round 7 (received 2026-09-19, on v6) — accepted; delivered as v6.1
 
 Metaphor subtext condensed to one muted, non-wrapping line "≈ 0.10 Smoothies" under the mL figure; baseline volume and formula removed from the frontend entirely (Settings helper text no longer shows volumes either; volumes remain in the config for the maths). Facts: timed text-heavy card → **persistent teaser** (icon + 3–5-word hook + "Tap to read ›", no auto-dismiss, one at a time) that opens a readable modal with the full fact, context and source link, plus Close. Redundant in-card "✓ Optimal" badge removed; the top-right pill remains the single status indicator (icon + label kept for colour-blind safety).
