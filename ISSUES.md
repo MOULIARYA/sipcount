@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 9 (received 2026-09-19) — "Lifetime Footprint"; delivered as v6.3
+
+All-time impact card below the 7-day chart: darker (#0C0C0C) muted card; total since install auto-scales mL → L (≥1,000 mL) → m³ (≥1,000 L); macro-metaphor subtext (largest unit with count ≥ 1: Olympic pools / fire trucks / bathtubs / standard water bottles); "Tracking since Sep 2026" from the earliest recorded day (kept on wipe of totals). **I-26 (open):** macro volumes are assumptions — bottle 500 mL, bathtub 150 L, fire truck 2,500 L, Olympic pool 2,500,000 L — confirm with partner alongside I-25.
+
 ## Partner feedback round 8 (received 2026-09-19, on v6.1) — accepted; delivered as v6.2
 
 Cup milestone alerts and click-to-read facts now fire for **all** users (D-17 fully reversed; age now only gates group features for under-13s). Settings top card → "Age profile · 13–17 / 18+ / Under 13" with Change age; no "alerts off" wording anywhere; dashboard mode pill removed. Settings helper reads "Your water is shown in Boba cups (500 mL per unit)." and a "Cup intro" alert fires on selection ("🍵 Matchas equipped! Tracking in 240 mL units."). Her example volumes (10,000 / 250 mL) were illustrative (Madhur, 2026-09-19); config values stand. **I-25 (open):** confirm all eight metaphor volumes with the partner once, since they are now displayed explicitly — bucket 1,000 · milk glass 250 · boba cup 500 · milkshake 400 · smoothie 350 · matcha 240 · espresso 30 · coffee mug 240 mL.

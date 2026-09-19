@@ -154,6 +154,12 @@ nav button[aria-current=page]{color:var(--green)}
 .alert.fact{border-left-color:var(--amber)} .alert.fact .timer{background:var(--amber)}
 .alert .hint{color:var(--dim);font-size:.75em;margin-top:4px}
 .alert.open .hint{display:none}
+/* All-time impact card: darker, muted, deliberately quieter than the daily metrics */
+.lifetime{background:#0C0C0C;border-color:#222}
+.lifenum{font-family:var(--display);font-size:2.1em;font-weight:700;color:#A3A3A3;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:6px}
+.lifenum small{font-size:.42em;font-weight:600;margin-left:5px;color:#7A7A7A}
+.lifesub{color:#8A8A8A;font-size:.85em;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.since{color:#6E6E6E;font-size:.72em;letter-spacing:.04em}
 /* Fact teaser: compact, persistent, tappable */
 .alert.teaser{padding:10px 14px;align-items:center;cursor:pointer;font:inherit;text-align:left;width:auto;align-self:flex-start;gap:10px;border-left-color:var(--amber)}
 .alert.teaser b{font-size:.9em;white-space:nowrap}
@@ -256,6 +262,13 @@ nav button[aria-current=page]{color:var(--green)}
     <div class="panel">
       <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
       <div class="bars" id="bars"></div>
+    </div>
+
+    <!-- All-Time Impact (round 9): muted, historical anchor -->
+    <div class="panel lifetime">
+      <div class="row between"><h2 style="color:#8A8A8A">All-time impact</h2><span class="since" id="lifeSince"></span></div>
+      <div class="lifenum"><span id="lifeVal">0</span><small id="lifeUnit">mL</small></div>
+      <div class="lifesub" id="lifeEq">—</div>
     </div>
 
     <div class="tiles">
@@ -422,7 +435,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-19c',
+  version: '2026-09-19d',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -478,6 +491,9 @@ const SIPCOUNT_CONFIG = {
     { hook:'One burger, 47 showers', t:'The hidden water behind a 200 g beef burger equals 47 eight-minute showers.', e:'🍔', s:'Water Footprint Network', full:'The Water Footprint Network estimates the water behind 200 g of beef equals about 47 eight-minute showers, and that the average consumer “eats” roughly 5,000 litres of hidden water a day through food and goods.', url:'https://www.waterfootprint.org/time-for-action/what-can-consumers-do/' }
   ],
   factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3, seconds:9 },
+  /* Macro metaphors for the lifetime counter (round 9). Volumes are ASSUMPTIONS to confirm (I-26):
+     bottle = standard 500 mL; bathtub ≈ 150 L typical fill; fire truck ≈ 2,500 L pumper tank; Olympic pool = 2,500,000 L (50×25×2 m). */
+  macro: [ ['Olympic pools',2500000], ['Fire trucks',2500], ['Bathtubs',150], ['Standard water bottles',0.5] ].map(([label,l])=>({label, ml:l*1000})),
   charities: [
     { name:'charity: water', url:'https://www.charitywater.org/donate', line:'≈ 1,100 litres of clean water per $1 (their published hand-pump average); 100 % of public donations fund projects.', per_l_usd:1/1100 },
     { name:'Water.org', url:'https://water.org/donate/', line:'$5 reaches one person with safe water or sanitation (their FY2020–24 average).' },
@@ -517,11 +533,13 @@ const KEY='sipcount.v5';
 const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let S=load();
 function load(){
-  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.facts||={}; if(!C.metaphors[j.metaphor]) j.metaphor='boba'; return j; } }catch(e){}
+  try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ j.milestones||={}; j.facts||={}; if(!C.metaphors[j.metaphor]) j.metaphor='boba'; j.installedAt||=installGuess(j.days); return j; } }catch(e){}
   let days={}, sample=false, budget=100, region='us_hyperscale', metaphorId='boba';
   for(const k of ['sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; sample=!!old.sample; budget=old.budget||100; region=C.regions[old.region]?old.region:region; if(C.metaphors[old.metaphor]) metaphorId=old.metaphor; break; } }catch(e){} }
-  return { budget, region, cooling:'reported', hydro:true, size:'standard', metaphor:metaphorId, mode:null, social:true, saved:0, days, sample, streak:12, milestones:{}, facts:{} };
+  return { budget, region, cooling:'reported', hydro:true, size:'standard', metaphor:metaphorId, mode:null, social:true, saved:0, days, sample, streak:12, milestones:{}, facts:{}, installedAt:installGuess(days) };
 }
+/* Install date = earliest day on record, else today (kept once set; survives wipe of totals). */
+function installGuess(days){ const ks=Object.keys(days||{}).sort(); return ks.length? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function bucket(k){ const b=(S.days[k] ||= {n:0,img:0,s1:0,s2:0,tier:{},task:{},vendor:{}}); b.tier||={}; b.task||={}; b.vendor||={}; b.img||=0; return b; }
 function record(e,tier,task,vendor,dt){
@@ -660,8 +678,26 @@ function insights(){
   return { scope, text:parts.join(' '), brands:brands.map(([v,a])=>[C.brands[v]||v, a.ml, a.n]), total:agg.ml };
 }
 
+/* ===================================================================================== [Lifetime] */
+function lifetimeMl(){ return Object.values(S.days).reduce((a,b)=>a+(b.s1||0)+(b.s2||0),0); }
+function scaleVolume(ml){ // mL → L → m³ (kL) as it grows
+  if(ml<1000) return { v:fmt(ml, ml<10?1:0), u:'mL' };
+  if(ml<1e6)  return { v:(ml/1000).toFixed(ml<1e4?2:1), u:'L' };
+  return { v:(ml/1e6).toFixed(2), u:'m³' };
+}
+function macroEquiv(ml){ // largest macro unit with a count ≥ 1; otherwise fractional bottles
+  const pick = C.macro.find(m=>ml>=m.ml) || C.macro[C.macro.length-1]; const n=ml/pick.ml;
+  return `≈ ${n<10?n.toFixed(n<1?2:1):fmt(n)} ${pick.label}`;
+}
+function renderLifetime(){
+  const ml=lifetimeMl(), s=scaleVolume(ml);
+  $('lifeVal').textContent=s.v; $('lifeUnit').textContent=s.u; $('lifeEq').textContent=macroEquiv(ml);
+  const since=new Date(S.installedAt); $('lifeSince').textContent=`Tracking since ${since.toLocaleString(undefined,{month:'short',year:'numeric'})}`;
+}
+
 /* ===================================================================================== [Dashboard] */
 function renderToday(){
+  renderLifetime();
   applyMode();
   const T=todayStats(), state=plantState(T.pct);
   $('modePill').hidden=true; // no mode label on the dashboard (round 8)
