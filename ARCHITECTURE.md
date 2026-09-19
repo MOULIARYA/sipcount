@@ -165,6 +165,16 @@ Optional sign-in and a 360° cross-device view (ISSUES D-21) may be added later.
 8. **UI reads a `Dashboard` view-model**, never raw storage, so a consolidated multi-device view is a different data source behind the same screens.
 9. **Tech choices favour code reuse:** Flutter for phone + desktop (one engine, one UI); the extension shares `engine.js` with the prototype; Rust/Tauri only if Flutter desktop proves too heavy for a tray app.
 
+## 10. Widgets & session check-ins (round 11, prototype v6.5)
+
+| Prototype (web) | Android (Flutter) | iOS (Flutter) |
+|---|---|---|
+| `widgetModel()` → `{ml, unit, line, drain, zone}`; `widgetHTML('small'|'medium')` renders 158×158 / 338×158 previews | Write the same model to `SharedPreferences` after each `DayTotals` update; **Glance** `AppWidgetProvider` reads it (`home_widget` package, BSD-3). "Add Widget" → `AppWidgetManager.requestPinAppWidget` (Android 8+) | Write to the **App Group** container; **WidgetKit** timeline entry from the same JSON (`home_widget` on iOS). No programmatic add on iOS → instruction overlay |
+| Discovery banner below the hero, dismissible (`widgetHintDismissed`) | same | same |
+| `trackSession()` in memory: session = prompts < 10 min apart; at ≥ 30 min fire once per session; in-app card + Web Notification | Same logic in the Dart `Tracker`; deliver via `flutter_local_notifications` (BSD-3). Runs in the sensor's process, so it works while the app is backgrounded | same (local notifications need one-time permission) |
+
+Rules honoured: no timestamps finer than a day are persisted (session state lives in RAM); widget payload is derived from `DayTotals` (§9.1), never from prompt data.
+
 ## 8. Next steps
 
 1. User test on a real phone (ChatGPT / Claude / Gemini apps + Chrome); tune send-button and model-label heuristics from feedback.

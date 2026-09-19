@@ -45,6 +45,10 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 11 (received 2026-09-19) — widgets + 30-min session check-ins; delivered as v6.5
+
+Web prototype cannot ship real home-screen widgets or OS push — both are native. Delivered: `widgetModel()`/`widgetHTML()` (the Widget.js equivalent) with Small/Medium previews in true black showing Water Today, the metaphor line and the draining drop; dismissible discovery banner with her copy; "Add Widget" opens the preview + per-OS instructions (on Android the native app will call the system pin flow). Session tracker: prompts <10 min apart form a session; at ≥30 min a one-time check-in fires (in-app card + browser Notification if permitted) with her copy; Settings toggle "Session check-ins"; Log tab has a demo fast-forward. Native mapping recorded in ARCHITECTURE.md §10. Session timestamps stay in memory only (privacy rule §9.6).
+
 ## Partner feedback round 10 (received 2026-09-19) — About copy v2, "Screen Time for Generative AI" positioning; delivered as v6.4
 
 New copy injected verbatim except one word: her text again says "your **exact** water footprint"; kept **"estimated"** per Madhur's 2026-09-19 decision (estimates with stated confidence). Partner should be told explicitly so the two of them settle it. "7-8%" GDP figure dropped as per her new text. **Tagline approved (Madhur, 2026-09-19): "See what your AI drinks."** — shown on the age splash and as the About eyebrow; to be used as the store subtitle. Positioning note: "Screen Time" is Apple's feature name — fine as a descriptive comparison in copy; avoid using it as a product name or in store listings.
