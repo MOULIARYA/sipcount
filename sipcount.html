@@ -160,8 +160,16 @@ nav button[aria-current=page]{color:var(--green)}
 .lifenum small{font-size:.42em;font-weight:600;margin-left:5px;color:#7A7A7A}
 .lifesub{color:#8A8A8A;font-size:.85em;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .since{color:#6E6E6E;font-size:.72em;letter-spacing:.04em}
-/* Widget hint + widget previews */
-.widgethint{padding:12px 14px;background:#0F0F0F}
+/* Compact pill buttons + widget previews */
+.pillbtn{border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.72em;font-weight:800;letter-spacing:.04em;border-radius:99px;padding:6px 12px;cursor:pointer;min-height:32px}
+.pillbtn:hover{color:var(--text);border-color:#3A3A3A}
+/* Weekly report (full-screen) */
+.report{position:fixed;inset:0;background:#000;z-index:8;display:none;overflow:auto;padding:28px 20px calc(28px + env(safe-area-inset-bottom))}
+.report.open{display:block}
+.report .inner{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.report h1{font-size:1.6em;font-weight:800;letter-spacing:-.02em}
+.report .k{font-family:var(--display);font-size:2.4em;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.report .k small{font-size:.4em;color:var(--muted);margin-left:4px}
 .widget{background:#000;border:1px solid #262626;border-radius:22px;color:#fff;display:flex;align-items:center;gap:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
 .widget.small{width:158px;height:158px;flex-direction:column;justify-content:center;gap:6px;text-align:center}
 .widget.medium{width:338px;height:158px}
@@ -182,7 +190,7 @@ nav button[aria-current=page]{color:var(--green)}
 .about h3{font-family:var(--display);font-size:1.05em;font-weight:700;margin-top:10px;color:var(--green)}
 .about p{margin:0;line-height:1.6;color:#E8E8E8}
 .about .lede{font-size:1.05em;color:var(--text)}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:5}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:12}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .demo{font-size:.78em;color:var(--dim);text-align:center;margin:0}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
@@ -238,14 +246,7 @@ nav button[aria-current=page]{color:var(--green)}
     <!-- Dominant card: the daily budget as a drop that DRAINS as prompts are logged (round 5) -->
     <div class="panel hero-card">
       <div class="hero">
-        <div class="drop" aria-hidden="true">
-          <svg viewBox="0 0 100 130">
-            <defs><clipPath id="dropClip"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs>
-            <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="var(--surface-2)"/>
-            <g clip-path="url(#dropClip)"><rect id="dropFill" class="fill" x="0" y="0" width="100" height="130" fill="var(--green)" style="transform:translateY(0px)"/></g>
-            <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="var(--line)" stroke-width="1.5"/>
-          </svg>
-        </div>
+        <div class="drop" id="heroVessel" aria-hidden="true"></div>
         <div class="stack" style="flex:1">
           <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
@@ -254,15 +255,7 @@ nav button[aria-current=page]{color:var(--green)}
           <div class="row between wrap" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span><span class="sub" id="todayLeft" style="font-size:.8em">—</span></div>
         </div>
       </div>
-    </div>
-
-    <!-- Widget discovery banner (round 11): dismissible; Add → native pin flow on Android / instructions elsewhere -->
-    <div class="panel widgethint" id="widgetHint" hidden>
-      <div class="row between" style="gap:12px">
-        <div style="flex:1"><b style="font-size:.93em">Keep your AI footprint in check.</b><div class="sub" style="font-size:.85em">Add the Sipcount widget to your home screen.</div></div>
-        <button class="btn small" id="widgetAdd">Add Widget</button>
-        <button class="btn ghost small" id="widgetDismiss" aria-label="Dismiss" style="padding:8px 10px">✕</button>
-      </div>
+      <div class="sub" id="oppCost" style="font-size:.85em;color:#A3A3A3;margin-top:12px;border-top:1px solid var(--line);padding-top:10px"></div>
     </div>
 
     <!-- Secondary module: the plant, compact -->
@@ -306,13 +299,15 @@ nav button[aria-current=page]{color:var(--green)}
     </div>
     <div class="row" style="gap:8px"><button class="btn" id="neutralBtn">Neutralize my water footprint</button><button class="btn ghost small" id="shareBtn">Share</button></div>
     <div class="nudge" id="todayNudge"></div>
+    <!-- compact widget discovery pill (round 12) -->
+    <div class="row" style="justify-content:center;gap:10px"><button class="pillbtn" id="widgetAdd">⊞ Add to Home Screen</button><button class="pillbtn" id="weeklyBtn">▤ Weekly report</button></div>
     <p class="demo" id="demoNote"></p>
   </section>
 
   <!-- ============ LOG ============ -->
   <section class="screen" id="s-log">
-    <h1>Log a prompt</h1>
-    <p class="sub" style="margin:-8px 0 0">In the real app this happens automatically when you hit send. Here you simulate it.</p>
+    <h1>Pre-prompt simulator</h1>
+    <p class="sub" style="margin:-8px 0 0">Before you prompt: pick the model, estimate the size, and see the water — and what a lighter model would save. In the real app, logging happens automatically when you hit send.</p>
     <div class="seg" id="vendorSeg" role="group" aria-label="AI tool">
       <button aria-pressed="true" data-v="openai">ChatGPT</button>
       <button aria-pressed="false" data-v="anthropic">Claude</button>
@@ -328,7 +323,7 @@ nav button[aria-current=page]{color:var(--green)}
       </div>
     </div>
     <div class="stack" id="lenWrap">
-      <label class="f" for="lenRange">Prompt length <span id="lenLabel" style="font-weight:500;color:var(--text)"></span></label>
+      <div class="row between"><label class="f" for="lenRange" style="flex:1">Prompt size <span id="lenLabel" style="font-weight:500;color:var(--text)"></span></label><label class="f" style="width:120px">Tokens<input type="number" id="tokIn" min="5" max="20000" step="5" value="100" aria-label="Estimated tokens"></label></div>
       <input type="range" id="lenRange" min="20" max="6000" step="20" value="400">
       <textarea id="promptBox" aria-label="Type or paste a prompt to measure its length" placeholder="Or paste/type a prompt to measure its length. It is counted, never saved."></textarea>
     </div>
@@ -339,7 +334,7 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="row wrap" style="font-size:.85em;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span><span id="estSplit"></span></div>
     </div>
     <div class="nudge" id="nudge"></div>
-    <button class="btn" id="logBtn">Log it</button>
+    <button class="btn" id="logBtn">Log it as a prompt</button>
     <button class="btn ghost" id="logTen">Log 10 quick prompts (demo)</button>
     <button class="btn line" id="sessionDemo">Simulate a 30-minute session (demo)</button>
     <p class="demo" id="sessionInfo"></p>
@@ -419,7 +414,7 @@ nav button[aria-current=page]{color:var(--green)}
 
   <nav aria-label="Sections" id="nav">
     <button data-s="today" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/></svg>Today</button>
-    <button data-s="log"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Log</button>
+    <button data-s="log"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>Simulate</button>
     <button data-s="grove" id="navGrove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
     <button data-s="about"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.2A4 4 0 0 1 17 17z"/><path d="M12 21v-4"/></svg>About</button>
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
@@ -436,6 +431,15 @@ nav button[aria-current=page]{color:var(--green)}
     <div class="row" style="gap:8px"><button class="btn" id="shareNative">Share</button><button class="btn ghost" id="shareSave">Save image</button></div>
     <p class="sub" style="margin:0;text-align:center;font-size:.8em">9:16 · 1080×1920 · made on your device</p>
     <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
+  </div>
+</div>
+
+<!-- ============ WEEKLY REPORT (full screen) ============ -->
+<div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Weekly digital sobriety report">
+  <div class="inner">
+    <div class="row between"><span class="pill good">Sunday review</span><button class="btn ghost small" id="reportClose">Close</button></div>
+    <div id="reportBody" class="stack" style="gap:14px"></div>
+    <button class="btn" id="reportNeutral">Neutralize my water footprint</button>
   </div>
 </div>
 
@@ -470,7 +474,7 @@ nav button[aria-current=page]{color:var(--green)}
 <script>
 /* ===================================================================================== [Config] */
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-19f',
+  version: '2026-09-20',
   charsPerToken: 4,
   tiers: { lightweight:{wh1k:0.15,label:'Light'}, standard:{wh1k:0.75,label:'Standard'}, reasoning:{wh1k:7.5,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
@@ -616,7 +620,20 @@ const zone=pct=>pct<C.zones.green?'green':pct<C.zones.amber?'amber':'red';
 const zoneVar=pct=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[zone(pct)];
 const zonePill=pct=>({green:'good',amber:'warn',red:'bad'})[zone(pct)];
 /* Colour-blind-safe status: icon + label per zone (round 6) */
-const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠',label:'Elevated'}, red:{ico:'✖',label:'Limit Exceeded'} };
+const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠️',label:'Elevated'}, red:{ico:'🛑',label:'Limit Exceeded'} };
+/* Hero vessels (round 12): the Water Drop by default; the chosen metaphor's cup once the user picks one. level = 0..1 fill from the bottom. */
+const VESSELS = {
+  drop(l,c){ const y=130*(1-l); return `<svg viewBox="0 0 100 130"><defs><clipPath id="vc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`; },
+  bucket(l,c){ const y=40+90*(1-l); return `<svg viewBox="0 0 120 150" shape-rendering="crispEdges"><defs><clipPath id="vc"><path d="M22 40h76l-10 90H32z"/></clipPath></defs><path d="M22 40h76l-10 90H32z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M22 40h76l-10 90H32z" fill="none" stroke="#333" stroke-width="4"/><path d="M30 40 C30 10 90 10 90 40" fill="none" stroke="#333" stroke-width="5"/><rect x="18" y="34" width="84" height="8" fill="#333"/></svg>`; },
+  milk(l,c){ const y=30+100*(1-l); return `<svg viewBox="0 0 120 150"><defs><clipPath id="vc"><path d="M30 30h60l-6 100H36z"/></clipPath></defs><path d="M30 30h60l-6 100H36z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M30 30h60l-6 100H36z" fill="none" stroke="#333" stroke-width="3"/></svg>`; },
+  boba(l,c){ const y=26+108*(1-l); return `<svg viewBox="0 0 120 150"><defs><clipPath id="vc"><path d="M28 26h64l-6 108H34z"/></clipPath></defs><path d="M28 26h64l-6 108H34z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/>${[...Array(9)].map((_,i)=>`<circle cx="${44+(i%3)*16}" cy="${112+Math.floor(i/3)*9}" r="4" fill="#000" opacity=".55"/>`).join('')}</g><path d="M28 26h64l-6 108H34z" fill="none" stroke="#333" stroke-width="3"/><rect x="24" y="20" width="72" height="8" rx="3" fill="#333"/><rect x="66" y="0" width="7" height="60" rx="3" fill="#333"/></svg>`; },
+  shake(l,c){ const y=36+96*(1-l); return `<svg viewBox="0 0 120 150"><defs><clipPath id="vc"><path d="M34 36h52l-4 96H38z"/></clipPath></defs><path d="M34 36h52l-4 96H38z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M34 36h52l-4 96H38z" fill="none" stroke="#333" stroke-width="3"/><path d="M42 36 C42 20 78 20 78 36" fill="none" stroke="#333" stroke-width="3"/><rect x="70" y="2" width="6" height="50" rx="3" fill="#333"/></svg>`; },
+  smoothie(l,c){ const y=30+104*(1-l); return `<svg viewBox="0 0 120 150"><defs><clipPath id="vc"><path d="M30 30h60l-4 104H34z"/></clipPath></defs><path d="M30 30h60l-4 104H34z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M30 30h60l-4 104H34z" fill="none" stroke="#333" stroke-width="3"/><path d="M56 30 L66 2" stroke="#333" stroke-width="4" stroke-linecap="round"/></svg>`; },
+  matcha(l,c){ const y=50+70*(1-l); return `<svg viewBox="0 0 120 150"><defs><clipPath id="vc"><path d="M20 50h80c0 40-20 70-40 70S20 90 20 50z"/></clipPath></defs><path d="M20 50h80c0 40-20 70-40 70S20 90 20 50z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="120" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M20 50h80c0 40-20 70-40 70S20 90 20 50z" fill="none" stroke="#333" stroke-width="3"/><ellipse cx="60" cy="50" rx="40" ry="6" fill="none" stroke="#333" stroke-width="3"/></svg>`; },
+  espresso(l,c){ const y=60+60*(1-l); return `<svg viewBox="0 0 130 150"><defs><clipPath id="vc"><path d="M30 60h60l-6 60H36z"/></clipPath></defs><path d="M90 74h12a10 10 0 0 1 0 20H88" fill="none" stroke="#333" stroke-width="6"/><path d="M30 60h60l-6 60H36z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="130" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M30 60h60l-6 60H36z" fill="none" stroke="#333" stroke-width="3"/><path d="M24 126h72" stroke="#333" stroke-width="4" stroke-linecap="round"/></svg>`; },
+  mug(l,c){ const y=40+92*(1-l); return `<svg viewBox="0 0 130 150"><defs><clipPath id="vc"><rect x="22" y="40" width="70" height="92" rx="8"/></clipPath></defs><path d="M92 58h14a14 14 0 0 1 0 28H92" fill="none" stroke="#333" stroke-width="8"/><rect x="22" y="40" width="70" height="92" rx="8" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="130" height="150" fill="${c}" style="transform:translateY(${y}px)"/></g><rect x="22" y="40" width="70" height="92" rx="8" fill="none" stroke="#333" stroke-width="3"/></svg>`; }
+};
+const heroVessel=()=> S.vesselChosen && VESSELS[S.metaphor] ? S.metaphor : 'drop';
 
 /* ===================================================================================== [Toasts] Educational Mode only */
 /* Slide-in card. Hover (desktop) or press-and-hold (touch) pauses the timer and expands `more`; ✕ dismisses. */
@@ -721,7 +738,7 @@ function insights(){
 function widgetModel(){ const T=todayStats(), e=equivParts(T.total); return { ml:fmt(T.total), unit:'mL', line:`≈ ${e.n} ${cap(metaphor().many)}`, drain:Math.min(1,T.pct), zone:zone(T.pct), color:zoneVar(T.pct) }; }
 function widgetHTML(size='small'){
   const w=widgetModel();
-  const drop=`<div class="wd"><svg viewBox="0 0 100 130"><defs><clipPath id="wclip${size}"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#wclip${size})"><rect x="0" y="${130*w.drain}" width="100" height="130" fill="${w.color}"/></g></svg></div>`;
+  const drop=`<div class="wd">${VESSELS[heroVessel()](w.drain,w.color).replace(/id="vc"/,`id="wvc${size}"`).replace(/url\(#vc\)/,`url(#wvc${size})`)}</div>`;
   const num=`<div><div class="wn">${w.ml}<small>${w.unit}</small></div><div class="ws">${w.line}</div></div>`;
   return size==='small' ? `<div class="widget small"><span class="wl">Water today</span>${drop}${num}</div>` : `<div class="widget medium">${drop}<div style="flex:1;min-width:0"><span class="wl">Sipcount · Water today</span>${num}</div></div>`;
 }
@@ -737,7 +754,9 @@ function renderWidget(){
 $('widgetSizeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; widgetSize=b.dataset.w; renderWidget(); };
 $('widgetAdd').onclick=()=>{ renderWidget(); $('widgetSheet').classList.add('open'); };
 $('widgetClose').onclick=()=>$('widgetSheet').classList.remove('open');
-$('widgetDismiss').onclick=()=>{ S.widgetHintDismissed=true; save(); $('widgetHint').hidden=true; };
+$('weeklyBtn').onclick=weeklyReport;
+$('reportClose').onclick=()=>$('reportSheet').classList.remove('open');
+$('reportNeutral').onclick=()=>{ $('reportSheet').classList.remove('open'); renderNeutral(); $('neutralSheet').classList.add('open'); };
 
 /* ===================================================================================== [Session]
    30-minute continuous-use check-in (round 11). A session = prompts separated by < GAP minutes.
@@ -760,6 +779,45 @@ function trackSession(promptMl, now=Date.now()){
   }
 }
 $('sessionDemo').onclick=()=>{ if(!SESSION.start){ SESSION.start=Date.now()-31*60000; SESSION.last=Date.now()-60000; } else { SESSION.start=Math.min(SESSION.start, Date.now()-31*60000); } logOne(); toast('Session fast-forwarded to 31 min'); };
+
+/* ===================================================================================== [Opportunity cost]
+   Human-scale translation of today's mL (round 12). Volumes are ASSUMPTIONS to confirm (I-27). */
+const OPP=[ ['minutes in the shower', 9000, '🚿'], ['toilet flushes', 6000, '🚽'], ['house plants watered', 250, '🪴'] ];
+function opportunityCost(ml){
+  if(ml<=0) return 'Log a prompt to see what that water could have done instead.';
+  const pick=OPP.find(o=>ml>=o[1])||OPP[OPP.length-1]; const n=ml/pick[1];
+  if(n<1) return `With this much water you could have filled ${n.toFixed(2)} of a glass of drinking water today. 🥛`;
+  const s=fmt(n,n<10?1:0), pl=s!=='1';
+  return `With this much water, you could have ${pick[0]==='house plants watered'?`watered ${s} house plant${pl?'s':''}`:pick[0]==='toilet flushes'?`flushed a toilet ${s} time${pl?'s':''}`:`showered for ${s} minute${pl?'s':''}`} today. ${pick[2]}`;
+}
+
+/* ===================================================================================== [Weekly report]
+   "Digital Sobriety" full-screen review (round 12): opens automatically on Sunday evening (≥18:00 local),
+   once per week; also on demand via the ▤ pill. Suggestion = counterfactual saving if reasoning-tier
+   prompts had run on the standard tier (energy ratio 0.75/7.5). */
+function weeklyReport(){
+  const keys=last7(); let total=0, byBrand={}, reasoning={}, tiers={}, n=0;
+  keys.forEach(k=>{ const b=S.days[k]; if(!b) return; n+=b.n; total+=b.s1+b.s2; for(const v in (b.vendor||{})){ byBrand[v]=(byBrand[v]||0)+b.vendor[v].ml; const r=b.vendor[v].tiers?.reasoning; if(r) reasoning[v]=(reasoning[v]||0)+r.ml; } for(const t in (b.tier||{})) tiers[t]=(tiers[t]||0)+b.tier[t]; });
+  const top=Object.entries(byBrand).sort((a,b)=>b[1]-a[1])[0];
+  const topTier=Object.entries(tiers).sort((a,b)=>b[1]-a[1])[0];
+  const rTot=Object.values(reasoning).reduce((a,b)=>a+b,0), saving=rTot*(1-C.tiers.standard.wh1k/C.tiers.reasoning.wh1k);
+  const rBrand=Object.entries(reasoning).sort((a,b)=>b[1]-a[1])[0];
+  const e=equivParts(total);
+  const vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals);
+  const bars=keys.map((k,i)=>`<div class="bar"><i class="${i===6?'today':''}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][new Date(k+'T12:00:00').getDay()]}</em></div>`).join('');
+  const tips=[];
+  if(saving>0 && rBrand) tips.push(`Switching your <b>${C.brands[rBrand[0]]||rBrand[0]}</b> reasoning-model prompts to standard models could save you roughly <b>${fmt(saving)} mL</b> next week.`);
+  if((tiers.standard||0)>0) tips.push(`Quick questions on a <b>light</b> model use about a fifth of the water of a standard one — roughly <b>${fmt((tiers.standard||0)*(1-C.tiers.lightweight.wh1k/C.tiers.standard.wh1k))} mL</b> available if every standard prompt were a light one.`);
+  if(!tips.length) tips.push('Keep it up — nothing heavier than a standard model this week.');
+  $('reportBody').innerHTML=`<span class="eyebrow" style="color:var(--green)">Weekly digital sobriety report</span><h1>${fmt(total)} mL this week</h1><div class="sub">≈ ${e.n} ${e.unit} · ${n} prompts · ${keys[0]} → ${keys[6]}</div>
+    <div class="panel"><h2>7-day history</h2><div class="bars" style="margin-top:8px">${bars}</div></div>
+    <div class="panel stack"><h2>Most used</h2><div>${top?`<b>${C.brands[top[0]]||top[0]}</b> — ${fmt(top[1])} mL (${Math.round(top[1]/(total||1)*100)}%)`:'No AI use recorded'}${topTier?` · mostly <b>${C.tiers[topTier[0]]?.label.toLowerCase()||topTier[0]}</b> models`:''}</div></div>
+    <div class="panel stack"><h2>Next week</h2>${tips.map(t=>`<div class="nudge quiet" style="border-left-color:var(--green)"><span>💡</span><span>${t}</span></div>`).join('')}</div>`;
+  $('reportSheet').classList.add('open');
+  S.lastReport=weekKey(new Date()); save();
+}
+function weekKey(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); return dayKey(x); } // Sunday-based week id
+function maybeWeeklyReport(){ const now=new Date(); if(now.getDay()===0 && now.getHours()>=18 && S.lastReport!==weekKey(now) && S.mode) setTimeout(weeklyReport, 2500); }
 
 /* ===================================================================================== [Lifetime] */
 function lifetimeMl(){ return Object.values(S.days).reduce((a,b)=>a+(b.s1||0)+(b.s2||0),0); }
@@ -786,8 +844,11 @@ function renderToday(){
   $('modePill').hidden=true; // no mode label on the dashboard (round 8)
   const z=zone(T.pct), col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total), m=metaphor(), e=equivParts(T.total);
   countTo($('todayMl'), T.total, T.total<10?1:0);
-  // drop starts FULL and drains as the budget is consumed (round 5)
-  $('dropFill').style.transform=`translateY(${130*Math.min(1,T.pct)}px)`; $('dropFill').style.fill=col;
+  // Hero vessel fills from the bottom as the day's footprint accumulates (round 12 — reverses round 5's drain).
+  const hv=heroVessel(), fillLvl=Math.min(1,T.pct);
+  if($('heroVessel').dataset.v!==hv){ $('heroVessel').innerHTML=VESSELS[hv](fillLvl,col); $('heroVessel').dataset.v=hv; }
+  else { const r=$('heroVessel').querySelector('.fill'); const box=$('heroVessel').querySelector('svg').viewBox.baseVal; const geom={drop:[0,130],bucket:[40,90],milk:[30,100],boba:[26,108],shake:[36,96],smoothie:[30,104],matcha:[50,70],espresso:[60,60],mug:[40,92]}[hv]; r.style.transform=`translateY(${geom[0]+geom[1]*(1-fillLvl)}px)`; r.style.fill=col; }
+  $('oppCost').textContent=opportunityCost(T.total);
   countTo($('metaCount'), e.raw, 2); $('metaUnit').textContent=cap(m.many); // "≈ 0.10 Smoothies" (round 7)
   $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; $('budgetRing').className='z-'+z;
   $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
@@ -810,7 +871,6 @@ function renderToday(){
   $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
   $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
-  $('widgetHint').hidden=!!S.widgetHintDismissed;
 }
 $('simBtn').onclick=simulateHeavyQuery;
 
@@ -878,8 +938,9 @@ let vendor='openai', task='text', chars=400;
 function fillModels(){ $('modelSel').innerHTML=C.models[vendor].map(([n,t])=>`<option value="${t}">${n} · ${C.tiers[t].label}</option>`).join(''); }
 $('vendorSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; vendor=b.dataset.v; [...$('vendorSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); fillModels(); renderEst(); };
 $('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('lenWrap').hidden=task==='image'; renderEst(); };
-$('lenRange').oninput=e=>{ chars=+e.target.value; $('promptBox').value=''; renderEst(); };
-$('promptBox').oninput=e=>{ chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,chars)); renderEst(); };
+$('lenRange').oninput=e=>{ chars=+e.target.value; $('promptBox').value=''; $('tokIn').value=tok(chars); renderEst(); };
+$('tokIn').oninput=e=>{ const t=Math.max(0,+e.target.value||0); chars=t*C.charsPerToken; $('lenRange').value=Math.min(6000,Math.max(20,chars)); $('promptBox').value=''; renderEst(); };
+$('promptBox').oninput=e=>{ chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,chars)); $('tokIn').value=tok(chars); renderEst(); };
 $('modelSel').onchange=renderEst;
 function current(){ return estimate({tier:$('modelSel').value,task,inputTokens:tok(chars),params:params()}); }
 function renderEst(){
@@ -919,7 +980,7 @@ function renderSettings(){
 }
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 // "Cup intro" alert on selection (round 8)
-$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b||b.dataset.m===S.metaphor) return; S.metaphor=b.dataset.m; resetMilestoneBaseline(); save(); renderSettings(); const m=metaphor(); alertCard(m.emoji, `${cap(m.many)} equipped!`, `Tracking in ${m.ml.toLocaleString()} mL units.`); };
+$('metaChips').onclick=e=>{ const b=e.target.closest('button'); if(!b||b.dataset.m===S.metaphor) return; S.metaphor=b.dataset.m; S.vesselChosen=true; resetMilestoneBaseline(); save(); renderSettings(); const m=metaphor(); alertCard(m.emoji, `${cap(m.many)} equipped!`, `Tracking in ${m.ml.toLocaleString()} mL units.`); };
 $('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyMode(); };
 $('sessionToggle').onchange=e=>{ S.sessionCheckins=e.target.checked; save(); if(e.target.checked && 'Notification' in window && Notification.permission==='default') Notification.requestPermission(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
@@ -935,7 +996,7 @@ $('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn
 $('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
 fillModels(); renderEst(); applyMode();
 if(!S.mode){ show('splash'); }
-else { show('today'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); }
+else { show('today'); if(C.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); maybeWeeklyReport(); }
 </script>
 </body>
 </html>
