@@ -1,5 +1,7 @@
 # Sipcount — open issues & feedback tracker
 
+> **Working mode (Madhur, 2026-09-20):** finish the UI first. Everything non-UI (sensors, calibration, extension work, Android constants sync, signing, Play readiness, desktop, iOS, token-economics experiments) is **backlog** until the prototype is signed off. Then: list everything to build, prioritise, and proceed in increments. UI rounds keep adding features, so no parallel engineering until the scope stops moving.
+
 Status legend: **Open** · **In progress** · **Parked** (deliberately later) · **Done**. Newest changes at the top of each entry.
 
 | # | Issue | Status | Notes / next step |
@@ -24,7 +26,8 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 | I-22 | Android spike A–G per SENSING-REVIEW §7 (attribution, prompt signature, battery, DNS/ECH matrix, coexistence, Play dry run, coarse mode) | Open — next | Bare test app, not the Sipcount UI. Needs 3 test phones (Pixel on A17 beta, Samsung, budget MediaTek) — Madhur to source. |
 | I-23 | Play readiness: target SDK 36, 16 KB page size for native libs, VpnService declaration + 2 videos, disclosure screen with decline path, listing text | Open | Draft text in `docs/store/`. |
 | I-24 | iOS track: individual Apple Developer account; macOS CI (GitHub Actions) for iOS builds; Safari Web Extension port; company entity → D-U-N-S → org account | Open | Start after spike B shows the prompt signature works. |
-| I-18 | Spike: bytes↔tokens and TTFB↔tier correlation via extension (prerequisite for the network sensor) | Open | Add a calibration mode to the extension that logs (model, chars in, chars out, request bytes, response bytes, TTFB) — counts only. |
+| I-30 | **Token-economics measurement programme** (docs/TOKEN-ECONOMICS.md): Part 1 literature ✔, Part 2 per-sensor derivation ✔, Part 3 calibration experiments (Madhur runs scripted prompts across 9 surfaces; Claude fits coefficients) | Open — next | Engine now weights output 5× input (was 4×). Not yet in engine: context-length factor, cached-history discount, per-image input multiplier, hidden-token estimate from TTFT. Also test forcing HTTP/2 (block UDP/443) for the three AI hosts on the doorman — an exception to D-1's "don't block QUIC". |
+| I-18 | Spike: bytes↔tokens and TTFB↔tier correlation via extension | Folded into I-30 | Extension calibration mode logs (model, chars in/out, request/response bytes, TTFB, chunks) — counts only. |
 | I-19 | Network sensor (Android VpnService) prototype: detect prompt to chatgpt.com / claude.ai / gemini hosts, emit PromptEvent with size + timing | Open | Depends on I-18. Cannot coexist with another VPN. |
 | I-20 | "Keep constants fresh" toggle: fetch published `models.json` from GitHub Pages; ship constants in updates by default | Open | Adds INTERNET permission gated by user toggle; document in privacy text. |
 | I-21 | iOS: Network Extension entitlement + Apple developer account | Parked | Needed for the doorman on iOS; $99/yr + approval time. |
@@ -44,6 +47,15 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 **Pre-build review done 2026-09-15 → `docs/SENSING-REVIEW.md`** (blockers B1–B8, improvements, store checklist, UI-independent work P1–P6, 3 decisions pending). Headline: iOS network sensor not viable for v1 (Apple org account + 5.4 + no app attribution) → iOS v1 = Safari extension; Android must use per-app UID attribution because Encrypted Client Hello (Android 17) hides hostnames.
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
+
+## Partner feedback round 13 (received 2026-09-20, two tranches) — delivered as v8: two branches
+
+Madhur allowed multiple Today options → two pages sharing one engine (`engine.js`, extracted from the single file; Flutter remains the product):
+- **Branch A** — `sipcount.html` (existing link): true black, **zero metaphors** (engine, settings, subtext, SVG swapping all removed), dashboard = raw mL + Water Drop + one context line; **catch-up drain** animation on open (drop starts full, drains to today's level over ~2.6 s — reverses round 12's fill; fourth direction change); alerts slide in below the header, copy ≤7 words ("30 min session. 120 mL evaporated."); weekly report includes questions-vs-answers ratio; compact "⊞ Add to Home Screen" pill; Simulator with separate input/output token fields; About copy v3 (with "input queries and output generations"). Removed in A: age splash, facts, plant, cup alerts, grove, share, all-time card.
+- **Branch B** — `sipcount-aqua.html`: light "Aqua" (#FFF/#F8F9FA, cyan→ocean gradient, Nunito), **wave hero** (undulating SVG, level = budget used), **flood & drain** one-time intro, **spline area chart** for the week, Learn tab with click-to-read facts on soft nature backdrops (photo slots — I-29: licensed lake/ocean/riverbed photos to be chosen), jargon-free copy throughout (Settings "How the numbers work" rewritten), widget with wave + context string, same simulator/session/weekly/give-back features.
+- **Engine change (both):** input and output tokens tracked separately; output weighted 4× input (autoregressive decode is less efficient) and re-normalised so the calibrated reference prompt (100 in/300 out → 0.30 Wh) is unchanged. **I-28 (open, low confidence):** ratio is an assumption — no vendor publishes it. `DayTotals` gains `tin`/`tout`. Flutter engine + golden tests to follow (I-16).
+- **"exact" vs "estimated":** her copy says "exact" for the fourth time; kept "estimated". Madhur to settle with her.
+- Review: no crashes; hygiene fixes applied (region/cooling validation on load, duplicate gradient ids in report chart, io bar hidden for images, sub-1 % copy → "about N drops").
 
 ## Partner feedback round 12 (received 2026-09-20) — consolidated "production build" spec; delivered as v7
 
