@@ -48,6 +48,20 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 14 (received 2026-09-21) — revert to the v7 UI; Aqua dropped. Delivered as v9
+
+Her words: *"Aqua version is not needed at all. Its not looking at all so lets stick to the UI that we have been working since the begining. And in that version as well the UI was better in the previous release than the changes that we just made. Can UI changes in last version be reverted while catering to the requirement that got added on the previous message?"*
+
+Done in `sipcount.html` (v9):
+- **Branch B deleted.** `sipcount-aqua.html` removed from the repo, the Settings link to it removed, `engine.js` header updated. Work lost: light Aqua palette, wave hero, flood intro, spline chart, Learn tab. I-29 (licensed nature photos) is closed — no longer needed.
+- **v8's minimal rewrite reverted.** The v7 dashboard is back verbatim: hero card + ring + status badge, compact **Dynamic Plant** module with ⚡ Simulate, **Insights** card above the **7-day chart**, **All-time impact** card, the four tiles, the cooling-vs-grid scope split, Neutralize + Share, water-fact teasers, Grove, age splash, Settings layout. Only the cup machinery is gone.
+- **Metaphors removed for good** (round 13's rule, which she has not reversed): no metaphor library, no cup units line under the hero, no vessel swapping, no cup milestone alerts, no "Count my water in…" chips. Cup milestones are replaced by **budget-crossing alerts** (first time the day passes 50 %, 70 %, 100 %) plus a heavy-prompt alert (>10 % of the budget in one prompt). The All-time card keeps water-to-water comparisons only (bottles → bathtubs → fire trucks → Olympic pools), which are not beverage metaphors.
+- **Round-13 tranche 1 kept:** catch-up **drain** on open (drop starts full, drains to today's level over 2.4 s — a newer render now cancels a pending drain, which was a real race); opportunity-cost line under the hero; alerts sit **below the header** (`.alerts{top:64px}`) with titles ≤7 words; weekly report gains a **questions-vs-answers** panel (token split + share of water); widget shows mL + drop + "N % of budget"; compact pills; About copy v3 ("estimated cost of your input queries and output generations").
+- **Simulator** now has separate **input / output token** fields (plus the paste box and slider, which fill the input side), an input-vs-output split bar, and a nudge that prices both levers: switching model tier *and* halving the answer.
+- **One engine, one file of constants.** The page now loads `engine.js` (output = 5× input, `tin`/`tout` in `DayTotals`, opportunity cost, weekly analysis), so the prototype and the Flutter port can't drift. Storage key `sipcount.v9`; migrates from `v8a`/`v7`…`v1`.
+- Golden check re-run after the rewrite: US standard tier, 100 in + 300 out = **1.2959 mL** (unchanged from v5/v7). Full click-through test (age splash → log → crossings → image task → weekly report → widget → neutralize → grove → settings) passes with **zero console errors**.
+- Cost of this round: v8's Branch A rewrite is discarded; Branch B is discarded entirely. Direction changes on the hero drop now stand at **five** (drain → fill → drain → fill → drain). Worth raising with her before the next round.
+
 ## Partner feedback round 13 (received 2026-09-20, two tranches) — delivered as v8: two branches
 
 Madhur allowed multiple Today options → two pages sharing one engine (`engine.js`, extracted from the single file; Flutter remains the product):

@@ -1,6 +1,7 @@
 /* =====================================================================================
-   Sipcount shared engine + constants (v8, 2026-09-20). Used by sipcount.html (Branch A) and
-   sipcount-aqua.html (Branch B). Mirrors app/assets/calc/models.json + WaterCalculator.dart
+   Sipcount shared engine + constants (2026-09-21). Used by sipcount.html — the single prototype.
+   (The v8 "Aqua" branch was dropped at the product owner's request, round 14.)
+   Mirrors app/assets/calc/models.json + WaterCalculator.dart
    (I-16: Dart still to be synced to input/output weighting).
 
    Formula: total_mL = E_Wh × PUE × (WUE_site + EWIF_grid)
@@ -70,7 +71,8 @@ function estimate({tier,task,inputTokens=0,outputTokens=null,items=1,params}){
   const outTok = outputTokens==null ? (K.out||0) : outputTokens;
   if(K.fixed!=null){ energy=K.fixed*items; } else { weighted=inputTokens*W.input+outTok*W.output; energy=T.wh1k*weighted/1000; }
   const f=energy*P.pue;
-  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens, outputTokens:K.fixed!=null?0:outTok, weightedTokens:weighted,
+  /* an image task spends no text tokens — report both sides as 0 so day totals stay honest */
+  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens:K.fixed!=null?0:inputTokens, outputTokens:K.fixed!=null?0:outTok, weightedTokens:weighted,
            inputShare: weighted? (inputTokens*W.input)/weighted : 0 };
 }
 const tok=ch=>ch<=0?0:Math.ceil(ch/C.charsPerToken);
@@ -79,12 +81,12 @@ const zone=pct=>pct<C.zones.green?'green':pct<C.zones.amber?'amber':'red';
 const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠️',label:'Elevated'}, red:{ico:'🛑',label:'Limit Exceeded'} };
 
 /* ---------- opportunity cost (one line, plain words) ---------- */
-function opportunityCost(ml){
+function opportunityCost(ml, period='today'){
   const o=C.opp;
-  if(ml<=0) return 'Nothing yet today.';
+  if(ml<=0) return `Nothing yet ${period}.`;
   if(ml<o.glass*0.5){ const p=ml/o.hydration*100; return p<1?`That’s about ${Math.max(1,Math.round(ml/0.05))} drops of water.`:`That’s ${Math.round(p)}% of a day’s drinking water gone.`; }
   if(ml<o.glass*1.5) return 'That’s a full glass of drinking water gone.';
-  if(ml<o.flush) { const n=ml/o.plant; return `That’s enough to water ${fmt(n,n<10?1:0)} houseplant${fmt(n,n<10?1:0)==='1'?'':'s'} today.`; }
+  if(ml<o.flush) { const n=ml/o.plant; return `That’s enough to water ${fmt(n,n<10?1:0)} houseplant${fmt(n,n<10?1:0)==='1'?'':'s'} ${period}.`; }
   if(ml<o.showerMin*3){ const n=ml/o.flush; return `That’s ${fmt(n,n<10?1:0)} toilet flush${fmt(n,n<10?1:0)==='1'?'':'es'} of water.`; }
   const n=ml/o.showerMin; return `That’s a ${fmt(n,n<10?1:0)}-minute shower’s worth of water.`;
 }
@@ -96,7 +98,7 @@ function makeStore(KEY, defaults){
   function load(){
     try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ const s=Object.assign({}, defaults, j); if(!C.regions[s.region]) s.region=defaults.region; if(!C.cooling[s.cooling]) s.cooling='reported'; return s; } }catch(e){}
     let days={}, budget=100, region='us_hyperscale';
-    for(const k of ['sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
+    for(const k of ['sipcount.v8a','sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
     return Object.assign({}, defaults, { budget, region, days, installedAt: (()=>{ const ks=Object.keys(days).sort(); return ks.length? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); })() });
   }
   S=load();
@@ -104,14 +106,17 @@ function makeStore(KEY, defaults){
   const bucket=k=>{ const b=(S.days[k] ||= {n:0,img:0,s1:0,s2:0,tin:0,tout:0,tier:{},task:{},vendor:{}}); b.tier||={}; b.task||={}; b.vendor||={}; b.img||=0; b.tin||=0; b.tout||=0; return b; };
   const record=(e,tier,task,vendor,dt)=>{
     const b=bucket(dayKey(dt||new Date())); b.n++; if(task==='image') b.img++; b.s1+=e.s1; b.s2+=e.s2; b.tin+=e.inputTokens||0; b.tout+=e.outputTokens||0;
-    b.tier[tier]=(b.tier[tier]||0)+e.total; b.task[task]=(b.task[task]||0)+e.total;
-    const v=(b.vendor[vendor] ||= {n:0,ml:0,tiers:{}}); v.n++; v.ml+=e.total; v.tiers[tier]=(v.tiers[tier]||{n:0,ml:0}); v.tiers[tier].n++; v.tiers[tier].ml+=e.total;
+    b.task[task]=(b.task[task]||0)+e.total;
+    const v=(b.vendor[vendor] ||= {n:0,ml:0,tiers:{}}); v.n++; v.ml+=e.total;
+    /* Image water is a fixed per-image cost, not a function of the model tier — keeping it out of the
+       tier maps stops "switch tier and save X" from claiming savings a tier switch cannot deliver. */
+    if(task!=='image'){ b.tier[tier]=(b.tier[tier]||0)+e.total; v.tiers[tier]=(v.tiers[tier]||{n:0,ml:0}); v.tiers[tier].n++; v.tiers[tier].ml+=e.total; }
   };
   const params=()=>regionParams(S.region,S.cooling,S.hydro);
   const last7=()=>[...Array(7)].map((_,i)=>{const d=new Date(); d.setDate(d.getDate()-(6-i)); return dayKey(d);});
   const todayStats=()=>{ const t=S.days[dayKey(new Date())]||{n:0,img:0,s1:0,s2:0,tin:0,tout:0,vendor:{},tier:{}}; return {...t, total:t.s1+t.s2, pct:(t.s1+t.s2)/S.budget}; };
   const loadSample=()=>{
-    S.days={}; S.sample=true; const P=params(); const vendors=['openai','anthropic','google'];
+    S.days={}; S.sample=true; S.streak=12; const P=params(); const vendors=['openai','anthropic','google'];
     const plan=[[6,0],[9,1],[7,0],[14,2],[5,0],[11,1],[4,1]];
     plan.forEach(([n,img],i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i));
       for(let p=0;p<n;p++){ const tier=p%5===0?'reasoning':(p%3===0?'lightweight':'standard'); const task=p%4===0?'code':'text'; const vendor=vendors[(p+i)%3];

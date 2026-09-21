@@ -4,143 +4,378 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Sipcount</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
-/* Sipcount — Branch A (v8): true-black, zero metaphors. Screens: Today · Simulate · About · Settings.
-   Shared engine/constants: engine.js. Branch B (aqua light) lives in sipcount-aqua.html. */
-:root{ --ink:#000; --surface:#141414; --surface-2:#1E1E1E; --line:#262626; --track:#333; --text:#FFF; --muted:#A3A3A3; --dim:#6E6E6E;
-  --green:#00F076; --amber:#FFB800; --red:#FF3B30; --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif; --fs:15px; --tap:44px; color-scheme:dark; }
-:root[data-size="large"]{ --fs:19px; --tap:52px; --muted:#C9C9C9 }
-*{box-sizing:border-box} [hidden]{display:none!important}
+/* =====================================================================================
+   Sipcount prototype v9 (2026-09-21) — the v7 dashboard, restored at the product owner's
+   request (round 14), with every beverage metaphor removed and round-13 tranche 1 folded in.
+     [Config]     shared constants + engine live in engine.js; only UI-only config is here
+     [App]        boot, age splash → mode, routing, storage (engine makeStore)
+     [Dashboard]  draining water-drop hero + mL + opportunity cost · Dynamic Plant ·
+                  Insights · 7-day chart · All-time impact · tiles · scope split · actions
+     [Alerts]     short (≤7 word) cards below the header + tappable water-fact teasers
+     [Plant]      single standardised plant, continuous health 0–100 % of budget
+     [Simulate]   separate input / output token fields (output tokens cost ≈5× input)
+     [ShareModal] 9:16 story (canvas PNG)   [Neutralize] water-project link-outs   [Grove] mock
+   Changed from v8: the minimal "black card" rewrite is reverted; the Aqua branch is deleted.
+   Aesthetic: performance-tracker look — true black, flat dark grey cards, stark white
+   metrics, one neon green for action/progress/thriving. Dark-only by design.
+   ===================================================================================== */
+:root{
+  --ink:#000000; --surface:#141414; --surface-2:#1E1E1E; --line:#262626; --track:#333333;
+  --text:#FFFFFF; --muted:#A6A6A6; --dim:#6E6E6E;
+  --green:#00F076; --green-deep:#00B85A; --green-soft:rgba(0,240,118,.12);
+  --amber:#FFB800; --red:#FF3B30; --soil:#3A3A3A;
+  --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
+  --fs:15px; --tap:44px; --radius:16px; --gap:16px;
+  color-scheme:dark;
+}
+:root[data-size="dense"]{ --fs:14px; --tap:40px; --gap:12px; }
+:root[data-size="large"]{ --fs:19px; --tap:52px; --gap:20px; --muted:#C9C9C9; }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:var(--fs);line-height:1.45;padding-inline:16px;padding-block:24px;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
 .phone{width:100%;max-width:420px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:min(860px,calc(100vh - 48px));position:relative}
 @media (max-width:480px){body{padding:0}.phone{border:0;border-radius:0;min-height:100vh;max-width:none}}
-header.top{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 6px}
-header.top h1{font-family:var(--display);font-size:1.25em;font-weight:800;letter-spacing:-.02em;margin:0}
-.screen{flex:1;padding:12px 18px 12px;display:none;flex-direction:column;gap:16px}
+.screen{flex:1;padding:20px 18px 12px;display:none;flex-direction:column;gap:var(--gap)}
 .screen.active{display:flex}
-h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--display);font-size:1.3em;font-weight:700;letter-spacing:-.01em}
+h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .eyebrow{font-size:.75em;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.big{font-family:var(--display);font-size:3.4em;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.big small{font-size:.36em;font-weight:600;color:var(--muted);margin-left:5px;letter-spacing:0}
 .sub{color:var(--muted);font-size:.93em}
-.row{display:flex;gap:12px;align-items:center} .between{justify-content:space-between} .wrap{flex-wrap:wrap}
+.row{display:flex;gap:12px;align-items:center}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
 .stack{display:flex;flex-direction:column;gap:6px}
-.panel{background:var(--surface);border-radius:16px;padding:16px;border:1px solid var(--line)}
-.pill{font-size:.7em;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.pill.good{background:rgba(0,240,118,.12);color:var(--green)} .pill.warn{background:rgba(255,184,0,.15);color:var(--amber)} .pill.bad{background:rgba(255,59,48,.15);color:var(--red)}
-.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:26px 16px 18px}
-.drop{width:150px;height:190px}
+.panel{background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--line)}
+/* Status system (round 6): never colour alone — icon + label + fill texture per zone */
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:.9em;padding:6px 10px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+.status .ico{font-size:1.05em;line-height:1}
+.status.z-green{color:var(--green)} .status.z-amber{color:var(--amber)} .status.z-red{color:var(--red);font-weight:900}
+.ring{width:100%;height:8px;border-radius:99px;background:var(--track);overflow:hidden}
+.ring i{display:block;height:100%;transition:width .6s}
+.ring i.z-green{background:var(--green)}
+.ring i.z-amber{background:repeating-linear-gradient(135deg,var(--amber) 0 5px,#8a6400 5px 8px)}
+.ring i.z-red{background:repeating-linear-gradient(45deg,var(--red) 0 3px,#7a1c17 3px 5px),repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.35) 3px 5px)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border-radius:14px;padding:14px}
+.tile .v{font-family:var(--display);font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .l{font-size:.78em;color:var(--muted);margin-top:2px;letter-spacing:.02em}
+.hero{display:flex;gap:20px;align-items:center}
+.hero-card{padding:22px 18px;border:1px solid var(--line)}
+.drop{width:124px;height:156px;flex:none}
 .drop svg{width:100%;height:100%;display:block}
-.drop .fill{transition:transform 2.6s cubic-bezier(.3,.1,.2,1)}
-.big{font-family:var(--display);font-size:3.6em;font-weight:800;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums;margin-top:8px}
-.big small{font-size:.34em;font-weight:600;color:var(--muted);margin-left:5px;letter-spacing:0}
-.context{color:#A3A3A3;font-size:.9em;max-width:30ch}
-.ring{width:100%;height:6px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:10px}
-.ring i{display:block;height:100%;transition:width 2.6s cubic-bezier(.3,.1,.2,1)}
-.ring i.z-green{background:var(--green)} .ring i.z-amber{background:repeating-linear-gradient(135deg,var(--amber) 0 5px,#8a6400 5px 8px)} .ring i.z-red{background:repeating-linear-gradient(45deg,var(--red) 0 3px,#7a1c17 3px 5px)}
-.pillbtn{border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.72em;font-weight:800;letter-spacing:.04em;border-radius:99px;padding:6px 12px;cursor:pointer;min-height:32px}
-.pillbtn:hover{color:var(--text);border-color:#3A3A3A}
+.fill{transition:transform .9s cubic-bezier(.2,.8,.2,1),fill .6s}
+.plantcard{display:flex;gap:12px;align-items:center;padding:12px 16px}
+.plantbox{height:104px;width:96px;flex:none}
+.plantbox svg{width:100%;height:100%;display:block;overflow:visible}
+.io{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.iobar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex}
+.iobar i{display:block;height:100%;transition:width .4s}
+.iobar i#ioIn{background:var(--muted)} .iobar i#ioOut{background:var(--green)}
+.scopebar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex}
+.scopebar i{display:block;height:100%;transition:width .6s}
+.legend{display:flex;gap:14px;font-size:.78em;color:var(--muted);flex-wrap:wrap}
+.legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 label.f{display:flex;flex-direction:column;gap:6px;font-size:.85em;color:var(--muted);font-weight:700}
-select,input[type=number],textarea{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-height:var(--tap)}
-textarea{resize:vertical;min-height:80px;font-size:.93em}
+select,input[type=number],textarea,input[type=text]{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-height:var(--tap)}
+textarea{resize:vertical;min-height:88px;font-size:.93em}
+input[type=range]{width:100%;accent-color:var(--green);min-height:var(--tap)}
 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:.87em;padding:9px 6px;border-radius:9px;cursor:pointer;min-height:calc(var(--tap) - 8px);min-width:64px}
 .seg button[aria-pressed=true]{background:var(--green);color:#000}
 button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--green);outline-offset:2px}
-.btn{border:0;font:inherit;font-weight:800;font-size:1em;padding:14px;border-radius:14px;cursor:pointer;background:var(--green);color:#000;width:100%;min-height:var(--tap);display:inline-flex;align-items:center;justify-content:center;gap:8px}
-.btn.ghost{background:var(--surface-2);color:var(--text)} .btn.danger{background:transparent;color:var(--red);border:1px solid var(--line)} .btn.small{width:auto;padding:10px 14px;font-size:.87em}
-.result{background:var(--surface);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
-.io{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.iobar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex} .iobar i{display:block;height:100%}
-.nudge{background:var(--surface);border-radius:14px;padding:12px 14px;font-size:.93em;display:flex;gap:10px;align-items:flex-start;border-left:3px solid var(--green)} .nudge b{color:var(--green)} .nudge.quiet{border-left-color:var(--line);color:var(--muted)}
+.btn{border:0;font:inherit;font-weight:800;font-size:1em;padding:14px;border-radius:14px;cursor:pointer;background:var(--green);color:#000;width:100%;min-height:var(--tap);text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.01em}
+.btn.ghost{background:var(--surface-2);color:var(--text)}
+.btn.line{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--line)}
+.btn.small{width:auto;padding:10px 14px;font-size:.87em}
+.result{background:var(--surface);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
+.range{font-size:.87em;color:var(--muted)}
+.nudge{background:var(--surface);border-radius:14px;padding:12px 14px;font-size:.93em;display:flex;gap:10px;align-items:flex-start;border-left:3px solid var(--green)}
+.nudge b{color:var(--green)}
+.nudge.quiet{border-left-color:var(--line);color:var(--muted)}
+.pill{font-size:.7em;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--green-soft);color:var(--green)}
+.pill.warn{background:rgba(255,176,32,.15);color:var(--amber)}
+.pill.bad{background:rgba(255,77,94,.15);color:var(--red)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:.87em;border-radius:99px;padding:8px 12px;cursor:pointer;min-height:var(--tap);display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed=true]{border-color:var(--green);color:var(--green);background:var(--green-soft)}
 .bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:110px;padding-top:6px}
 .bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-.bar i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--surface-2);min-height:3px;position:relative} .bar i.today{background:var(--green)}
-.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.72em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums} .bar em{font-style:normal;font-size:.72em;color:var(--dim)}
-details{background:var(--surface);border-radius:14px;padding:0 14px;border:1px solid var(--line)}
-summary{cursor:pointer;padding:13px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;min-height:var(--tap);align-items:center} summary::after{content:"+";color:var(--muted)} details[open] summary::after{content:"–"}
-details p,details ul{color:var(--muted);font-size:.87em;margin:0 0 12px} details ul{padding-left:18px}
+.bar i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--surface-2);min-height:3px;position:relative}
+.bar i.today{background:var(--green)}
+.bar i.spike{background:var(--amber)}
+.bar i span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.72em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar em{font-style:normal;font-size:.72em;color:var(--dim)}
+.list{display:flex;flex-direction:column}
+.list .it{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.93em;align-items:center}
+.list .it:last-child{border-bottom:0}
+.list .it .r{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.rank{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--surface-2);align-items:center;justify-content:center;font-weight:800;font-size:.78em;margin-right:10px}
+.brand{display:flex;gap:10px;align-items:center;padding:7px 0}
+.brand .bar2{flex:1;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.brand .bar2 i{display:block;height:100%;background:var(--green-deep)}
+.brand .nm{width:74px;font-weight:700;font-size:.87em}
+.brand .v{width:78px;text-align:right;font-size:.78em;color:var(--muted);font-variant-numeric:tabular-nums}
+details{background:var(--surface);border-radius:14px;padding:0 14px}
+summary{cursor:pointer;padding:13px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;min-height:var(--tap);align-items:center}
+summary::after{content:"+";color:var(--muted)}
+details[open] summary::after{content:"–"}
+details p,details ul{color:var(--muted);font-size:.87em;margin:0 0 12px}
+details ul{padding-left:18px}
 code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
-.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;min-height:var(--tap);font-size:.93em} .toggle input{width:44px;height:26px;accent-color:var(--green)}
-.conf{font-size:.73em;color:var(--muted)} .conf i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle} .conf .high{background:var(--green)} .conf .medium{background:var(--amber)} .conf .low{background:var(--red)}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;min-height:var(--tap);font-size:.93em}
+.toggle input{width:44px;height:26px;accent-color:var(--green)}
+.conf{font-size:.73em;color:var(--muted)}
+.conf i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.conf .high{background:var(--green)} .conf .medium{background:var(--amber)} .conf .low{background:var(--red)}
 nav{display:flex;border-top:1px solid var(--line);background:#0A0A0A;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 nav button{flex:1;border:0;background:transparent;color:var(--dim);font:inherit;font-size:.68em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
-nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round} nav button[aria-current=page]{color:var(--green)}
-/* alerts sit BELOW the header, never over the logo */
-.alerts{position:absolute;top:62px;left:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
-.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:11px 40px 11px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 12px 30px rgba(0,0,0,.7);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em;position:relative}
-.alert.in{transform:translateY(0);opacity:1} .alert b{font-family:var(--display);font-weight:700;font-size:.92em}
-.alert .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.85em;cursor:pointer}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:12} .toast.show{opacity:1;transform:translateX(-50%)}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-current=page]{color:var(--green)}
+/* in-app slide-in alerts — always BELOW the header row, never over the Sipcount logo (round 13) */
+.alerts{position:absolute;top:64px;left:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
+.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 40px 12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 12px 30px rgba(0,0,0,.7);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em;position:relative;cursor:default;user-select:none}
+.alert.in{transform:translateY(0);opacity:1}
+.alert .ic{font-size:1.6em;line-height:1;margin-top:2px}
+.alert b{font-family:var(--display);font-weight:700;font-size:.92em;display:block}
+.alert small{color:var(--muted);display:block;margin-top:2px}
+.alert .more{display:none;color:var(--text);margin-top:8px;font-size:.9em;line-height:1.45;border-top:1px solid var(--line);padding-top:8px}
+.alert .more a{color:var(--green);text-decoration:none;font-weight:700}
+.alert.open .more{display:block}
+.alert.open{background:#1E1E1E}
+.alert .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.85em;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.alert .timer{position:absolute;left:0;bottom:0;height:2px;background:var(--green);width:100%;transform-origin:left;animation:shrink var(--dur,9s) linear forwards}
+.alert.paused .timer{animation-play-state:paused}
+@keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.alert.fact{border-left-color:var(--amber)} .alert.fact .timer{background:var(--amber)}
+.alert .hint{color:var(--dim);font-size:.75em;margin-top:4px}
+.alert.open .hint{display:none}
+/* All-time impact card: darker, muted, deliberately quieter than the daily metrics */
+.lifetime{background:#0C0C0C;border-color:#222}
+.lifenum{font-family:var(--display);font-size:2.1em;font-weight:700;color:#A3A3A3;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:6px}
+.lifenum small{font-size:.42em;font-weight:600;margin-left:5px;color:#7A7A7A}
+.lifesub{color:#8A8A8A;font-size:.85em;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.since{color:#6E6E6E;font-size:.72em;letter-spacing:.04em}
+/* Compact pill buttons + widget previews */
+.pillbtn{border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.72em;font-weight:800;letter-spacing:.04em;border-radius:99px;padding:6px 12px;cursor:pointer;min-height:32px}
+.pillbtn:hover{color:var(--text);border-color:#3A3A3A}
+/* Weekly report (full-screen) */
+.report{position:fixed;inset:0;background:#000;z-index:8;display:none;overflow:auto;padding:28px 20px calc(28px + env(safe-area-inset-bottom))}
+.report.open{display:block}
+.report .inner{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.report h1{font-size:1.6em;font-weight:800;letter-spacing:-.02em}
+.report .k{font-family:var(--display);font-size:2.4em;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.report .k small{font-size:.4em;color:var(--muted);margin-left:4px}
+.widget{background:#000;border:1px solid #262626;border-radius:22px;color:#fff;display:flex;align-items:center;gap:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.widget.small{width:158px;height:158px;flex-direction:column;justify-content:center;gap:6px;text-align:center}
+.widget.medium{width:338px;height:158px}
+.widget .wd{width:44px;height:56px;flex:none}
+.widget .wd svg{width:100%;height:100%;display:block}
+.widget .wn{font-family:var(--display);font-weight:800;font-size:1.7em;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.widget .wn small{font-size:.42em;color:#A3A3A3;margin-left:3px;font-weight:600}
+.widget .ws{color:#A3A3A3;font-size:.72em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.widget .wl{color:#6E6E6E;font-size:.62em;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+/* Fact teaser: compact, persistent, tappable */
+.alert.teaser{padding:10px 14px;align-items:center;cursor:pointer;font:inherit;text-align:left;width:auto;align-self:flex-start;gap:10px;border-left-color:var(--amber)}
+.alert.teaser b{font-size:.9em;white-space:nowrap}
+.alert.teaser .tap{color:var(--amber);font-weight:800;font-size:.78em;white-space:nowrap;margin-left:4px}
+.alert.teaser:hover{background:#1E1E1E}
+/* About */
+.about{max-width:60ch;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.about h1{font-size:1.7em;font-weight:800;letter-spacing:-.02em}
+.about h3{font-family:var(--display);font-size:1.05em;font-weight:700;margin-top:10px;color:var(--green)}
+.about p{margin:0;line-height:1.6;color:#E8E8E8}
+.about .lede{font-size:1.05em;color:var(--text)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:12}
+.toast.show{opacity:1;transform:translateX(-50%)}
 .demo{font-size:.78em;color:var(--dim);text-align:center;margin:0}
-.sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px} .sheet.open{display:flex}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
+.sheet.open{display:flex}
 .sheet .card{background:var(--surface);border-radius:22px;padding:22px 18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto;border:1px solid var(--line)}
-.report{position:fixed;inset:0;background:#000;z-index:8;display:none;overflow:auto;padding:28px 20px} .report.open{display:block} .report .inner{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-.report h1{font-family:var(--display);font-size:1.6em;font-weight:800;letter-spacing:-.02em;margin:0}
-.about{max-width:60ch;margin:0 auto;display:flex;flex-direction:column;gap:14px} .about h1{font-family:var(--display);font-size:1.7em;font-weight:800;letter-spacing:-.02em;margin:0} .about h3{font-family:var(--display);font-size:1.05em;font-weight:700;margin:10px 0 0;color:var(--green)} .about p{margin:0;line-height:1.6;color:#E8E8E8}
-.widget{background:#000;border:1px solid #262626;border-radius:22px;color:#fff;display:flex;align-items:center;gap:14px;padding:16px} .widget.small{width:158px;height:158px;flex-direction:column;justify-content:center;gap:6px} .widget.medium{width:338px;height:158px}
-.widget .wd{width:44px;height:56px;flex:none} .widget .wd svg{width:100%;height:100%} .widget .wn{font-family:var(--display);font-weight:800;font-size:1.7em;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums} .widget .wn small{font-size:.42em;color:#A3A3A3;margin-left:3px} .widget .wl{color:#6E6E6E;font-size:.62em;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
-.charity{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line)} .charity:last-child{border-bottom:0} .charity a{color:var(--green);font-weight:800;text-decoration:none} .charity small{color:var(--muted)}
+/* Age splash */
+.splash{display:none;flex:1;flex-direction:column;gap:26px;align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+.splash.active{display:flex}
+.splash h1{font-size:1.9em;font-weight:800;letter-spacing:-.02em}
+.splash input{font-family:var(--display);font-size:2.6em;font-weight:800;text-align:center;width:170px;padding:12px;border-radius:20px;border-color:var(--green)}
+.splash .mark{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#000;font-size:1.8em}
+/* plant transitions */
+.plant .leafy,.plant .stem,.plant .bud{transition:transform 3s cubic-bezier(.4,0,.2,1),fill 3s ease,stroke 3s ease,opacity 3s ease;transform-box:view-box}
+.plant.fast .leafy,.plant.fast .stem,.plant.fast .bud{transition-duration:.9s}
+.story{aspect-ratio:9/16;width:100%;max-width:270px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(170deg,#000 0%,#111 70%,#0b3b2b 100%);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;font-family:var(--body)}
+.story .hl{font-family:var(--display);font-size:1.1em;font-weight:700;line-height:1.2}
+.story .num{font-family:var(--display);font-size:3.2em;font-weight:800;line-height:1;letter-spacing:-.03em}
+.story .num small{font-size:.35em;color:var(--green)}
+.story .wm{font-size:.68em;opacity:.85;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--green)}
+.story .art{height:38%;display:flex;align-items:center;justify-content:center}
+.story .art svg{height:100%}
+.charity{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line)}
+.charity:last-child{border-bottom:0}
+.charity a{color:var(--green);font-weight:800;text-decoration:none}
+.charity small{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div class="phone">
-  <header class="top"><h1>Sipcount</h1><span class="pill good" id="statusPill">✓ Optimal</span></header>
   <div class="alerts" id="alerts" aria-live="polite"></div>
 
-  <!-- ============ TODAY ============ -->
-  <section class="screen active" id="s-today">
-    <div class="panel hero">
-      <span class="eyebrow">Water today</span>
-      <div class="drop" id="heroDrop" aria-hidden="true"></div>
-      <div class="big"><span id="todayMl">0</span><small>mL</small></div>
-      <div class="context" id="oppCost">—</div>
-      <div class="ring"><i id="budgetRing" class="z-green" style="width:100%"></i></div>
-      <div class="row between" style="width:100%;margin-top:6px"><span class="sub" style="font-size:.8em" id="todayBudget">—</span><span class="sub" style="font-size:.8em" id="todayLeft">—</span></div>
+  <!-- ============ AGE SPLASH ============ -->
+  <section class="splash" id="s-splash">
+    <div class="mark" aria-hidden="true">💧</div>
+    <div class="stack" style="align-items:center;gap:4px">
+      <span class="eyebrow" style="color:var(--green)">Sipcount</span>
+      <p style="margin:0 0 14px;font-family:var(--display);font-weight:600;color:var(--muted)">See what your AI drinks.</p>
+      <h1>How old are you?</h1>
+      <p class="sub" style="margin:0;max-width:300px">One question, then straight in. We keep only the mode it picks — never the number — and nothing leaves this device.</p>
     </div>
+    <input type="number" id="ageIn" inputmode="numeric" min="5" max="120" placeholder="18" aria-label="Your age">
+    <button class="btn" id="ageGo" style="max-width:260px">Continue</button>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="screen" id="s-today">
+    <div class="row between wrap">
+      <h1>Sipcount</h1>
+      <span class="pill good" id="plantPill">Thriving</span>
+    </div>
+
+    <!-- Dominant card: the daily budget as a drop that DRAINS as prompts are logged (round 5) -->
+    <div class="panel hero-card">
+      <div class="hero">
+        <div class="drop" id="heroVessel" aria-hidden="true"></div>
+        <div class="stack" style="flex:1">
+          <span class="eyebrow">Water today</span>
+          <div class="big"><span id="todayMl">0</span><small>mL</small></div>
+          <div class="ring" style="margin-top:10px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
+          <div class="row between wrap" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span><span class="sub" id="todayLeft" style="font-size:.8em">—</span></div>
+        </div>
+      </div>
+      <div class="sub" id="oppCost" style="font-size:.85em;color:#A3A3A3;margin-top:12px;border-top:1px solid var(--line);padding-top:10px"></div>
+    </div>
+
+    <!-- Secondary module: the plant, compact -->
+    <div class="panel plantcard">
+      <div class="plantbox" id="plantBox" aria-hidden="true"></div>
+      <div class="stack" style="flex:1">
+        <span class="eyebrow">Dynamic plant</span>
+        <div class="row between wrap"><h3 id="plantState" style="font-family:var(--display);font-size:1.15em;font-weight:800"><span id="plantIco"></span> <span id="plantStateTxt"></span></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
+        <div class="sub" id="plantLine" style="font-size:.85em"></div>
+      </div>
+    </div>
+
+    <div class="panel stack">
+      <div class="row between"><h2>Insights</h2><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
+      <div id="insightText" style="line-height:1.5"></div>
+      <div id="brandBars"></div>
+    </div>
+
+    <div class="panel">
+      <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <!-- All-Time Impact (round 9): muted, historical anchor -->
+    <div class="panel lifetime">
+      <div class="row between"><h2 style="color:#8A8A8A">All-time impact</h2><span class="since" id="lifeSince"></span></div>
+      <div class="lifenum"><span id="lifeVal">0</span><small id="lifeUnit">mL</small></div>
+      <div class="lifesub" id="lifeEq">—</div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="v" id="tPrompts">0</div><div class="l">Prompts today</div></div>
+      <div class="tile"><div class="v" id="tImages">0</div><div class="l">Images today</div></div>
+      <div class="tile"><div class="v" id="tWeek">0 mL</div><div class="l">Last 7 days</div></div>
+      <div class="tile"><div class="v" id="tStreak">0</div><div class="l">Days plant alive</div></div>
+    </div>
+    <div class="stack">
+      <h2>Where the water goes</h2>
+      <div class="scopebar"><i id="sb1" style="width:15%;background:var(--green)"></i><i id="sb2" style="width:85%;background:var(--green-deep)"></i></div>
+      <div class="legend"><span><b style="background:var(--green)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--green-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
+    </div>
+    <div class="row" style="gap:8px"><button class="btn" id="neutralBtn">Neutralize my water footprint</button><button class="btn ghost small" id="shareBtn">Share</button></div>
+    <div class="nudge" id="todayNudge"></div>
+    <!-- compact widget discovery pill (round 12) -->
     <div class="row" style="justify-content:center;gap:10px"><button class="pillbtn" id="widgetAdd">⊞ Add to Home Screen</button><button class="pillbtn" id="weeklyBtn">▤ Weekly report</button></div>
-    <button class="btn" id="neutralBtn">Neutralize my water footprint</button>
     <p class="demo" id="demoNote"></p>
   </section>
 
-  <!-- ============ SIMULATE ============ -->
-  <section class="screen" id="s-sim">
-    <div class="stack" style="gap:2px"><h2>Pre-prompt simulator</h2><p class="sub" style="margin:0">Estimate the prompt you're about to send and see the water before you spend it. Answers cost more than questions: generating text is slower, hotter work than reading it.</p></div>
-    <div class="seg" id="vendorSeg" role="group" aria-label="AI tool"><button aria-pressed="true" data-v="openai">ChatGPT</button><button aria-pressed="false" data-v="anthropic">Claude</button><button aria-pressed="false" data-v="google">Gemini</button></div>
-    <label class="f">Model<select id="modelSel"></select></label>
-    <div class="seg" id="taskSeg" role="group" aria-label="Task type"><button aria-pressed="true" data-t="text">Text</button><button aria-pressed="false" data-t="code">Code</button><button aria-pressed="false" data-t="long_context">Long doc</button><button aria-pressed="false" data-t="image">Image</button></div>
-    <div class="io" id="ioWrap">
-      <label class="f">Estimated input tokens<input type="number" id="inTok" min="0" max="200000" step="10" value="100"></label>
-      <label class="f">Estimated output tokens<input type="number" id="outTok" min="0" max="200000" step="10" value="300"></label>
+  <!-- ============ LOG ============ -->
+  <section class="screen" id="s-log">
+    <h1>Pre-prompt simulator</h1>
+    <p class="sub" style="margin:-8px 0 0">Before you prompt: pick the model, estimate the question and the answer, and see the water. Answers cost far more than questions — generating text is slower, hotter work than reading it. In the real app, logging happens automatically when you hit send.</p>
+    <div class="seg" id="vendorSeg" role="group" aria-label="AI tool">
+      <button aria-pressed="true" data-v="openai">ChatGPT</button>
+      <button aria-pressed="false" data-v="anthropic">Claude</button>
+      <button aria-pressed="false" data-v="google">Gemini</button>
     </div>
-    <textarea id="promptBox" aria-label="Paste a prompt to estimate its input tokens" placeholder="Or paste your prompt to estimate input tokens. Counted, never saved."></textarea>
+    <label class="f">Model<select id="modelSel"></select></label>
+    <div class="stack"><span class="eyebrow">Task</span>
+      <div class="seg" id="taskSeg" role="group" aria-label="Task type">
+        <button aria-pressed="true" data-t="text">Text</button>
+        <button aria-pressed="false" data-t="code">Code</button>
+        <button aria-pressed="false" data-t="long_context">Long doc</button>
+        <button aria-pressed="false" data-t="image">Image</button>
+      </div>
+    </div>
+    <div class="stack" id="lenWrap">
+      <div class="io"><label class="f">Your question <span style="font-weight:500;color:var(--text)">· input tokens</span><input type="number" id="inTok" min="0" max="200000" step="10" value="100"></label><label class="f">The AI's answer <span style="font-weight:500;color:var(--text)">· output tokens</span><input type="number" id="outTok" min="0" max="200000" step="10" value="300"></label></div>
+      <input type="range" id="lenRange" min="20" max="6000" step="20" value="400" aria-label="Question length in characters">
+      <span class="sub" id="lenLabel" style="font-size:.8em"></span>
+      <textarea id="promptBox" aria-label="Type or paste a prompt to measure its length" placeholder="Or paste/type your question to measure it. It is counted, never saved."></textarea>
+    </div>
     <div class="result">
       <span class="eyebrow">This prompt</span>
-      <div class="big" style="font-size:2.6em;margin:0"><span id="estMl">0</span><small>mL</small></div>
-      <div class="sub" id="estRange">—</div>
-      <div id="ioBlock"><div class="iobar" id="ioBar"><i id="ioIn" style="width:20%;background:var(--muted)"></i><i id="ioOut" style="width:80%;background:var(--green)"></i></div>
-      <div class="row between" style="font-size:.8em;color:var(--muted)"><span id="ioInLbl">Input</span><span id="ioOutLbl">Output</span></div></div>
+      <div class="big"><span id="estMl">0</span><small>mL</small></div>
+      <div class="range" id="estRange">—</div>
+      <div id="ioBlock">
+        <div class="iobar"><i id="ioIn"></i><i id="ioOut"></i></div>
+        <div class="row between" style="font-size:.78em;color:var(--muted);margin-top:6px"><span id="ioInLbl">Question</span><span id="ioOutLbl">Answer</span></div>
+      </div>
+      <div class="row wrap" style="font-size:.85em;color:var(--muted);gap:16px"><span id="estEnergy"></span><span id="estTokens"></span><span id="estSplit"></span></div>
     </div>
     <div class="nudge" id="nudge"></div>
     <button class="btn" id="logBtn">Log it as a prompt</button>
-    <div class="row" style="gap:8px"><button class="btn ghost small" id="logTen">Log 10 (demo)</button><button class="btn ghost small" id="sessionDemo">30-min session (demo)</button></div>
+    <button class="btn ghost" id="logTen">Log 10 quick prompts (demo)</button>
+    <button class="btn line" id="sessionDemo">Simulate a 30-minute session (demo)</button>
     <p class="demo" id="sessionInfo"></p>
   </section>
 
-  <!-- ============ ABOUT ============ -->
+  <!-- ============ GROVE (mock) ============ -->
+  <section class="screen" id="s-grove">
+    <div class="row between wrap"><h1>Grove</h1><span class="pill">Demo data</span></div>
+    <div class="panel">
+      <div class="row between"><div><span class="eyebrow">Your group</span><h3 style="font-family:var(--display);font-size:1.1em;margin-top:4px">Campus demo grove</h3></div><span class="pill good">Alive 12 days</span></div>
+      <div id="groveArt" style="height:120px;margin-top:8px" aria-hidden="true"></div>
+      <p class="sub" style="margin:8px 0 0">Digital sobriety: the group whose shared plant stays green the longest wins. Everyone's daily water counts against one plant.</p>
+    </div>
+    <div class="stack"><h2>Groups this week</h2><div class="panel list" id="groupList"></div></div>
+    <div class="stack"><h2>In your group</h2><div class="panel list" id="memberList"></div></div>
+    <button class="btn ghost" id="joinBtn">Join or create a group</button>
+    <p class="demo">Prototype shows sample data. Real groups will be opt-in, nickname only, sharing daily totals — never prompts.</p>
+  </section>
+
+  <!-- ============ ABOUT — "Behind the Cloud" (copy supplied by product owner, verbatim) ============ -->
   <section class="screen" id="s-about">
     <div class="about">
       <span class="eyebrow">Sipcount · See what your AI drinks.</span>
       <h1>Behind the Cloud</h1>
       <h3>The "Cloud" is on the Ground</h3>
-      <p>Generative AI feels like magic. You type a prompt, and a server in the cloud instantly writes code, drafts essays, or renders artwork. But the cloud isn't in the sky—it's massive, hyper-heated physical infrastructure sitting right here on earth.</p>
+      <p class="lede">Generative AI feels like magic. You type a prompt, and a server in the cloud instantly writes code, drafts essays, or renders artwork. But the cloud isn't in the sky—it's massive, hyper-heated physical infrastructure sitting right here on earth.</p>
       <h3>The Hidden Cost of Computing</h3>
       <p>Every AI query requires intense computational power. To keep these hyperscale server racks from melting, data centers evaporate millions of liters of freshwater daily through cooling towers. Meanwhile, the regional power grids feeding them consume even more water to generate that electricity.</p>
       <p>We are trading our most vital physical resource for digital convenience. As global economies push for aggressive GDP growth, balancing this massive industrial resource drain against municipal water stress is a math problem that simply doesn't add up.</p>
       <h3>Screen Time for Generative AI</h3>
       <p>You wouldn't use your phone without checking your screen time or battery level. Sipcount applies that same visibility to your AI usage. We serve as your native Screen Time for Generative AI, stripping away the abstraction of server telemetry and translating your estimated water footprint into tangible, everyday metrics—down to the milliliter.</p>
-      <p>We are building a movement of <b>digital sobriety</b>. By seeing the actual cost of your input queries and output generations, you can write smarter prompts, choose lighter models for simple tasks, and hold tech infrastructure accountable.</p>
+      <p>We are building a movement of <b>digital sobriety</b>. By seeing the estimated cost of your input queries and output generations, you can write smarter prompts, choose lighter models for simple tasks, and hold tech infrastructure accountable.</p>
       <p><b>Stop guessing your impact. Start tracking your sips.</b></p>
       <button class="btn" id="neutralBtn2" style="margin-top:8px">Neutralize My Water Footprint</button>
       <p class="demo" style="text-align:left">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How we calculate.</p>
@@ -149,150 +384,502 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="s-settings">
-    <h2>Settings</h2>
-    <label class="f">Daily water budget (mL)<input type="number" id="budgetIn" min="10" step="10"></label>
+    <h1>Settings</h1>
+    <div class="panel stack">
+      <div class="row between"><span><b id="modeLabel"></b><br><span class="sub" id="modeSub"></span></span><button class="btn ghost small" id="redoAge">Change age</button></div>
+    </div>
     <label class="toggle"><span>Session check-ins<br><small class="sub">A reality check after 30 minutes of continuous prompting</small></span><input type="checkbox" id="sessionToggle"></label>
-    <label class="f">Text size<select id="sizeSel"><option value="standard">Standard</option><option value="large">Large print</option></select></label>
-    <div class="stack"><label class="f">Where your AI runs (data-centre region)<select id="regionSel"></select></label><div class="conf" id="regionConf"></div></div>
-    <details><summary>Advanced assumptions</summary><div class="stack" style="padding-bottom:12px"><label class="f">Server cooling technology<select id="coolingSel"></select></label><label class="toggle"><span>Count hydropower reservoir evaporation</span><input type="checkbox" id="hydroToggle"></label><div class="sub" id="stressNote"></div></div></details>
+    <label class="f">Text size<select id="sizeSel"><option value="standard">Standard</option><option value="dense">Compact</option><option value="large">Large print</option></select></label>
+    <label class="f">Daily water budget (mL)<input type="number" id="budgetIn" min="10" step="10"></label>
+    <div class="stack">
+      <label class="f">Where your AI runs (data-centre region)<select id="regionSel"></select></label>
+      <div class="conf" id="regionConf"></div>
+    </div>
+    <details><summary>Advanced assumptions</summary>
+      <div class="stack" style="padding-bottom:12px">
+        <label class="f">Server cooling technology<select id="coolingSel"></select></label>
+        <label class="toggle"><span>Count hydropower reservoir evaporation</span><input type="checkbox" id="hydroToggle"></label>
+        <div class="sub" id="stressNote"></div>
+      </div>
+    </details>
     <details><summary>How we calculate</summary>
-      <p><code>Scope 1 (cooling) = energy × PUE × WUE<sub>site</sub></code><br><code>Scope 2 (grid) = energy × PUE × EWIF<sub>grid</sub></code></p>
-      <ul><li><b>energy</b> from model class × tokens. Input and output tokens are tracked separately; an output token is weighted 4× an input token (generation is slower, hotter work), normalised so a typical prompt (≈100 in, ≈300 out) stays ≈0.30 Wh on a standard model. Reasoning ≈10× (estimate); image ≈2.9 Wh (Luccioni et al. 2023).</li><li><b>PUE</b> data-centre overhead; <b>WUE<sub>site</sub></b> on-site cooling water; <b>EWIF<sub>grid</sub></b> water evaporated generating the region's electricity (WRI 2020; Li et al. 2023).</li></ul>
-      <p>Constants <code id="cVersion"></code>. Sources in <code>ARCHITECTURE.md</code>.</p></details>
+      <p><code>Scope 1 (cooling) = energy × PUE × WUE<sub>site</sub></code><br><code>Scope 2 (grid) = energy × PUE × EWIF<sub>grid</sub></code><br><code>Total = Scope 1 + Scope 2</code></p>
+      <ul>
+        <li><b>energy</b> (Wh) from model class × tokens. Input and output tokens are counted separately: an <b>output token is weighted 5× an input token</b> (generating an answer is slower, hotter work than reading a question — central estimate of a 3–10× research range), re-normalised so a typical prompt (≈100 in, ≈300 out) stays ≈0.30 Wh on a standard model (Epoch AI 2025; Google 2025). Reasoning ≈ 10× (estimate); image ≈ 2.9 Wh (Luccioni et al. 2023).</li>
+        <li><b>PUE</b> data-centre overhead; <b>WUE<sub>site</sub></b> on-site cooling water (ISO/IEC 30134-9); <b>EWIF<sub>grid</sub></b> water evaporated generating the region's electricity (WRI 2020; Li et al. 2023).</li>
+      </ul>
+      <p>Range shown spans vendor-reported lows (≈0.2×) to 2023 academic highs (≈3.9×). Constants <code id="cVersion"></code>. Sources in <code>ARCHITECTURE.md</code>.</p>
+    </details>
     <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
-    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. We keep daily totals (mL, tokens in/out, per AI brand and model type) and your preferences on this device. Clear everything below.</p></details>
+    <details><summary>Privacy</summary><p>Nothing you type leaves your device or is stored. We keep daily totals (mL, tokens in and out, per AI brand, model type and task) and your display preferences on this device. Not your age — only the mode it picked. Clear everything below.</p></details>
     <button class="btn danger" id="wipeBtn">Clear all my data</button>
     <button class="btn ghost" id="sampleBtn">Load sample week (for demos)</button>
-    <p class="demo"><a href="sipcount-aqua.html" style="color:var(--dim)">Try Branch B — the Aqua light version →</a></p>
   </section>
 
   <nav aria-label="Sections" id="nav">
     <button data-s="today" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/></svg>Today</button>
-    <button data-s="sim"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>Simulate</button>
+    <button data-s="log"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>Simulate</button>
+    <button data-s="grove" id="navGrove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
     <button data-s="about"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.2A4 4 0 0 1 17 17z"/><path d="M12 21v-4"/></svg>About</button>
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
-<div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Weekly digital sobriety report"><div class="inner"><div class="row between"><span class="pill good">Sunday review</span><button class="btn ghost small" id="reportClose">Close</button></div><div id="reportBody" class="stack" style="gap:14px"></div><button class="btn" id="reportNeutral">Neutralize my water footprint</button></div></div>
+<!-- ============ SHARE MODAL ============ -->
+<div class="sheet" id="shareSheet" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+  <div class="card">
+    <div class="row between"><h1 id="shareTitle" style="font-size:1.1em">Share your story</h1><button class="btn ghost small" id="shareClose" aria-label="Close">✕</button></div>
+    <div class="story" id="storyPreview"></div>
+    <div class="chips" id="copyChips" role="group" aria-label="Choose a caption"></div>
+    <div class="row" style="gap:8px"><button class="btn" id="shareNative">Share</button><button class="btn ghost" id="shareSave">Save image</button></div>
+    <p class="sub" style="margin:0;text-align:center;font-size:.8em">9:16 · 1080×1920 · made on your device</p>
+    <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
+  </div>
+</div>
 
-<div class="sheet" id="widgetSheet" role="dialog" aria-modal="true"><div class="card"><div class="row between"><h2 style="font-size:1em;text-transform:none;letter-spacing:0;color:var(--text)">Sipcount widget</h2><button class="btn ghost small" id="widgetClose">Close</button></div><div class="seg" id="widgetSizeSeg"><button aria-pressed="true" data-w="small">Small</button><button aria-pressed="false" data-w="medium">Medium</button></div><div id="widgetPreview" style="display:flex;justify-content:center;padding:6px 0"></div><div id="widgetHow" class="sub" style="line-height:1.55"></div></div></div>
+<!-- ============ WEEKLY REPORT (full screen) ============ -->
+<div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Weekly digital sobriety report">
+  <div class="inner">
+    <div class="row between"><span class="pill good">Sunday review</span><button class="btn ghost small" id="reportClose">Close</button></div>
+    <div id="reportBody" class="stack" style="gap:14px"></div>
+    <button class="btn" id="reportNeutral">Neutralize my water footprint</button>
+  </div>
+</div>
 
-<div class="sheet" id="neutralSheet" role="dialog" aria-modal="true"><div class="card"><div class="row between"><h2 style="font-size:1em;text-transform:none;letter-spacing:0;color:var(--text)">Neutralize my water footprint</h2><button class="btn ghost small" id="neutralClose">Close</button></div><div id="neutralSummary" class="result"></div><p class="sub" style="margin:0">These organisations fund water access and river restoration. Giving supports real projects — it is <b>not</b> a scientific offset of your AI use, and we don't take any payment. Links open the organisation's own site.</p><div id="charityList"></div></div></div>
+<!-- ============ WIDGET MODAL: preview (Small / Medium) + install instructions ============ -->
+<div class="sheet" id="widgetSheet" role="dialog" aria-modal="true" aria-labelledby="widgetTitle">
+  <div class="card">
+    <div class="row between"><h1 id="widgetTitle" style="font-size:1.1em">Sipcount widget</h1><button class="btn ghost small" id="widgetClose" aria-label="Close">Close</button></div>
+    <div class="seg" id="widgetSizeSeg" role="group" aria-label="Widget size"><button aria-pressed="true" data-w="small">Small</button><button aria-pressed="false" data-w="medium">Medium</button></div>
+    <div id="widgetPreview" style="display:flex;justify-content:center;padding:6px 0"></div>
+    <div id="widgetHow" class="sub" style="line-height:1.55"></div>
+  </div>
+</div>
+
+<!-- ============ FACT MODAL ============ -->
+<div class="sheet" id="factSheet" role="dialog" aria-modal="true" aria-labelledby="factTitle">
+  <div class="card">
+    <div class="row between"><span class="eyebrow" id="factTitle">Water fact</span><button class="btn ghost small" id="factClose" aria-label="Close">Close</button></div>
+    <div id="factBody"></div>
+  </div>
+</div>
+
+<!-- ============ NEUTRALIZE MODAL ============ -->
+<div class="sheet" id="neutralSheet" role="dialog" aria-modal="true" aria-labelledby="neutralTitle">
+  <div class="card">
+    <div class="row between"><h1 id="neutralTitle" style="font-size:1.1em">Neutralize my water footprint</h1><button class="btn ghost small" id="neutralClose" aria-label="Close">✕</button></div>
+    <div id="neutralSummary" class="result"></div>
+    <p class="sub" style="margin:0">These organisations fund water access and river restoration. Giving supports real projects near people who need water — it is <b>not</b> a scientific offset of your AI use, and we don't take any payment. Links open the organisation's own site.</p>
+    <div id="charityList"></div>
+  </div>
+</div>
 
 <script src="engine.js"></script>
 <script>
+/* ===================================================================================== [Config]
+   Constants, regions, tiers, facts, charities, the estimate() engine and the day store all live in
+   engine.js (one source of truth, mirrored by the Flutter app). Only UI-only settings live here. */
+const UI = {
+  plant: { thriving:0.5, drooping:0.7 },                     // matches C.zones (green 0.5 / amber 0.7)
+  factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3, seconds:9 },
+  /* All-time impact units — water-to-water only, no beverages (round 14). Volumes assumed (I-26):
+     bathtub ≈ 150 L typical fill; fire truck ≈ 2,500 L pumper tank; Olympic pool = 2,500,000 L. */
+  macro: [ ['Olympic pools',2500000], ['Fire trucks',2500], ['Bathtubs',150], ['Standard water bottles',0.5] ].map(([label,l])=>({label, ml:l*1000})),
+  storyCopy: [
+    d=>`My AI drank ${d.ml} mL of water today. Can your plant survive finals week?`,
+    d=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} — ${d.ml} mL of water evaporated.`:`${d.prompts} prompts, ${d.ml} mL of water. Plant status: ${d.state}.`,
+    d=>`Digital sobriety check: ${d.ml} mL of water for ${d.prompts} AI prompts. Plant is ${d.state.toLowerCase()}.`
+  ]
+};
+
+/* ===================================================================================== [App] state */
 const $=id=>document.getElementById(id);
-const store=makeStore('sipcount.v8a',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard', sessionCheckins:true });
+const store=makeStore('sipcount.v9',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
+  mode:null, social:true, saved:0, streak:12, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null });
 let S=store.S; const save=store.save;
-
-/* ---------- drop ---------- */
-const DROP=(l,c)=>`<svg viewBox="0 0 100 130"><defs><clipPath id="dc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#141414"/><g clip-path="url(#dc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${130*(1-l)}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`;
-const zoneCol=z=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[z];
-function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id)); document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); }); if(id==='today') renderToday(); if(id==='settings') renderSettings(); }
+S.facts ||= {}; S.zoneAlert ||= {};
+if(!S.installedAt){ const ks=Object.keys(S.days||{}).sort(); S.installedAt = ks.length ? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
+save();
+const last7=()=>store.last7(), todayStats=()=>store.todayStats(), params=()=>store.params();
+const isEdu=()=>S.mode==='edu';
+const zoneVar=pct=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[zone(pct)];
+const zonePill=pct=>({green:'good',amber:'warn',red:'bad'})[zone(pct)];
+function plantState(pct){ return pct>=UI.plant.drooping?'Wilting':pct>=UI.plant.thriving?'Drooping':'Thriving'; }
+/* Smooth number counting for a text node: tweens from its current value to `to`. */
+function countTo(el, to, decimals=2, ms=700){
+  const from=parseFloat((el.textContent||'0').replace(/,/g,''))||0; if(Math.abs(to-from)<1e-9){ el.textContent=decimals?to.toFixed(decimals):fmt(to); return; }
+  const t0=performance.now(); const ease=x=>1-Math.pow(1-x,3);
+  (function step(now){ const p=Math.min(1,(now-t0)/ms), v=from+(to-from)*ease(p); el.textContent=decimals?v.toFixed(decimals):fmt(v); if(p<1) requestAnimationFrame(step); })(t0);
+}
+function applyMode(){ document.documentElement.dataset.size=S.size||'standard'; $('navGrove').hidden=!S.social; $('nav').hidden=!S.mode; }
+function applyAge(age){ S.mode = age>=18?'min':'edu'; S.social = age>=13; save(); applyMode(); }
+function show(id){
+  $('s-splash').classList.toggle('active', id==='splash'); $('nav').hidden = id==='splash' || !S.mode;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id));
+  document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  if(id==='today') renderToday(); if(id==='settings') renderSettings(); if(id==='grove') renderGrove();
+}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
-const toast=t=>{ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); };
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
 
-let drainAnimated=false;
+/* ===================================================================================== [Hero drop]
+   One vessel only — the water drop (round 14: every beverage metaphor removed). It holds the day's
+   budget and DRAINS as prompts are logged (round 13). On every open it starts full and catches up
+   to today's level in front of the user, so the day's use is something you watch happen. */
+const DROP=(l,c)=>{ const y=130*(1-l); return `<svg viewBox="0 0 100 130"><defs><clipPath id="vc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`; };
+let drainAnimated=false, dropSeq=0;
+function renderDrop(pct, col){
+  const lvl=Math.max(0,1-Math.min(1,pct)), width=Math.min(100,pct*100).toFixed(1)+'%', seq=++dropSeq;
+  const settle=dur=>{ const r=$('heroVessel').querySelector('.fill'); if(!r||seq!==dropSeq) return;   // a newer render wins
+    r.style.transitionDuration=dur; r.style.transform=`translateY(${(130*(1-lvl)).toFixed(1)}px)`; r.style.fill=col; $('budgetRing').style.width=width; };
+  if(!$('heroVessel').firstChild || !drainAnimated){            // first paint of the session: start full, then drain
+    drainAnimated=true; $('heroVessel').innerHTML=DROP(1,col); $('budgetRing').style.width='0%';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>settle('2.4s')));
+  } else settle('');
+}
+
+/* ===================================================================================== [Alerts]
+   Slide-in cards under the header. Titles are kept to seven words or fewer (round 13); anything
+   longer goes in the sub-line. Hover (desktop) or press-and-hold (touch) pauses the timer. */
+function alertCard(icon, title, sub, cls='', more='', seconds=5){
+  while($('alerts').children.length>=3){ const victim=[...$('alerts').children].find(c=>!c.classList.contains('teaser'))||$('alerts').firstChild; victim.remove(); }
+  const el=document.createElement('div'); el.className='alert '+cls; el.style.setProperty('--dur', seconds+'s');
+  el.innerHTML=`<span class="ic">${icon}</span><div style="flex:1"><b>${title}</b><small>${sub||''}</small>${more?`<div class="hint">Hold or hover to read more</div><div class="more">${more}</div>`:''}</div><button class="x" aria-label="Dismiss">✕</button><span class="timer"></span>`;
+  $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
+  let gone=false, paused=false; const born=Date.now(); const dismiss=()=>{ if(gone) return; gone=true; el.classList.remove('in'); setTimeout(()=>el.remove(),500); };
+  let timer=setTimeout(dismiss, seconds*1000), remaining=seconds*1000, started=Date.now();
+  const pause=()=>{ if(gone||paused||Date.now()-born<600) return; paused=true; clearTimeout(timer); remaining-=Date.now()-started; el.classList.add('paused'); if(more) el.classList.add('open'); };
+  const resume=()=>{ if(gone||!paused) return; paused=false; started=Date.now(); el.classList.remove('paused'); timer=setTimeout(dismiss, Math.max(1500,remaining)); };
+  el.addEventListener('pointerenter',pause); el.addEventListener('pointerleave',resume);
+  el.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse') pause(); }); el.addEventListener('pointerup',e=>{ if(e.pointerType!=='mouse') resume(); }); el.addEventListener('pointercancel',resume);
+  el.querySelector('.x').onclick=e=>{ e.stopPropagation(); dismiss(); };
+  return el;
+}
+/* Facts: a small persistent TEASER (icon + short hook, no timer) that expands on tap into a
+   readable card with the fact, its context and its source. Only one teaser waits at a time. */
+function showFact(reason){
+  const k=dayKey(new Date()), f=(S.facts[k] ||= {shown:[], count:0, prompts:0});
+  if(f.count>=UI.factCadence.maxPerDay || $('alerts').querySelector('.teaser')) return;
+  const pool=C.facts.map((_,i)=>i).filter(i=>!f.shown.includes(i)); if(!pool.length) return;
+  const i=pool[Math.floor(Math.random()*pool.length)], fact=C.facts[i];
+  f.shown.push(i); f.count++; save();
+  const el=document.createElement('button'); el.className='alert fact teaser'; el.setAttribute('aria-label',`Water fact: ${fact.hook}. Tap to read`);
+  el.innerHTML=`<span class="ic">${fact.e}</span><b style="margin:0">${fact.hook}</b><span class="tap">Tap to read ›</span>`;
+  $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
+  el.onclick=()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),300); openFact(fact); };
+}
+function openFact(fact){
+  $('factBody').innerHTML=`<div style="font-size:2.2em;line-height:1">${fact.e}</div><h2 style="color:var(--green);margin-top:8px">${fact.hook}</h2><p style="margin:6px 0 0;font-family:var(--display);font-weight:700;font-size:1.1em;line-height:1.35">${fact.t}</p><p class="sub" style="margin:10px 0 0;line-height:1.55">${fact.full}</p><p style="margin:10px 0 0;font-size:.85em"><a href="${fact.url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;text-decoration:none">Source: ${fact.s} ↗</a></p>`;
+  $('factSheet').classList.add('open');
+}
+/* Budget-crossing alerts replace the old cup milestones (round 14): one card the first time the day
+   crosses 50 %, 70 % and 100 % of the budget, plus one for a single unusually heavy prompt. */
+const CROSSINGS=[ [1,'🛑','Daily water limit exceeded.','Everything from here is over budget.'],
+                  [0.7,'⚠️','Seventy percent of today used.','Lighter models from here?'],
+                  [0.5,'💧','Halfway through today’s water.','Amber zone from here.'] ];
+function checkAlerts(promptMl){
+  const k=dayKey(new Date()), T=todayStats(), done=(S.zoneAlert[k] ||= []);
+  for(const [th,ico,title,sub] of CROSSINGS){ if(T.pct>=th && !done.includes(th)){ done.push(th); alertCard(ico,title,sub); break; } }
+  if(promptMl>=S.budget*0.1) alertCard('🔥', `Heavy prompt — ${fmt(promptMl,promptMl<10?1:0)} mL gone.`, 'A lighter model would do most of that for a fifth.');
+  const f=(S.facts[k] ||= {shown:[], count:0, prompts:0}); f.prompts++; save();
+  if(f.prompts % UI.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);
+}
+
+/* ===================================================================================== [Plant] single standardised plant */
+function plantSVG(){
+  return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190">
+    <ellipse cx="80" cy="178" rx="48" ry="8" fill="var(--soil)"/>
+    <path d="M44 150h72l-7 26H51z" fill="#2A2A2A"/>
+    <path class="stem" d="M80 150 C80 122 78 96 80 62" stroke="var(--green-deep)" stroke-width="5" fill="none" stroke-linecap="round" style="transform-origin:80px 150px"/>
+    <path class="leafy" d="M80 130 C60 130 42 116 40 96 C60 96 78 108 80 130z" fill="var(--green)" style="transform-origin:80px 130px" data-i="0"/>
+    <path class="leafy" d="M80 114 C100 114 118 100 120 80 C100 80 82 92 80 114z" fill="var(--green)" style="transform-origin:80px 114px" data-i="1"/>
+    <path class="leafy" d="M80 98 C64 98 48 86 46 68 C64 68 78 80 80 98z" fill="var(--green)" style="transform-origin:80px 98px" data-i="2"/>
+    <g class="bud" style="transform-origin:80px 58px"><ellipse cx="80" cy="50" rx="9" ry="14" fill="var(--green)"/><ellipse cx="80" cy="50" rx="4" ry="9" fill="#000" opacity=".25"/></g>
+  </svg>`;
+}
+/* Continuous degradation: colour and posture map directly to 0–100 % of budget; past 100 % the
+   plant collapses further and browns out. */
+function setPlant(pct, fast=false, svg=$('plantSvg')){
+  if(!svg) return; svg.classList.toggle('fast',fast);
+  const t=Math.min(1,Math.max(0,pct));
+  const w=Math.min(1,Math.max(0,(pct-1)/0.5));
+  const droop=t*45+w*30, lean=t*8+w*12;
+  const leaf = w>0 ? mix('#FF4D5E','#5A4A3A',w) : t<0.5 ? mix('#00F0A0','#FFB020',t/0.5) : mix('#FFB020','#FF4D5E',(t-0.5)/0.5);
+  svg.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-t*0.15-w*0.3})`; l.style.fill=leaf; l.style.opacity=String(1-t*0.15-w*0.3); });
+  const st=svg.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-t*0.08-w*0.15})`; st.style.stroke=w>0?mix('#8A5A2B','#5A4A3A',w):mix('#00B877','#8A5A2B',t);
+  const bud=svg.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-t*0.5-w*0.5})`; bud.style.opacity=String(1-t*0.5-w*0.5);
+}
+function mix(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16)); return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+let simTimer=null;
+function simulateHeavyQuery(){
+  if(simTimer) return; toast('Simulating a heavy day…');
+  setPlant(1.5); $('plantPill').textContent='🛑 Limit Exceeded'; $('plantPill').className='pill bad'; $('plantIco').textContent='🛑'; $('plantStateTxt').textContent='Wilting';
+  simTimer=setTimeout(()=>{ renderToday(); simTimer=null; },5500);
+}
+
+/* ===================================================================================== [Insights] */
+function insights(){
+  const keys=last7(), agg={vendor:{},tiers:{},n:0,ml:0}, T=todayStats();
+  const scope = T.n?'today':'this week'; const days = T.n?[dayKey(new Date())]:keys;
+  days.forEach(k=>{ const b=S.days[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in (b.vendor[v].tiers||{})){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
+  const brands=Object.entries(agg.vendor).sort((a,b)=>b[1].ml-a[1].ml);
+  if(!agg.n || !agg.ml || !brands.length) return { scope, total:agg.ml, text: !agg.n?'Log a prompt and the insights appear here.':!agg.ml?'Nothing measurable yet — those prompts used no tokens.':'Older data has no brand breakdown yet — new prompts will show which AI you used.', brands:[] };
+  const [topV, top]=brands[0]; const topTier=Object.entries(top.tiers||{}).sort((a,b)=>b[1].ml-a[1].ml)[0]?.[0] ?? 'standard';
+  const lightN=Object.values(agg.vendor).reduce((s,v)=>s+((v.tiers.lightweight?.n||0)+(v.tiers.standard?.n||0)),0);
+  const heaviest = agg.tiers.reasoning?'reasoning':agg.tiers.standard?'standard':'lightweight';
+  let saved=0; for(const v of Object.values(agg.vendor)) for(const t of ['lightweight','standard']){ const x=v.tiers[t]; if(x && t!==heaviest) saved += x.ml*(C.tiers[heaviest].wh1k/C.tiers[t].wh1k) - x.ml; }
+  const efficientBrand = brands.find(([v,a])=>(a.tiers.standard?.n||0)+(a.tiers.lightweight?.n||0)>0);
+  const parts=[`You leaned on <b>${C.brands[topV]||topV}</b> ${scope} — mostly its <b>${C.tiers[topTier].label.toLowerCase()} model</b> (${fmt(top.ml)} mL, ${Math.round(top.ml/agg.ml*100)}% of your water).`];
+  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?' Plant stays green.':''}`); }
+  else if(agg.tiers.reasoning && lightN/agg.n<0.5) parts.push(`Most prompts hit a reasoning model (≈10× the water). Try a standard model first.`);
+  const tin=T.tin||0, tout=T.tout||0, wt=tin*C.tokenWeights.input+tout*C.tokenWeights.output;
+  if(wt>0 && T.n) parts.push(`Your questions were ${fmt(tin)} tokens and the answers ${fmt(tout)} — <b>${Math.round((tout*C.tokenWeights.output)/wt*100)}% of the water went into the answers</b>.`);
+  if(T.img){ const P=params(), one=estimate({tier:'standard',task:'image',params:P}).total, ref=estimate({tier:'standard',task:'text',inputTokens:100,outputTokens:300,params:P}).total;
+    parts.push(`${T.img} image${T.img>1?'s':''} today ≈ ${Math.round(T.img*one/ref)} text prompts' worth of water.`); }
+  return { scope, text:parts.join(' '), brands:brands.map(([v,a])=>[C.brands[v]||v, a.ml, a.n]), total:agg.ml };
+}
+
+/* ===================================================================================== [Widget]
+   `widgetModel()` is the exact payload a native widget needs (WidgetKit timeline entry / Glance
+   state): millilitres, the drop's remaining level, the zone and one short line. Rendered here as
+   HTML for the Small (158×158) and Medium (338×158) formats. */
+function widgetModel(){ const T=todayStats(); return { ml:fmt(T.total), unit:'mL', line:`${Math.round(Math.min(999,T.pct*100))}% of ${S.budget} mL budget`, level:Math.max(0,1-Math.min(1,T.pct)), zone:zone(T.pct), color:zoneVar(T.pct) }; }
+function widgetHTML(size='small'){
+  const w=widgetModel();
+  const drop=`<div class="wd">${DROP(w.level,w.color).replace(/id="vc"/,`id="wvc${size}"`).replace(/url\(#vc\)/,`url(#wvc${size})`)}</div>`;
+  const num=`<div><div class="wn">${w.ml}<small>${w.unit}</small></div><div class="ws">${w.line}</div></div>`;
+  return size==='small' ? `<div class="widget small"><span class="wl">Water today</span>${drop}${num}</div>` : `<div class="widget medium">${drop}<div style="flex:1;min-width:0"><span class="wl">Sipcount · Water today</span>${num}</div></div>`;
+}
+let widgetSize='small';
+function renderWidget(){
+  $('widgetPreview').innerHTML=widgetHTML(widgetSize);
+  const ua=navigator.userAgent, isIOS=/iPhone|iPad/.test(ua), isAndroid=/Android/.test(ua);
+  $('widgetHow').innerHTML = isIOS ? '<b>iPhone:</b> touch and hold your home screen → tap <b>+</b> → search <b>Sipcount</b> → choose Small or Medium → Add Widget.'
+    : isAndroid ? '<b>Android:</b> touch and hold your home screen → <b>Widgets</b> → <b>Sipcount</b> → drag it into place. (The app can also open this flow directly.)'
+    : '<b>On your phone:</b> touch and hold the home screen, open Widgets, and pick Sipcount. In the app this button opens the system’s add-widget flow on Android and shows these steps on iPhone.';
+  [...$('widgetSizeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.w===widgetSize));
+}
+$('widgetSizeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; widgetSize=b.dataset.w; renderWidget(); };
+$('widgetAdd').onclick=()=>{ renderWidget(); $('widgetSheet').classList.add('open'); };
+$('widgetClose').onclick=()=>$('widgetSheet').classList.remove('open');
+$('weeklyBtn').onclick=weeklyReport;
+$('reportClose').onclick=()=>$('reportSheet').classList.remove('open');
+$('reportNeutral').onclick=()=>{ $('reportSheet').classList.remove('open'); renderNeutral(); $('neutralSheet').classList.add('open'); };
+
+/* ===================================================================================== [Session]
+   30-minute continuous-use check-in. A session = prompts separated by < GAP minutes. Kept in
+   memory only (timestamps finer than a day are never persisted — ARCHITECTURE §9.6). */
+const SESSION={ start:null, last:null, ml:0, n:0, notified:false };
+const SESSION_RULES={ gapMin:10, checkInMin:30 };
+function trackSession(promptMl, now=Date.now()){
+  if(SESSION.last && now-SESSION.last > SESSION_RULES.gapMin*60000){ Object.assign(SESSION,{start:null,last:null,ml:0,n:0,notified:false}); }
+  if(!SESSION.start) SESSION.start=now;
+  SESSION.last=now; SESSION.ml+=promptMl; SESSION.n++;
+  const mins=Math.floor((now-SESSION.start)/60000);
+  $('sessionInfo').textContent=`Current session: ${SESSION.n} prompt${SESSION.n===1?'':'s'} · ${mins} min · ${fmt(SESSION.ml)} mL`;
+  if(S.sessionCheckins!==false && !SESSION.notified && now-SESSION.start >= SESSION_RULES.checkInMin*60000){
+    SESSION.notified=true;
+    const title=`${mins} min session. ${fmt(SESSION.ml)} mL evaporated.`, body='Time for a breather.';
+    alertCard('⏱️', title, body, '', '', 12);
+    if('Notification' in window && Notification.permission==='granted') new Notification('Sipcount', { body:`${title} ${body}` });
+  }
+}
+$('sessionDemo').onclick=()=>{ if(!SESSION.start){ SESSION.start=Date.now()-31*60000; SESSION.last=Date.now()-60000; } else { SESSION.start=Math.min(SESSION.start, Date.now()-31*60000); } logOne(); toast('Session fast-forwarded to 31 min'); };
+
+/* ===================================================================================== [Weekly report]
+   "Digital Sobriety" full-screen review: opens automatically on Sunday evening (≥18:00 local), once
+   per week, and on demand from the ▤ pill. Now also reports the question/answer token split. */
+function weeklyReport(){
+  const A=weeklyAnalysis(store), max=Math.max(1,...A.vals);
+  const bars=A.keys.map((k,i)=>`<div class="bar"><i class="${i===6?'today':''}" style="height:${Math.max(2,A.vals[i]/max*100)}%"><span>${fmt(A.vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][new Date(k+'T12:00:00').getDay()]}</em></div>`).join('');
+  const io = (A.tin||A.tout) ? `<div class="panel stack"><h2>Questions vs answers</h2><div class="iobar"><i style="width:${Math.round((1-A.outShare)*100)}%;background:var(--muted)"></i><i style="width:${Math.round(A.outShare*100)}%;background:var(--green)"></i></div><div class="row between" style="font-size:.78em;color:var(--muted);margin-top:6px"><span>${fmt(A.tin)} tokens asked</span><span>${fmt(A.tout)} tokens answered</span></div><div class="sub" style="margin-top:6px">About <b>${Math.round(A.outShare*100)}%</b> of this week's water went into generating answers, not reading your questions. Asking for shorter answers saves more than asking shorter questions.</div></div>` : '';
+  $('reportBody').innerHTML=`<span class="eyebrow" style="color:var(--green)">Weekly digital sobriety report</span><h1>${fmt(A.total)} mL this week</h1><div class="sub">${A.n} prompts · ${A.keys[0]} → ${A.keys[6]} · ${opportunityCost(A.total,'this week')}</div>
+    <div class="panel"><h2>7-day history</h2><div class="bars" style="margin-top:8px">${bars}</div></div>
+    <div class="panel stack"><h2>Most used</h2><div>${A.top?`<b>${C.brands[A.top[0]]||A.top[0]}</b> — ${fmt(A.top[1])} mL (${Math.round(A.top[1]/(A.total||1)*100)}%)`:'No AI use recorded'}${A.topTier?` · mostly <b>${C.tiers[A.topTier[0]]?.label.toLowerCase()||A.topTier[0]}</b> models`:''}</div></div>
+    ${io}
+    <div class="panel stack"><h2>Next week</h2>${A.tips.map(t=>`<div class="nudge quiet" style="border-left-color:var(--green)"><span>💡</span><span>${t}</span></div>`).join('')}</div>`;
+  $('reportSheet').classList.add('open');
+  S.lastReport=weekKey(new Date()); save();
+}
+function weekKey(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); return dayKey(x); } // Sunday-based week id
+function maybeWeeklyReport(){ const now=new Date(); if(now.getDay()===0 && now.getHours()>=18 && S.lastReport!==weekKey(now) && S.mode) setTimeout(weeklyReport, 2500); }
+
+/* ===================================================================================== [Lifetime] */
+function lifetimeMl(){ return Object.values(S.days).reduce((a,b)=>a+(b.s1||0)+(b.s2||0),0); }
+function scaleVolume(ml){ // mL → L → m³ as it grows
+  if(ml<1000) return { v:fmt(ml, ml<10?1:0), u:'mL' };
+  if(ml<1e6)  return { v:(ml/1000).toFixed(ml<1e4?2:1), u:'L' };
+  return { v:(ml/1e6).toFixed(2), u:'m³' };
+}
+function macroEquiv(ml){ if(ml<=0) return 'Nothing tracked yet.'; const pick = UI.macro.find(m=>ml>=m.ml) || UI.macro[UI.macro.length-1]; const n=ml/pick.ml; return `≈ ${n<10?n.toFixed(n<1?2:1):fmt(n)} ${pick.label}`; }
+function renderLifetime(){
+  const ml=lifetimeMl(), s=scaleVolume(ml);
+  $('lifeVal').textContent=s.v; $('lifeUnit').textContent=s.u; $('lifeEq').textContent=macroEquiv(ml);
+  const since=new Date(S.installedAt); $('lifeSince').textContent=`Tracking since ${since.toLocaleString(undefined,{month:'short',year:'numeric'})}`;
+}
+
+/* ===================================================================================== [Dashboard] */
 function renderToday(){
-  document.documentElement.dataset.size=S.size||'standard';
-  const T=store.todayStats(), z=zone(T.pct), col=zoneCol(z), left=Math.max(0,S.budget-T.total), lvl=1-Math.min(1,T.pct);
-  $('statusPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('statusPill').className='pill '+({green:'good',amber:'warn',red:'bad'})[z];
-  // Catch-up drain: the drop always starts FULL, then drains to today's level in front of the user (once per open).
-  if(!$('heroDrop').firstChild || !drainAnimated){ $('heroDrop').innerHTML=DROP(1,col); $('budgetRing').style.width='0%'; drainAnimated=true;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ const r=$('heroDrop').querySelector('.fill'); r.style.transform=`translateY(${130*(1-lvl)}px)`; $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; })); }
-  else { const r=$('heroDrop').querySelector('.fill'); r.style.transform=`translateY(${130*(1-lvl)}px)`; r.style.fill=col; $('budgetRing').style.width=Math.min(100,T.pct*100)+'%'; }
+  renderLifetime();
+  applyMode();
+  const T=todayStats(), state=plantState(T.pct);
+  const z=zone(T.pct), col=zoneVar(T.pct), left=Math.max(0,S.budget-T.total);
+  countTo($('todayMl'), T.total, T.total<10?1:0);
+  renderDrop(T.pct, col);
   $('budgetRing').className='z-'+z;
-  $('todayMl').textContent=fmt(T.total); $('oppCost').textContent=opportunityCost(T.total);
-  $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`; $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over`:`${fmt(left)} mL left`;
-  $('demoNote').textContent=S.sample?'Sample data for demo — clear it in Settings.':'';
+  $('oppCost').textContent=opportunityCost(T.total);
+  $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
+  $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
+  $('plantPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('plantPill').className='pill '+zonePill(T.pct);
+  $('plantIco').textContent=ZONE_UI[z].ico; $('plantStateTxt').textContent=state; $('plantState').style.color=col;
+  $('plantLine').textContent = T.pct>=1?`${fmt(T.total-S.budget)} mL past the limit.`:`Health ${Math.max(0,Math.round((1-T.pct)*100))}% — fades with every prompt.`;
+  if(!$('plantSvg')) $('plantBox').innerHTML=plantSVG();
+  requestAnimationFrame(()=>setPlant(T.pct));
+  const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
+  $('bars').innerHTML=keys.map((k,i)=>{const d=new Date(k+'T12:00:00'); const cls=i===6?'today':(vals[i]>avg*1.6?'spike':''); return `<div class="bar"><i class="${cls}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][d.getDay()]}</em></div>`;}).join('');
+  const spikes=vals.filter(v=>v>avg*1.6).length; $('trendPill').className='pill '+(spikes?'warn':'good'); $('trendPill').textContent=spikes?`${spikes} spike day${spikes>1?'s':''}`:'Steady';
+  const I=insights(); $('insightScope').textContent=I.scope; $('insightText').innerHTML=I.text;
+  $('brandBars').innerHTML=I.brands.map(([n,ml,cnt])=>`<div class="brand"><span class="nm">${n}</span><div class="bar2"><i style="width:${Math.round(ml/(I.total||1)*100)}%"></i></div><span class="v">${fmt(ml)} mL · ${cnt}</span></div>`).join('');
+  $('tPrompts').textContent=T.n; $('tImages').textContent=T.img||0;
+  let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
+  $('tWeek').textContent=fmt(w)+' mL'; $('tStreak').textContent=state==='Wilting'?0:S.streak;
+  const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15; $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=Math.round(p1*100)+'%'; $('p2').textContent=Math.round((1-p1)*100)+'%';
+  const light='Asking for a <b>shorter answer</b> saves more water than asking a shorter question.';
+  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
+  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
+  $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
 }
+$('simBtn').onclick=simulateHeavyQuery;
 
-/* ---------- alerts (≤7 words) ---------- */
-function alertCard(icon,text){ const a=$('alerts'); while(a.children.length>=2) a.firstChild.remove(); const el=document.createElement('div'); el.className='alert'; el.innerHTML=`<span>${icon}</span><b>${text}</b><button class="x" aria-label="Dismiss">✕</button>`; a.appendChild(el); requestAnimationFrame(()=>el.classList.add('in')); const go=()=>{ el.classList.remove('in'); setTimeout(()=>el.remove(),400); }; el.querySelector('.x').onclick=go; setTimeout(go,7000); }
-
-/* ---------- session (in memory only) ---------- */
-const SESSION={start:null,last:null,ml:0,n:0,notified:false}, RULES={gapMin:10, checkInMin:30};
-function trackSession(ml, now=Date.now()){
-  if(SESSION.last && now-SESSION.last>RULES.gapMin*60000) Object.assign(SESSION,{start:null,last:null,ml:0,n:0,notified:false});
-  if(!SESSION.start) SESSION.start=now; SESSION.last=now; SESSION.ml+=ml; SESSION.n++;
-  const mins=Math.floor((now-SESSION.start)/60000); $('sessionInfo').textContent=`Session: ${SESSION.n} prompts · ${mins} min · ${fmt(SESSION.ml)} mL`;
-  if(S.sessionCheckins!==false && !SESSION.notified && now-SESSION.start>=RULES.checkInMin*60000){ SESSION.notified=true; const msg=`${mins} min session. ${fmt(SESSION.ml)} mL evaporated.`; alertCard('⏱️',msg); if('Notification' in window && Notification.permission==='granted') new Notification('Sipcount',{body:msg}); }
+/* ===================================================================================== [ShareModal] */
+let copyIdx=0;
+function storyData(){ const T=todayStats(); return { prompts:T.n, images:T.img||0, state:plantState(T.pct), ml:fmt(T.total), pct:T.pct }; }
+function storyText(i=copyIdx){ return UI.storyCopy[i](storyData()); }
+function renderShare(){
+  const d=storyData();
+  $('storyPreview').innerHTML=`<div class="wm">Sipcount</div><div class="art">${plantSVG().replace('id="plantSvg"','id="plantShare"')}</div><div><div class="num">${d.ml}<small> mL</small></div><div class="hl">${storyText()}</div></div><div class="wm">Sipcount • Track your AI footprint</div>`;
+  const sp=$('plantShare'); if(sp){ sp.classList.add('fast'); requestAnimationFrame(()=>setPlant(d.pct,true,sp)); }
+  $('copyChips').innerHTML=UI.storyCopy.map((_,i)=>`<button class="chip" data-i="${i}" aria-pressed="${i===copyIdx}">Caption ${i+1}</button>`).join('');
 }
-$('sessionDemo').onclick=()=>{ SESSION.start=Math.min(SESSION.start||Date.now(), Date.now()-31*60000); SESSION.last=Date.now()-60000; logOne(); };
+$('copyChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; copyIdx=+b.dataset.i; renderShare(); };
+$('shareBtn').onclick=()=>{ renderShare(); $('shareSheet').classList.add('open'); };
+$('shareClose').onclick=()=>$('shareSheet').classList.remove('open');
+function drawStory(){
+  const c=$('storyCanvas'), x=c.getContext('2d'), d=storyData(), W=1080, H=1920;
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#000000'); g.addColorStop(.7,'#111111'); g.addColorStop(1,'#0b3b2b'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='#00F0A0'; x.font='800 40px Manrope, system-ui'; x.fillText('SIPCOUNT', 80, 140);
+  const wilt=d.pct>1?Math.min(1,(d.pct-1)/0.5):0, droop=d.pct>0.5?Math.min(1,(d.pct-0.5)/0.5):0;
+  const leaf = wilt?mix('#FFB020','#5A4A3A',wilt):mix('#00F0A0','#FFB020',droop);
+  x.save(); x.translate(540,940); x.fillStyle='#2A2A2A'; x.beginPath(); x.moveTo(-150,0); x.lineTo(150,0); x.lineTo(120,120); x.lineTo(-120,120); x.fill();
+  x.strokeStyle=wilt?mix('#00B877','#5A4A3A',wilt):'#00B877'; x.lineWidth=20; x.lineCap='round'; x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(droop*60+wilt*120,-200, wilt*160+droop*40,-380+wilt*140); x.stroke();
+  x.fillStyle=leaf; for(const [sx,sy,dir] of [[-1,-90,1],[1,-170,-1],[-1,-250,1]]){ x.save(); x.translate(0,sy+wilt*60); x.rotate(dir*(droop*0.5+wilt*0.9)); x.beginPath(); x.ellipse(sx*110,0,120,45,sx*-0.4,0,Math.PI*2); x.fill(); x.restore(); }
+  x.restore();
+  x.fillStyle='#fff'; x.font='800 150px Sora, system-ui'; x.fillText(d.ml, 80, 1330); x.font='600 56px Sora, system-ui'; x.fillStyle='#00F0A0'; x.fillText('mL of water today', 80, 1400);
+  x.fillStyle='#fff'; x.font='700 60px Sora, system-ui'; wrapText(x, storyText(), 80, 1520, 920, 76);
+  x.font='800 34px Manrope, system-ui'; x.fillStyle='#00F0A0'; x.fillText('SIPCOUNT • TRACK YOUR AI FOOTPRINT', 80, 1840);
+  return c;
+}
+function wrapText(x,text,px,py,maxW,lh){ const words=text.split(' '); let line=''; for(const w of words){ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ x.fillText(line,px,py); line=w; py+=lh; } else line=t; } x.fillText(line,px,py); }
+async function storyBlob(){ return new Promise(res=>drawStory().toBlob(res,'image/png')); }
+$('shareSave').onclick=async()=>{ const b=await storyBlob(); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sipcount-story.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Saved'); };
+$('shareNative').onclick=async()=>{ const b=await storyBlob(); const file=new File([b],'sipcount-story.png',{type:'image/png'}); if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],text:storyText()+' #Sipcount'}); }catch(e){} } else { try{ await navigator.clipboard.writeText(storyText()+' #Sipcount'); toast('Caption copied — image saved'); }catch(e){} $('shareSave').click(); } };
 
-/* ---------- simulator ---------- */
+/* ===================================================================================== [Neutralize] */
+function renderNeutral(){
+  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
+  const L=wk/1000; const cents=Math.max(1, Math.round(L*C.charities[0].per_l_usd*100));
+  $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">About ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
+  $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
+}
+$('neutralBtn').onclick=$('neutralBtn2').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };
+$('factClose').onclick=()=>$('factSheet').classList.remove('open');
+$('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
+
+/* ===================================================================================== [Grove] MOCK */
+const GROVE_MOCK = {
+  groups:[['IIT Delhi · Hostel 7',1840,'Thriving',12],['Design Society',2210,'Thriving',9],['Xebia · Pune office',2670,'Drooping',5],['Manipal CS 2nd year',3120,'Drooping',3],['Startup Weekend crew',4410,'Wilting',0],['Bangalore run club',4980,'Wilting',0]],
+  members:[['You',0,''],['aanya_k',310,'Thriving'],['rohan.dev',420,'Thriving'],['maya',615,'Drooping'],['dhruv',890,'Wilting']]
+};
+function renderGrove(){
+  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
+  $('groveArt').innerHTML=`<div class="row" style="justify-content:space-around;height:100%">${[0.2,0.4,0.7,1.2].map(p=>`<div style="width:22%;height:100%">${plantSVG().replace('id="plantSvg"',`data-p="${p}"`)}</div>`).join('')}</div>`;
+  $('groveArt').querySelectorAll('svg').forEach(s=>{ s.classList.add('fast'); requestAnimationFrame(()=>setPlant(+s.dataset.p,true,s)); });
+  $('groupList').innerHTML=GROVE_MOCK.groups.map((g,i)=>`<div class="it"><span><span class="rank">${i+1}</span>${g[0]}</span><span class="r">${fmt(g[1])} mL · ${g[2]}${g[3]?` · ${g[3]} d`:''}</span></div>`).join('');
+  const me=GROVE_MOCK.members.find(m=>m[0]==='You'); me[1]=Math.round(wk); me[2]=plantState(todayStats().pct);
+  $('memberList').innerHTML=[...GROVE_MOCK.members].sort((a,b)=>a[1]-b[1]).map((m,i)=>`<div class="it"><span><span class="rank">${i+1}</span>${m[0]}</span><span class="r">${fmt(m[1])} mL${m[2]?' · '+m[2]:''}</span></div>`).join('');
+}
+$('joinBtn').onclick=()=>toast('Groups coming soon — opt-in, nickname only');
+
+/* ===================================================================================== [Simulate]
+   Round 13: the question and the answer are estimated separately, because they do not cost the same.
+   An output token is weighted 5× an input token (engine.js / docs/TOKEN-ECONOMICS.md). */
 let vendor='openai', task='text';
-const fillModels=()=>{ $('modelSel').innerHTML=C.models[vendor].map(([n,t])=>`<option value="${t}">${n} · ${C.tiers[t].label}</option>`).join(''); };
+const inTokens=()=>Math.max(0,+$('inTok').value||0), outTokens=()=>Math.max(0,+$('outTok').value||0);
+function fillModels(){ $('modelSel').innerHTML=C.models[vendor].map(([n,t])=>`<option value="${t}">${n} · ${C.tiers[t].label}</option>`).join(''); }
 $('vendorSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; vendor=b.dataset.v; [...$('vendorSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); fillModels(); renderEst(); };
-$('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('ioWrap').hidden=task==='image'; $('promptBox').hidden=task==='image'; if(task!=='image'&&C.tasks[task].out) $('outTok').value=C.tasks[task].out; renderEst(); };
-$('promptBox').oninput=e=>{ $('inTok').value=tok(e.target.value.length); renderEst(); };
-$('inTok').oninput=renderEst; $('outTok').oninput=renderEst; $('modelSel').onchange=renderEst;
-const current=()=>estimate({tier:$('modelSel').value,task,inputTokens:+$('inTok').value||0,outputTokens:+$('outTok').value||0,params:store.params()});
+$('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('lenWrap').hidden=task==='image'; if(task!=='image' && C.tasks[task].out) $('outTok').value=C.tasks[task].out; renderEst(); };
+$('lenRange').oninput=e=>{ const chars=+e.target.value; $('promptBox').value=''; $('inTok').value=tok(chars); renderEst(); };
+$('inTok').oninput=()=>{ $('lenRange').value=Math.min(6000,Math.max(20,inTokens()*C.charsPerToken)); $('promptBox').value=''; renderEst(); };
+$('outTok').oninput=renderEst;
+$('promptBox').oninput=e=>{ const chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,chars)); $('inTok').value=tok(chars); renderEst(); };
+$('modelSel').onchange=renderEst;
+function current(){ return estimate({tier:$('modelSel').value,task,inputTokens:inTokens(),outputTokens:outTokens(),params:params()}); }
 function renderEst(){
   const tier=$('modelSel').value, e=current();
+  $('lenLabel').textContent=`${(inTokens()*C.charsPerToken).toLocaleString()} characters ≈ ${inTokens()} input tokens`;
   $('estMl').textContent=fmt(e.total,e.total<10?2:1);
-  $('estRange').textContent=task==='image'?`Per image · ${fmt(e.energyWh,2)} Wh`:`${fmt(e.energyWh,2)} Wh · likely ${fmt(e.total*C.range.low,2)}–${fmt(e.total*C.range.high,1)} mL`;
+  $('estRange').textContent=`Best estimate · likely between ${fmt(e.total*C.range.low,2)} and ${fmt(e.total*C.range.high,1)} mL`;
   $('ioBlock').hidden=task==='image';
-  const inS=Math.round(e.inputShare*100); $('ioIn').style.width=inS+'%'; $('ioOut').style.width=(100-inS)+'%'; $('ioInLbl').textContent=`Input ${e.inputTokens} tok · ${inS}%`; $('ioOutLbl').textContent=`Output ${e.outputTokens} tok · ${100-inS}%`;
+  const inS=Math.round(e.inputShare*100);
+  $('ioIn').style.width=inS+'%'; $('ioOut').style.width=(100-inS)+'%';
+  $('ioInLbl').textContent=`Question ${e.inputTokens} tok · ${inS}%`; $('ioOutLbl').textContent=`Answer ${e.outputTokens} tok · ${100-inS}%`;
+  $('estEnergy').textContent=`${fmt(e.energyWh,2)} Wh`;
+  $('estTokens').textContent=task==='image'?'per image':`${e.inputTokens} in + ${e.outputTokens} out`;
+  const sp = e.total>0 ? e.s1/e.total : 0;
+  $('estSplit').textContent = e.total>0 ? `${Math.round(sp*100)}% cooling · ${Math.round((1-sp)*100)}% grid` : 'Nothing to estimate yet';
   const n=$('nudge');
-  if(task==='image'){ n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One image ≈ <b>${Math.round(e.total/estimate({tier:'standard',task:'text',inputTokens:100,params:store.params()}).total)} text prompts</b>.</span>`; return; }
+  if(task==='image'){ const ref=estimate({tier:'standard',task:'text',inputTokens:100,outputTokens:300,params:params()}).total; n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One image ≈ <b>${Math.round(e.total/ref)} text prompts</b>. Worth it? Go for it — just know the cost.</span>`; return; }
   const alt=tier==='reasoning'?'standard':(tier==='standard'?'lightweight':null);
-  if(alt){ const a=estimate({tier:alt,task,inputTokens:e.inputTokens,outputTokens:e.outputTokens,params:store.params()}); n.className='nudge'; n.innerHTML=`<span>🔁</span><span>A <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(e.total-a.total,2)} mL</b> here. Asking for a shorter answer saves more than a shorter question.</span>`; }
-  else { n.className='nudge quiet'; n.innerHTML=`<span>✅</span><span>Already the lightest option.</span>`; }
+  const halve=e.total*(1-e.inputShare)/2;
+  if(alt){ const a=estimate({tier:alt,task,inputTokens:e.inputTokens,outputTokens:e.outputTokens,params:params()}); const sv=e.total-a.total; n.className='nudge'; n.innerHTML=`<span>🔁</span><span>Switching to a <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(sv,sv<10?2:1)} mL</b> here. Asking for an answer half as long saves <b>${fmt(halve,halve<10?2:1)} mL</b>.</span>`; }
+  else { n.className='nudge quiet'; n.innerHTML=`<span>✅</span><span>Already the lightest option — but an answer half as long still saves <b>${fmt(halve,halve<10?2:1)} mL</b>.</span>`; }
 }
-function logOne(){ const e=current(); store.record(e,$('modelSel').value,task,vendor); save(); trackSession(e.total); return e; }
+function logOne(){ const e=current(); store.record(e,$('modelSel').value,task,vendor); save(); checkAlerts(e.total); trackSession(e.total); return e; }
 $('logBtn').onclick=()=>{ const e=logOne(); toast(`Logged · ${fmt(e.total,2)} mL`); };
-$('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++) t+=logOne().total; toast(`Logged 10 · ${fmt(t,1)} mL`); };
+$('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } toast(`Logged 10 · ${fmt(t,1)} mL`); };
 
-/* ---------- weekly report ---------- */
-function weekKey(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); return dayKey(x); }
-function weeklyReport(){
-  const A=weeklyAnalysis(store); const max=Math.max(1,...A.vals);
-  const bars=A.keys.map((k,i)=>`<div class="bar"><i class="${i===6?'today':''}" style="height:${Math.max(2,A.vals[i]/max*100)}%"><span>${fmt(A.vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][new Date(k+'T12:00:00').getDay()]}</em></div>`).join('');
-  $('reportBody').innerHTML=`<span class="eyebrow" style="color:var(--green)">Weekly digital sobriety report</span><h1>${fmt(A.total)} mL this week</h1><div class="sub">${A.n} prompts · ${opportunityCost(A.total).replace('today','this week')}</div>
-    <div class="panel"><h2>7-day history</h2><div class="bars" style="margin-top:8px">${bars}</div></div>
-    <div class="panel stack"><h2>Most used</h2><div>${A.top?`<b>${C.brands[A.top[0]]||A.top[0]}</b> — ${fmt(A.top[1])} mL (${Math.round(A.top[1]/(A.total||1)*100)}%)`:'No AI use recorded'}${A.topTier?` · mostly <b>${C.tiers[A.topTier[0]]?.label.toLowerCase()}</b> models`:''}</div><div class="sub">Questions vs answers: ${fmt(A.tin)} input tokens · ${fmt(A.tout)} output tokens (${Math.round(A.outShare*100)}% of the water went into answers)</div></div>
-    <div class="panel stack"><h2>Next week</h2>${A.tips.map(t=>`<div class="nudge quiet" style="border-left-color:var(--green)"><span>💡</span><span>${t}</span></div>`).join('')}</div>`;
-  $('reportSheet').classList.add('open'); S.lastReport=weekKey(new Date()); save();
-}
-$('weeklyBtn').onclick=weeklyReport; $('reportClose').onclick=()=>$('reportSheet').classList.remove('open'); $('reportNeutral').onclick=()=>{ $('reportSheet').classList.remove('open'); openNeutral(); };
-function maybeWeeklyReport(){ const now=new Date(); if(now.getDay()===0 && now.getHours()>=18 && S.lastReport!==weekKey(now)) setTimeout(weeklyReport,2500); }
-
-/* ---------- widget ---------- */
-let widgetSize='small';
-function widgetHTML(size){ const T=store.todayStats(), z=zone(T.pct); const d=`<div class="wd">${DROP(1-Math.min(1,T.pct),zoneCol(z)).replace('id="dc"',`id="wdc${size}"`).replace('url(#dc)',`url(#wdc${size})`)}</div>`; const n=`<div><div class="wn">${fmt(T.total)}<small>mL</small></div></div>`; return size==='small'?`<div class="widget small"><span class="wl">Water today</span>${d}${n}</div>`:`<div class="widget medium">${d}<div><span class="wl">Sipcount · Water today</span>${n}</div></div>`; }
-function renderWidget(){ $('widgetPreview').innerHTML=widgetHTML(widgetSize); const ua=navigator.userAgent; $('widgetHow').innerHTML=/iPhone|iPad/.test(ua)?'<b>iPhone:</b> touch and hold the home screen → <b>+</b> → search Sipcount → Add Widget.':/Android/.test(ua)?'<b>Android:</b> touch and hold the home screen → Widgets → Sipcount → drag into place.':'On your phone: touch and hold the home screen, open Widgets, pick Sipcount.'; [...$('widgetSizeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.w===widgetSize)); }
-$('widgetSizeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; widgetSize=b.dataset.w; renderWidget(); };
-$('widgetAdd').onclick=()=>{ renderWidget(); $('widgetSheet').classList.add('open'); }; $('widgetClose').onclick=()=>$('widgetSheet').classList.remove('open');
-
-/* ---------- neutralize ---------- */
-function openNeutral(){ const wk=store.last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0), L=wk/1000, cents=Math.max(1,Math.round(L*C.charities[0].per_l_usd*100));
-  $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em;margin:0">${fmt(wk)}<small>mL</small></div><div class="sub">About ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
-  $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join(''); $('neutralSheet').classList.add('open'); }
-$('neutralBtn').onclick=$('neutralBtn2').onclick=openNeutral; $('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
-
-/* ---------- settings ---------- */
+/* ===================================================================================== [Settings] */
 function renderSettings(){
-  $('budgetIn').value=S.budget; $('sessionToggle').checked=S.sessionCheckins!==false; $('sizeSel').value=S.size||'standard';
-  const R=C.regions[S.region], P=store.params(), dot=c=>`<i class="${c}"></i>`;
+  $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
+  $('modeSub').textContent = S.social?'Alerts and water facts are on for everyone.':'Group features are off for under-13s.';
+  $('sizeSel').value=S.size; $('budgetIn').value=S.budget; $('sessionToggle').checked=S.sessionCheckins!==false;
+  const R=C.regions[S.region];
   $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
+  const P=params(); const dot=c=>`<i class="${c}"></i>`;
   $('regionConf').innerHTML=`PUE ${R.pue} ${dot(R.conf.pue)} · cooling ${P.site} L/kWh ${dot(S.cooling==='reported'?R.conf.wueSite:C.cooling[S.cooling].conf)} · grid ${P.grid} L/kWh ${dot(S.hydro?R.conf.ewifIncl:R.conf.ewifExcl)} &nbsp;<span>${dot('high')}high ${dot('medium')}medium ${dot('low')}low confidence</span>`;
-  $('coolingSel').innerHTML=Object.entries(C.cooling).map(([id,c])=>`<option value="${id}">${c.label}${c.wue!=null?` · ${c.wue} L/kWh`:` · ${R.wueSite} L/kWh`}</option>`).join(''); $('coolingSel').value=S.cooling; $('hydroToggle').checked=!!S.hydro;
-  const st=C.stress[R.stress]; $('stressNote').textContent=st?`${R.short}: ${st.label} water stress (${st.band}).`:`${R.short}: water-stress class not verified.`;
-  $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join(''); $('cVersion').textContent=C.version;
+  $('coolingSel').innerHTML=Object.entries(C.cooling).map(([id,c])=>`<option value="${id}">${c.label}${c.wue!=null?` · ${c.wue} L/kWh`:` · ${R.wueSite} L/kWh`}</option>`).join(''); $('coolingSel').value=S.cooling;
+  $('hydroToggle').checked=!!S.hydro;
+  const st=C.stress[R.stress]; $('stressNote').textContent = st ? `${R.short}: ${st.label} water stress (${st.band}).` : `${R.short}: water-stress class not verified.`;
+  $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('');
+  $('cVersion').textContent=C.version;
 }
+$('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyMode(); };
+$('sessionToggle').onchange=e=>{ S.sessionCheckins=e.target.checked; save(); if(e.target.checked && 'Notification' in window && Notification.permission==='default') Notification.requestPermission(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
-$('sessionToggle').onchange=e=>{ S.sessionCheckins=e.target.checked; save(); if(e.target.checked&&'Notification' in window&&Notification.permission==='default') Notification.requestPermission(); };
-$('sizeSel').onchange=e=>{ S.size=e.target.value; save(); document.documentElement.dataset.size=S.size; };
-$('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.region].defaultCooling||'reported'; save(); renderSettings(); renderEst(); };
-$('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); }; $('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
-$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,days:{},sample:false,wiped:true}; S=store.S; save(); drainAnimated=false; toast('Cleared'); show('today'); } };
-$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); drainAnimated=false; toast('Sample week loaded'); show('today'); };
+$('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.region].defaultCooling||'reported'; save(); renderSettings(); renderEst(); toast('Region saved'); };
+$('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); };
+$('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
+$('redoAge').onclick=()=>show('splash');
+$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,facts:{},zoneAlert:{}}; S=store.S; save(); drainAnimated=false; toast('Cleared'); show('today'); } };
+$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; drainAnimated=false; toast('Sample week loaded'); show('today'); };
 
-/* ---------- boot ---------- */
-fillModels(); renderEst(); renderToday(); maybeWeeklyReport();
+/* ===================================================================================== [App] boot */
+$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(UI.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
+$('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
+fillModels(); renderEst(); applyMode();
+if(!S.mode){ show('splash'); }
+else { show('today'); if(UI.factCadence.onOpen) setTimeout(()=>showFact('open'),1500); maybeWeeklyReport(); }
 </script>
 </body>
 </html>
