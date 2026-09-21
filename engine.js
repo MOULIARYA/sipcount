@@ -84,11 +84,10 @@ const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠️',label:'El
 function opportunityCost(ml, period='today'){
   const o=C.opp;
   if(ml<=0) return `Nothing yet ${period}.`;
-  if(ml<o.glass*0.5){ const p=ml/o.hydration*100; return p<1?`That’s about ${Math.max(1,Math.round(ml/0.05))} drops of water.`:`That’s ${Math.round(p)}% of a day’s drinking water gone.`; }
-  if(ml<o.glass*1.5) return 'That’s a full glass of drinking water gone.';
-  if(ml<o.flush) { const n=ml/o.plant; return `That’s enough to water ${fmt(n,n<10?1:0)} houseplant${fmt(n,n<10?1:0)==='1'?'':'s'} ${period}.`; }
-  if(ml<o.showerMin*3){ const n=ml/o.flush; return `That’s ${fmt(n,n<10?1:0)} toilet flush${fmt(n,n<10?1:0)==='1'?'':'es'} of water.`; }
-  const n=ml/o.showerMin; return `That’s a ${fmt(n,n<10?1:0)}-minute shower’s worth of water.`;
+  if(ml<o.glass*0.5){ const p=ml/o.hydration*100; return p<1?`Your AI evaporated about ${Math.max(1,Math.round(ml/0.05))} drops of water ${period}.`:`Your AI evaporated about ${Math.round(p)}% of a day’s drinking water ${period}.`; }
+  if(ml<o.flush){ const s=fmt(ml/o.glass, ml/o.glass<10?1:0); return `Your AI evaporated enough water to fill ${s} standard drinking glass${s==='1'?'':'es'} ${period}.`; }
+  if(ml<o.showerMin*3){ const s=fmt(ml/o.flush, ml/o.flush<10?1:0); return `Your AI evaporated enough water to flush a toilet ${s} time${s==='1'?'':'s'} ${period}.`; }
+  const s=fmt(ml/o.showerMin, ml/o.showerMin<10?1:0); return `Your AI evaporated enough water for a ${s}-minute shower ${period}.`;
 }
 
 /* ---------- storage (DayTotals canonical document, ARCHITECTURE §9) ---------- */
@@ -98,7 +97,7 @@ function makeStore(KEY, defaults){
   function load(){
     try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ const s=Object.assign({}, defaults, j); if(!C.regions[s.region]) s.region=defaults.region; if(!C.cooling[s.cooling]) s.cooling='reported'; return s; } }catch(e){}
     let days={}, budget=100, region='us_hyperscale';
-    for(const k of ['sipcount.v8a','sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
+    for(const k of ['sipcount.v9','sipcount.v8a','sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
     return Object.assign({}, defaults, { budget, region, days, installedAt: (()=>{ const ks=Object.keys(days).sort(); return ks.length? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); })() });
   }
   S=load();

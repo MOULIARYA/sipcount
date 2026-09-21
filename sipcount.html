@@ -72,9 +72,22 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .drop{width:124px;height:156px;flex:none}
 .drop svg{width:100%;height:100%;display:block}
 .fill{transition:transform .9s cubic-bezier(.2,.8,.2,1),fill .6s}
-.plantcard{display:flex;gap:12px;align-items:center;padding:12px 16px}
-.plantbox{height:104px;width:96px;flex:none}
-.plantbox svg{width:100%;height:100%;display:block;overflow:visible}
+/* Ecosystem module (round 15): the companion mascot beside the drop — plant, polar bear or glacier */
+.eco{display:flex;gap:14px;align-items:stretch;padding:14px 16px}
+.ecoart{width:132px;height:120px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0A;border:1px solid var(--line)}
+.ecoart svg,.ecoart img{width:100%;height:100%;display:block;object-fit:cover}
+.mini{width:62px;height:56px;flex:none;border-radius:10px;overflow:hidden;background:#0A0A0A;border:1px solid var(--line)}
+.mini svg,.mini img{width:100%;height:100%;display:block;object-fit:cover}
+.ecoline{font-size:.85em;color:#A3A3A3;border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
+/* click-to-expand explainers — keeps the dashboard free of jargon (round 15) */
+.info{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.72em;font-weight:800;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+.info:hover{color:var(--text);border-color:#3A3A3A} .info[aria-expanded=true]{color:var(--green);border-color:var(--green)}
+.tip{display:none;background:#121212;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:11px 13px;font-size:.85em;color:#D8D8D8;line-height:1.55;margin-top:-6px}
+.tip.open{display:block} .tip b{color:var(--green)}
+/* widget discovery card: elevated surface + soft blue glow, still true black around it */
+.widgetcard{background:#121212;border:1px solid rgba(59,130,246,.3);border-radius:18px;padding:14px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 0 0 1px rgba(59,130,246,.06),0 10px 34px rgba(59,130,246,.14)}
+.widgetcard .cta{background:#2563EB;color:#fff;border:0;font:inherit;font-weight:800;font-size:.85em;padding:10px 14px;border-radius:12px;cursor:pointer;min-height:40px;white-space:nowrap}
+.widgetcard .cta:hover{background:#1D4ED8}
 .io{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .iobar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex}
 .iobar i{display:block;height:100%;transition:width .4s}
@@ -207,16 +220,19 @@ nav button[aria-current=page]{color:var(--green)}
 .splash h1{font-size:1.9em;font-weight:800;letter-spacing:-.02em}
 .splash input{font-family:var(--display);font-size:2.6em;font-weight:800;text-align:center;width:170px;padding:12px;border-radius:20px;border-color:var(--green)}
 .splash .mark{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#000;font-size:1.8em}
-/* plant transitions */
+/* mascot transitions: the ecosystem degrades over the same beat as the drop drains (2.4 s) */
+.scene *{transform-box:view-box;transition:transform 2.4s cubic-bezier(.3,.1,.2,1),opacity 2.4s ease,stroke-opacity 2.4s ease,fill 2.4s ease}
+.scene.fast *{transition-duration:.7s}
 .plant .leafy,.plant .stem,.plant .bud{transition:transform 3s cubic-bezier(.4,0,.2,1),fill 3s ease,stroke 3s ease,opacity 3s ease;transform-box:view-box}
 .plant.fast .leafy,.plant.fast .stem,.plant.fast .bud{transition-duration:.9s}
+.scene.fast .plant .leafy,.scene.fast .plant .stem,.scene.fast .plant .bud{transition-duration:.7s}
 .story{aspect-ratio:9/16;width:100%;max-width:270px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(170deg,#000 0%,#111 70%,#0b3b2b 100%);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;font-family:var(--body)}
 .story .hl{font-family:var(--display);font-size:1.1em;font-weight:700;line-height:1.2}
 .story .num{font-family:var(--display);font-size:3.2em;font-weight:800;line-height:1;letter-spacing:-.03em}
 .story .num small{font-size:.35em;color:var(--green)}
 .story .wm{font-size:.68em;opacity:.85;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--green)}
 .story .art{height:38%;display:flex;align-items:center;justify-content:center}
-.story .art svg{height:100%}
+.story .art svg{height:100%;width:100%}
 .charity{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid var(--line)}
 .charity:last-child{border-bottom:0}
 .charity a{color:var(--green);font-weight:800;text-decoration:none}
@@ -245,7 +261,7 @@ nav button[aria-current=page]{color:var(--green)}
   <section class="screen" id="s-today">
     <div class="row between wrap">
       <h1>Sipcount</h1>
-      <span class="pill good" id="plantPill">Thriving</span>
+      <span class="pill good" id="ecoPill">Thriving</span>
     </div>
 
     <!-- Dominant card: the daily budget as a drop that DRAINS as prompts are logged (round 5) -->
@@ -259,24 +275,26 @@ nav button[aria-current=page]{color:var(--green)}
           <div class="row between wrap" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span><span class="sub" id="todayLeft" style="font-size:.8em">—</span></div>
         </div>
       </div>
-      <div class="sub" id="oppCost" style="font-size:.85em;color:#A3A3A3;margin-top:12px;border-top:1px solid var(--line);padding-top:10px"></div>
     </div>
 
-    <!-- Secondary module: the plant, compact -->
-    <div class="panel plantcard">
-      <div class="plantbox" id="plantBox" aria-hidden="true"></div>
-      <div class="stack" style="flex:1">
-        <span class="eyebrow">Dynamic plant</span>
-        <div class="row between wrap"><h3 id="plantState" style="font-family:var(--display);font-size:1.15em;font-weight:800"><span id="plantIco"></span> <span id="plantStateTxt"></span></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
-        <div class="sub" id="plantLine" style="font-size:.85em"></div>
+    <!-- Companion Ecosystem module (round 15): plant · polar bear · glacier, degrading with the drop -->
+    <div class="panel eco">
+      <div class="ecoart" id="ecoArt" aria-hidden="true"></div>
+      <div class="stack" style="flex:1;min-width:0">
+        <div class="row between"><span class="eyebrow" id="ecoTitle">Ecosystem</span><button class="info" data-tip="eco" aria-controls="tip-eco" aria-expanded="false" aria-label="Why the ecosystem changes">i</button></div>
+        <div class="row between wrap"><h3 id="ecoState" style="font-family:var(--display);font-size:1.15em;font-weight:800"><span id="ecoIco"></span> <span id="ecoStateTxt"></span></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
+        <div class="sub" id="ecoLine" style="font-size:.85em"></div>
       </div>
     </div>
+    <div class="tip" id="tip-eco" role="region" aria-label="Explainer"></div>
+    <div class="ecoline" id="oppCost"></div>
 
     <div class="panel stack">
-      <div class="row between"><h2>Insights</h2><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
+      <div class="row between"><div class="row" style="gap:8px"><h2>Insights</h2><button class="info" data-tip="insights" aria-controls="tip-insights" aria-expanded="false" aria-label="How insights are worked out">i</button></div><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
       <div id="insightText" style="line-height:1.5"></div>
       <div id="brandBars"></div>
     </div>
+    <div class="tip" id="tip-insights" role="region" aria-label="Explainer"></div>
 
     <div class="panel">
       <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
@@ -294,17 +312,26 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="tile"><div class="v" id="tPrompts">0</div><div class="l">Prompts today</div></div>
       <div class="tile"><div class="v" id="tImages">0</div><div class="l">Images today</div></div>
       <div class="tile"><div class="v" id="tWeek">0 mL</div><div class="l">Last 7 days</div></div>
-      <div class="tile"><div class="v" id="tStreak">0</div><div class="l">Days plant alive</div></div>
+      <div class="tile"><div class="v" id="tStreak">0</div><div class="l">Days ecosystem alive</div></div>
     </div>
     <div class="stack">
-      <h2>Where the water goes</h2>
+      <div class="row" style="gap:8px"><h2>Where the water goes</h2><button class="info" data-tip="scope" aria-controls="tip-scope" aria-expanded="false" aria-label="Why electricity uses water">i</button></div>
       <div class="scopebar"><i id="sb1" style="width:15%;background:var(--green)"></i><i id="sb2" style="width:85%;background:var(--green-deep)"></i></div>
       <div class="legend"><span><b style="background:var(--green)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--green-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
+      <div class="tip" id="tip-scope" role="region" aria-label="Explainer"></div>
     </div>
     <div class="row" style="gap:8px"><button class="btn" id="neutralBtn">Neutralize my water footprint</button><button class="btn ghost small" id="shareBtn">Share</button></div>
     <div class="nudge" id="todayNudge"></div>
-    <!-- compact widget discovery pill (round 12) -->
-    <div class="row" style="justify-content:center;gap:10px"><button class="pillbtn" id="widgetAdd">⊞ Add to Home Screen</button><button class="pillbtn" id="weeklyBtn">▤ Weekly report</button></div>
+    <!-- prominent widget discovery card (round 15 — reverses round 12's compact pill) -->
+    <div class="widgetcard" id="widgetCard">
+      <div class="mini" id="widgetCardArt" aria-hidden="true"></div>
+      <div class="stack" style="flex:1;min-width:0;gap:2px">
+        <b style="font-family:var(--display);font-size:.98em">Keep your footprint in check.</b>
+        <span class="sub" style="font-size:.85em">Add Sipcount to your home screen.</span>
+      </div>
+      <button class="cta" id="widgetAdd">Add Widget</button>
+    </div>
+    <div class="row" style="justify-content:center"><button class="pillbtn" id="weeklyBtn">▤ Weekly report</button></div>
     <p class="demo" id="demoNote"></p>
   </section>
 
@@ -330,12 +357,16 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="io"><label class="f">Your question <span style="font-weight:500;color:var(--text)">· input tokens</span><input type="number" id="inTok" min="0" max="200000" step="10" value="100"></label><label class="f">The AI's answer <span style="font-weight:500;color:var(--text)">· output tokens</span><input type="number" id="outTok" min="0" max="200000" step="10" value="300"></label></div>
       <input type="range" id="lenRange" min="20" max="6000" step="20" value="400" aria-label="Question length in characters">
       <span class="sub" id="lenLabel" style="font-size:.8em"></span>
+      <input type="range" id="outRange" min="0" max="4000" step="20" value="300" aria-label="Answer length in tokens">
+      <span class="sub" id="outLabel" style="font-size:.8em"></span>
       <textarea id="promptBox" aria-label="Type or paste a prompt to measure its length" placeholder="Or paste/type your question to measure it. It is counted, never saved."></textarea>
     </div>
     <div class="result">
-      <span class="eyebrow">This prompt</span>
+      <div class="row between"><span class="eyebrow">This prompt</span><button class="info" data-tip="sim" aria-controls="tip-sim" aria-expanded="false" aria-label="How this estimate is made">i</button></div>
+      <div class="tip" id="tip-sim" role="region" aria-label="Explainer"></div>
       <div class="big"><span id="estMl">0</span><small>mL</small></div>
       <div class="range" id="estRange">—</div>
+      <div class="row" style="gap:12px;align-items:center;margin-top:2px"><div class="mini" id="simMascot" aria-hidden="true"></div><div class="sub" id="simMascotLine" style="font-size:.85em;flex:1"></div></div>
       <div id="ioBlock">
         <div class="iobar"><i id="ioIn"></i><i id="ioOut"></i></div>
         <div class="row between" style="font-size:.78em;color:var(--muted);margin-top:6px"><span id="ioInLbl">Question</span><span id="ioOutLbl">Answer</span></div>
@@ -378,7 +409,7 @@ nav button[aria-current=page]{color:var(--green)}
       <p>We are building a movement of <b>digital sobriety</b>. By seeing the estimated cost of your input queries and output generations, you can write smarter prompts, choose lighter models for simple tasks, and hold tech infrastructure accountable.</p>
       <p><b>Stop guessing your impact. Start tracking your sips.</b></p>
       <button class="btn" id="neutralBtn2" style="margin-top:8px">Neutralize My Water Footprint</button>
-      <p class="demo" style="text-align:left">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How we calculate.</p>
+      <p class="demo" style="text-align:left">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How the number is worked out.</p>
     </div>
   </section>
 
@@ -388,6 +419,12 @@ nav button[aria-current=page]{color:var(--green)}
     <div class="panel stack">
       <div class="row between"><span><b id="modeLabel"></b><br><span class="sub" id="modeSub"></span></span><button class="btn ghost small" id="redoAge">Change age</button></div>
     </div>
+    <div class="stack">
+      <div class="row" style="gap:8px"><h2>Your ecosystem</h2><button class="info" data-tip="mascot" aria-controls="tip-mascot" aria-expanded="false" aria-label="About the mascots">i</button></div>
+      <div class="chips" id="mascotChips" role="group" aria-label="Choose your mascot"></div>
+      <span class="sub" id="mascotNote"></span>
+      <div class="tip" id="tip-mascot" role="region" aria-label="Explainer"></div>
+    </div>
     <label class="toggle"><span>Session check-ins<br><small class="sub">A reality check after 30 minutes of continuous prompting</small></span><input type="checkbox" id="sessionToggle"></label>
     <label class="f">Text size<select id="sizeSel"><option value="standard">Standard</option><option value="dense">Compact</option><option value="large">Large print</option></select></label>
     <label class="f">Daily water budget (mL)<input type="number" id="budgetIn" min="10" step="10"></label>
@@ -395,14 +432,14 @@ nav button[aria-current=page]{color:var(--green)}
       <label class="f">Where your AI runs (data-centre region)<select id="regionSel"></select></label>
       <div class="conf" id="regionConf"></div>
     </div>
-    <details><summary>Advanced assumptions</summary>
+    <details><summary>Fine-tune the assumptions</summary>
       <div class="stack" style="padding-bottom:12px">
         <label class="f">Server cooling technology<select id="coolingSel"></select></label>
         <label class="toggle"><span>Count hydropower reservoir evaporation</span><input type="checkbox" id="hydroToggle"></label>
         <div class="sub" id="stressNote"></div>
       </div>
     </details>
-    <details><summary>How we calculate</summary>
+    <details><summary>How the number is worked out</summary>
       <p><code>Scope 1 (cooling) = energy × PUE × WUE<sub>site</sub></code><br><code>Scope 2 (grid) = energy × PUE × EWIF<sub>grid</sub></code><br><code>Total = Scope 1 + Scope 2</code></p>
       <ul>
         <li><b>energy</b> (Wh) from model class × tokens. Input and output tokens are counted separately: an <b>output token is weighted 5× an input token</b> (generating an answer is slower, hotter work than reading a question — central estimate of a 3–10× research range), re-normalised so a typical prompt (≈100 in, ≈300 out) stays ≈0.30 Wh on a standard model (Epoch AI 2025; Google 2025). Reasoning ≈ 10× (estimate); image ≈ 2.9 Wh (Luccioni et al. 2023).</li>
@@ -487,16 +524,16 @@ const UI = {
      bathtub ≈ 150 L typical fill; fire truck ≈ 2,500 L pumper tank; Olympic pool = 2,500,000 L. */
   macro: [ ['Olympic pools',2500000], ['Fire trucks',2500], ['Bathtubs',150], ['Standard water bottles',0.5] ].map(([label,l])=>({label, ml:l*1000})),
   storyCopy: [
-    d=>`My AI drank ${d.ml} mL of water today. Can your plant survive finals week?`,
-    d=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} — ${d.ml} mL of water evaporated.`:`${d.prompts} prompts, ${d.ml} mL of water. Plant status: ${d.state}.`,
-    d=>`Digital sobriety check: ${d.ml} mL of water for ${d.prompts} AI prompts. Plant is ${d.state.toLowerCase()}.`
+    d=>`My AI drank ${d.ml} mL of water today. Can your ${d.mascot} survive finals week?`,
+    d=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} — ${d.ml} mL of water evaporated.`:`${d.prompts} prompts, ${d.ml} mL of water. My ${d.mascot}: ${d.state.toLowerCase()}.`,
+    d=>`Digital sobriety check: ${d.ml} mL of water for ${d.prompts} AI prompts. My ${d.mascot} is ${d.state.toLowerCase()}.`
   ]
 };
 
 /* ===================================================================================== [App] state */
 const $=id=>document.getElementById(id);
-const store=makeStore('sipcount.v9',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
-  mode:null, social:true, saved:0, streak:12, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null });
+const store=makeStore('sipcount.v10',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
+  mascot:'plant', mode:null, social:true, saved:0, streak:12, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null });
 let S=store.S; const save=store.save;
 S.facts ||= {}; S.zoneAlert ||= {};
 if(!S.installedAt){ const ks=Object.keys(S.days||{}).sort(); S.installedAt = ks.length ? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
@@ -528,7 +565,7 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
    budget and DRAINS as prompts are logged (round 13). On every open it starts full and catches up
    to today's level in front of the user, so the day's use is something you watch happen. */
 const DROP=(l,c)=>{ const y=130*(1-l); return `<svg viewBox="0 0 100 130"><defs><clipPath id="vc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`; };
-let drainAnimated=false, dropSeq=0;
+let drainAnimated=false, dropSeq=0, ecoFresh=true, ecoSeq=0;
 function renderDrop(pct, col){
   const lvl=Math.max(0,1-Math.min(1,pct)), width=Math.min(100,pct*100).toFixed(1)+'%', seq=++dropSeq;
   const settle=dur=>{ const r=$('heroVessel').querySelector('.fill'); if(!r||seq!==dropSeq) return;   // a newer render wins
@@ -586,7 +623,201 @@ function checkAlerts(promptMl){
   if(f.prompts % UI.factCadence.everyPrompts === 0) setTimeout(()=>showFact('prompts'), 900);
 }
 
-/* ===================================================================================== [Plant] single standardised plant */
+/* ===================================================================================== [Ecosystem]
+   Round 15. A companion mascot lives beside the Water Drop — it never replaces it — and degrades with
+   the day's usage: health = 1 − (water used ÷ daily budget), clamped 0…1 (1 = pristine).
+   Three mascots: Plant (default), Polar bear on an ice floe, Glacier. All are drawn as layered SVG
+   (multi-stop gradients, fractal-noise texture, water reflections and caustics) so the app stays
+   offline, free of licence costs and a few KB instead of megabytes of photography.
+
+   ASSET SLOT — to swap in commissioned or licensed artwork later, fill MASCOT_ASSETS with five frames
+   per mascot (index 0 = pristine → 4 = collapsed). The module then renders <img> frames with a
+   cross-fade instead of the SVG, and nothing else in this file changes. Frames belong in assets/ and
+   should be WebP at 2× the largest display size (≈ 528×480).                                        */
+const F=(n)=>({ dir:'assets/', frames:[0,1,2,3,4].map(i=>`${n}-${i}.webp`) });
+const MASCOT_ASSETS = { plant:F('plant'), bear:F('bear'), glacier:F('glacier') };
+/*  Photoreal frames generated 2026-09-21 (Gemini, prompts in docs/ASSET-PROMPTS.md), 900 px WebP,
+    ~35 KB each, 517 KB for all fifteen. Set a mascot to null to fall back to its SVG; a failed image
+    load does the same automatically, so the app still works if the assets are missing.               */
+let uidN=0; const uid=()=>'e'+(++uidN);
+const clamp01=v=>Math.max(0,Math.min(1,v));
+/* shared scene defs: sky, sea, ice, fur, plus a fractal-noise filter used as a texture overlay */
+const sceneDefs=(u,lite)=>`
+  <linearGradient id="sky${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1826"/><stop offset=".7" stop-color="#1B3348"/><stop offset="1" stop-color="#2C4D66"/></linearGradient>
+  <linearGradient id="sea${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4863"/><stop offset=".35" stop-color="#0E3149"/><stop offset="1" stop-color="#061722"/></linearGradient>
+  <linearGradient id="ice${u}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".35" stop-color="#E4F0F8"/><stop offset=".72" stop-color="#C2DAEA"/><stop offset="1" stop-color="#9BC0D6"/></linearGradient>
+  <linearGradient id="icewall${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BBD8E9"/><stop offset=".5" stop-color="#7FAECB"/><stop offset="1" stop-color="#2B5B7B"/></linearGradient>
+  <linearGradient id="fur${u}" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F0F5F9"/><stop offset="1" stop-color="#BFD1DE"/></linearGradient>
+  <radialGradient id="glow${u}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8FD7FF" stop-opacity=".45"/><stop offset="1" stop-color="#8FD7FF" stop-opacity="0"/></radialGradient>
+  ${lite?'':`<filter id="noise${u}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" seed="9" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>`}`;
+const texture=(u,lite,clip,op=.16)=>lite?'':`<g clip-path="url(#${clip})"><rect x="0" y="0" width="200" height="170" filter="url(#noise${u})" opacity="${op}" style="mix-blend-mode:overlay"/></g>`;
+const waves=(y,n,o=.07)=>[...Array(n)].map((_,i)=>`<path d="M${-10+i*7} ${y+i*9} q 26 ${i%2?-4:4} 52 0 t 52 0 t 52 0 t 52 0" fill="none" stroke="#DCF2FF" stroke-opacity="${o}" stroke-width="1.6" stroke-linecap="round"/>`).join('');
+
+/* ---------- mascot 1: polar bear on a shrinking ice floe ---------- */
+function bearSVG(u, lite){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="bear">
+    <defs>${sceneDefs(u,lite)}
+      <clipPath id="floeC${u}"><path d="M44 110 L74 99 L128 99 L156 111 L146 124 L56 124 Z"/></clipPath>
+</defs>
+    <rect width="200" height="170" fill="url(#sky${u})"/>
+    <path d="M0 92 L26 84 L58 90 L86 82 L118 89 L150 83 L182 90 L200 86 L200 100 L0 100 Z" fill="#9FC4DB" opacity=".18"/>
+    <rect y="96" width="200" height="74" fill="url(#sea${u})"/>
+    ${waves(104,7)}
+    <g class="floe" style="transform-origin:100px 120px">
+      <ellipse cx="100" cy="126" rx="62" ry="11" fill="#0B2B3D" opacity=".6"/>
+      <path d="M56 124 L146 124 L138 139 L64 139 Z" fill="url(#icewall${u})"/>
+      <path d="M44 110 L74 99 L128 99 L156 111 L146 124 L56 124 Z" fill="url(#ice${u})"/>
+      <path d="M74 99 L88 110 L64 118 L44 110 Z" fill="#FFFFFF" opacity=".35"/>
+      <path d="M128 99 L156 111 L134 119 L118 108 Z" fill="#FFFFFF" opacity=".22"/>
+      <path d="M56 124 L146 124" stroke="#EAF6FF" stroke-opacity=".5" stroke-width="1.5"/>
+      <path d="M78 126 L74 139 M96 126 L95 139 M118 126 L121 139" stroke="#1C4A66" stroke-opacity=".5" stroke-width="1.2"/>
+      ${texture(u,lite,'floeC'+u,.2)}
+    </g>
+    <g class="bear" style="transform-origin:100px 104px">
+      <ellipse cx="112" cy="84" rx="30" ry="21" fill="url(#fur${u})"/>
+      <ellipse cx="128" cy="90" rx="17" ry="14" fill="url(#fur${u})"/>
+      <path d="M92 96 q -3 -12 8 -14 q 10 -2 11 10 z" fill="#E7EEF3"/>
+      <g class="head" style="transform-origin:82px 74px">
+        <circle cx="74" cy="64" r="5" fill="#EDF3F7"/><circle cx="92" cy="61" r="5" fill="#E3EBF1"/>
+        <ellipse cx="82" cy="72" rx="16" ry="14" fill="url(#fur${u})"/>
+        <path d="M68 74 q -8 2 -9 8 q 6 4 12 1 z" fill="#F4F8FB"/>
+        <circle cx="60" cy="81" r="2.4" fill="#2B2B2B"/>
+        <circle cx="76" cy="69" r="2.2" fill="#23323C"/><circle cx="90" cy="68" r="2.2" fill="#23323C"/>
+        <path class="tear" d="M76 73 q 1 5 0 8" stroke="#8FD7FF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0"/>
+      </g>
+      <path d="M96 96 q 4 8 14 8 q 10 0 12 -8 z" fill="#E9F0F5"/>
+      <ellipse cx="128" cy="100" rx="13" ry="5" fill="#DCE7EE"/>
+      <ellipse cx="100" cy="101" rx="11" ry="4.5" fill="#E6EEF4"/>
+    </g>
+    <g class="drips" opacity="0">
+      <path d="M62 138 q 1 6 0 9" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+      <path d="M100 139 q 1 7 0 11" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+      <path d="M136 137 q -1 6 0 9" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    </g>
+    <g class="ripple" opacity=".5"><ellipse cx="100" cy="150" rx="46" ry="6" fill="none" stroke="#BFE6FF" stroke-opacity=".25"/><ellipse cx="100" cy="158" rx="66" ry="8" fill="none" stroke="#BFE6FF" stroke-opacity=".16"/></g>
+  </svg>`;
+}
+/* ---------- mascot 2: a calving glacier ---------- */
+function glacierSVG(u, lite){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="glacier">
+    <defs>${sceneDefs(u,lite)}<clipPath id="wallC${u}"><path d="M8 122 L8 44 L52 30 L104 40 L150 26 L192 42 L192 122 Z"/></clipPath></defs>
+    <rect width="200" height="170" fill="url(#sky${u})"/>
+    <rect y="112" width="200" height="58" fill="url(#sea${u})"/>
+    ${waves(120,6)}
+    <g class="wall" style="transform-origin:100px 122px">
+      <path d="M8 122 L8 44 L52 30 L104 40 L150 26 L192 42 L192 122 Z" fill="url(#icewall${u})"/>
+      <path d="M8 44 L52 30 L104 40 L150 26 L192 42 L192 58 L150 44 L104 56 L52 46 L8 60 Z" fill="url(#ice${u})" opacity=".92"/>
+      <path d="M40 34 L46 122 M88 40 L84 122 M126 32 L132 122 M166 32 L162 122" stroke="#5E93B4" stroke-opacity=".45" stroke-width="1.4"/>
+      <path class="crack" d="M70 46 l 8 26 l -7 20 l 9 26" stroke="#0E3A54" stroke-opacity=".0" stroke-width="2" fill="none"/>
+      <path class="crack" d="M144 44 l -7 30 l 8 22 l -5 24" stroke="#0E3A54" stroke-opacity="0" stroke-width="2" fill="none"/>
+      <path class="melt" d="M30 60 q 3 26 -1 50 M108 62 q -3 24 2 46 M178 58 q 2 28 -2 52" stroke="#BFEAFF" stroke-opacity="0" stroke-width="1.6" fill="none"/>
+      ${texture(u,lite,'wallC'+u,.22)}
+    </g>
+    <g class="bergs" opacity="0">
+      <g><ellipse cx="34" cy="143" rx="18" ry="4" fill="#03111A" opacity=".55"/><path d="M18 138 L27 126 L40 123 L50 134 L44 141 Z" fill="url(#ice${u})"/><path d="M27 126 L40 123 L36 133 Z" fill="#FFFFFF" opacity=".4"/><path d="M18 138 L44 141" stroke="#5E93B4" stroke-opacity=".6" stroke-width="1.2"/></g>
+      <g><ellipse cx="166" cy="148" rx="20" ry="4" fill="#03111A" opacity=".55"/><path d="M149 145 L157 130 L172 128 L183 141 L176 147 Z" fill="url(#ice${u})"/><path d="M157 130 L172 128 L166 139 Z" fill="#FFFFFF" opacity=".35"/><path d="M149 145 L176 147" stroke="#5E93B4" stroke-opacity=".6" stroke-width="1.2"/></g>
+      <g><ellipse cx="97" cy="153" rx="13" ry="3" fill="#03111A" opacity=".5"/><path d="M86 151 L92 141 L103 140 L109 149 L104 153 Z" fill="url(#ice${u})" opacity=".95"/><path d="M92 141 L103 140 L99 147 Z" fill="#FFFFFF" opacity=".3"/></g>
+    </g>
+    <ellipse cx="100" cy="126" rx="96" ry="9" fill="url(#glow${u})"/>
+    <g class="ripple" opacity=".45"><ellipse cx="100" cy="146" rx="60" ry="7" fill="none" stroke="#BFE6FF" stroke-opacity=".22"/><ellipse cx="100" cy="158" rx="82" ry="9" fill="none" stroke="#BFE6FF" stroke-opacity=".14"/></g>
+  </svg>`;
+}
+/* ---------- mascot 3: the plant (default, carried over from v5) ---------- */
+function plantScene(u, lite){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="plant">
+    <defs>${sceneDefs(u,lite)}
+      <linearGradient id="leaf${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00F076"/><stop offset="1" stop-color="#00A85A"/></linearGradient>
+      <linearGradient id="pot${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A4A4A"/><stop offset="1" stop-color="#242424"/></linearGradient>
+      <clipPath id="potC${u}"><path d="M74 128 h52 l-6 30 h-40 z"/></clipPath></defs>
+    <rect width="200" height="170" fill="#0A0A0A"/>
+    <ellipse cx="100" cy="70" rx="78" ry="62" fill="url(#glow${u})" opacity=".35"/>
+    <ellipse cx="100" cy="160" rx="52" ry="7" fill="#000" opacity=".6"/>
+    <g class="plant">
+      <path class="stem" d="M100 130 C100 104 98 82 100 52" stroke="#00B85A" stroke-width="5" fill="none" stroke-linecap="round" style="transform-origin:100px 130px"/>
+      <path class="leafy" d="M100 112 C82 112 66 100 64 82 C82 82 98 92 100 112z" fill="url(#leaf${u})" style="transform-origin:100px 112px"/>
+      <path class="leafy" d="M100 98 C118 98 134 86 136 68 C118 68 102 78 100 98z" fill="url(#leaf${u})" style="transform-origin:100px 98px"/>
+      <path class="leafy" d="M100 84 C86 84 72 74 70 58 C86 58 98 68 100 84z" fill="url(#leaf${u})" style="transform-origin:100px 84px"/>
+      <g class="bud" style="transform-origin:100px 48px"><ellipse cx="100" cy="42" rx="8" ry="13" fill="url(#leaf${u})"/><ellipse cx="100" cy="42" rx="3.5" ry="8" fill="#000" opacity=".2"/></g>
+    </g>
+    <path d="M74 128 h52 l-6 30 h-40 z" fill="url(#pot${u})"/>
+    <ellipse cx="100" cy="128" rx="26" ry="5" fill="#3A2A20"/>
+    <ellipse cx="100" cy="128" rx="26" ry="5" fill="none" stroke="#5A5A5A" stroke-width="1"/>
+    ${texture(u,lite,'potC'+u,.25)}
+  </svg>`;
+}
+
+/* ---------- registry: how each mascot is drawn, named and degraded ---------- */
+const ECO = {
+  plant: { label:'Plant', chip:'🪴 Plant', svg:plantScene,
+    state:t=>t>=0.7?'Wilting':t>=0.5?'Drooping':'Thriving',
+    line:t=>t>=1?'Past the limit — it can’t recover today.':`Health ${Math.round((1-Math.min(1,t))*100)}% — it fades with every prompt.`,
+    apply(root,t,fast){ const p=root.querySelector('.plant'); if(!p) return; p.classList.toggle('fast',!!fast);
+      const c=Math.min(1,t), w=clamp01((t-1)/0.5), droop=c*45+w*30, lean=c*8+w*12;
+      const leaf = w>0 ? mix('#FF4D5E','#5A4A3A',w) : c<0.5 ? mix('#00F076','#FFB020',c/0.5) : mix('#FFB020','#FF4D5E',(c-0.5)/0.5);
+      p.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-c*0.15-w*0.3})`; l.style.fill=leaf; l.style.opacity=String(1-c*0.15-w*0.3); });
+      const st=p.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-c*0.08-w*0.15})`; st.style.stroke=w>0?mix('#8A5A2B','#5A4A3A',w):mix('#00B877','#8A5A2B',c);
+      const bud=p.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-c*0.5-w*0.5})`; bud.style.opacity=String(1-c*0.5-w*0.5); } },
+
+  bear: { label:'Polar bear', chip:'🐻‍❄️ Polar bear', svg:bearSVG,
+    state:t=>t>=0.7?'Ice breaking up':t>=0.5?'Ice thinning':'Ice holding',
+    line:t=>`Ice floe at ${Math.round((1-0.4*Math.min(1,t))*100)}% of its size${t>=1?' — and still melting.':'.'}`,
+    apply(root,t,fast){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
+      const floe=root.querySelector('.floe'), bear=root.querySelector('.bear'), head=root.querySelector('.head');
+      if(!floe) return;
+      /* the floe melts down to 60 % of its size across the day's budget (round 15 spec) */
+      floe.style.transform=`translateY(${(c*5+w*4).toFixed(2)}px) scale(${(1-0.4*c-0.08*w).toFixed(3)})`;
+      /* the bear shrinks far less than its ice, so it looks increasingly cramped but still stands on it */
+      if(bear) bear.style.transform=`translate(${(-5*c).toFixed(2)}px, ${(5.6*c+4*w).toFixed(2)}px) scale(${(1-0.16*c-0.04*w).toFixed(3)})`;
+      if(head) head.style.transform=`rotate(${(c*11+w*8).toFixed(1)}deg)`;
+      const set=(sel,o)=>{ const e=root.querySelector(sel); if(e) e.style.opacity=String(o); };
+      set('.drips', c*0.9); set('.tear', clamp01((c-0.55)/0.35)); set('.ripple', 0.5+c*0.4); } },
+
+  glacier: { label:'Glacier', chip:'🧊 Glacier', svg:glacierSVG,
+    state:t=>t>=0.7?'Calving':t>=0.5?'Retreating':'Holding fast',
+    line:t=>`Ice wall down to ${Math.round((1-0.45*Math.min(1,t))*100)}% of its height${t>=1?' — chunks are breaking off.':'.'}`,
+    apply(root,t,fast){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
+      const wall=root.querySelector('.wall'); if(!wall) return;
+      wall.style.transform=`scale(${(1-0.05*c).toFixed(3)}, ${(1-0.45*c-0.1*w).toFixed(3)})`;
+      root.querySelectorAll('.crack').forEach(e=>e.style.strokeOpacity=String(clamp01((c-0.35)/0.4)*0.75));
+      const set=(sel,o)=>{ const e=root.querySelector(sel); if(e) e.style.opacity=String(o); };
+      set('.bergs', clamp01((c-0.45)/0.4)); set('.melt', c*0.8); set('.ripple', 0.45+c*0.45);
+      root.querySelectorAll('.melt').forEach(e=>e.style.strokeOpacity=String(c*0.7)); } }
+};
+const mascot=()=>ECO[S.mascot]||ECO.plant;
+const mascotId=()=>ECO[S.mascot]?S.mascot:'plant';
+/* Renders the chosen mascot into a container. Returns the element that `applyEco` animates.
+   If MASCOT_ASSETS has frames for this mascot, photographic frames are used instead of the SVG. */
+function renderEco(box, {lite=false, id=mascotId()}={}){
+  const A=MASCOT_ASSETS[id], key=`${id}:${A&&A.frames?'img':'svg'}:${lite}`;
+  if(box.dataset.k===key) return box;
+  box.dataset.k=key;
+  box.innerHTML = A&&A.frames ? A.frames.map((f,i)=>`<img class="frame" data-i="${i}" src="${A.dir||''}${f}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i?0:1};transition:opacity .55s ease">`).join('')
+                              : ECO[id].svg(uid(), lite);
+  box.style.position = A&&A.frames ? 'relative' : '';
+  /* If the artwork can't load (missing assets, offline first paint), fall back to the SVG mascot
+     for the rest of the session rather than showing an empty box. */
+  if(A&&A.frames){ const first=box.querySelector('img.frame');
+    if(first) first.addEventListener('error',()=>{ MASCOT_ASSETS[id]=null; box.dataset.k='';
+      renderEco(box,{lite,id}); applyEco(box, +box.dataset.pct||0, true, id); },{once:true}); }
+  return box;
+}
+/* timelapse: walk the frames 0 → target so the degradation happens in front of the user (round 15) */
+function applyEco(box, pct, fast=false, id=mascotId(), timelapse=false){
+  box.dataset.pct=String(pct);
+  const A=MASCOT_ASSETS[id];
+  if(A&&A.frames){
+    const n=A.frames.length, target=Math.min(n-1,Math.round(clamp01(pct)*(n-1)));
+    const show=i=>box.querySelectorAll('.frame').forEach(f=>f.style.opacity = +f.dataset.i===i?'1':'0');
+    (box._t||[]).forEach(clearTimeout); box._t=[];
+    if(timelapse && target>0){ show(0); const step=Math.max(300,Math.min(650,2200/target));
+      for(let i=1;i<=target;i++) box._t.push(setTimeout(()=>show(i), i*step)); }
+    else show(target);
+    return;
+  }
+  const s=box.querySelector('svg'); if(!s) return; s.classList.toggle('fast',!!fast); ECO[id].apply(s,pct,fast);
+}
+
+/* ===================================================================================== [Plant] kept for the Grove mock and the share card */
 function plantSVG(){
   return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190">
     <ellipse cx="80" cy="178" rx="48" ry="8" fill="var(--soil)"/>
@@ -600,7 +831,7 @@ function plantSVG(){
 }
 /* Continuous degradation: colour and posture map directly to 0–100 % of budget; past 100 % the
    plant collapses further and browns out. */
-function setPlant(pct, fast=false, svg=$('plantSvg')){
+function setPlant(pct, fast=false, svg=null){
   if(!svg) return; svg.classList.toggle('fast',fast);
   const t=Math.min(1,Math.max(0,pct));
   const w=Math.min(1,Math.max(0,(pct-1)/0.5));
@@ -614,9 +845,24 @@ function mix(a,b,t){ const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,
 let simTimer=null;
 function simulateHeavyQuery(){
   if(simTimer) return; toast('Simulating a heavy day…');
-  setPlant(1.5); $('plantPill').textContent='🛑 Limit Exceeded'; $('plantPill').className='pill bad'; $('plantIco').textContent='🛑'; $('plantStateTxt').textContent='Wilting';
+  ecoSeq++; ecoFresh=false; applyEco($('ecoArt'), 1.5, true);
+  $('ecoPill').textContent='🛑 Limit Exceeded'; $('ecoPill').className='pill bad';
+  $('ecoIco').textContent='🛑'; $('ecoStateTxt').textContent=mascot().state(1.5); $('ecoState').style.color='var(--red)';
+  $('ecoLine').textContent=mascot().line(1.5);
   simTimer=setTimeout(()=>{ renderToday(); simTimer=null; },5500);
 }
+/* ---------- click-to-expand explainers: plain English, no PUE/WUE anywhere on the dashboard ---------- */
+const TIPS={
+  eco:'<b>Why this matters:</b> your mascot mirrors the day’s water. Every prompt runs servers that are cooled with real freshwater, and the power stations feeding them evaporate more. As your total climbs toward your daily budget, the ecosystem beside the drop gives way — plant wilts, ice floe shrinks, glacier calves.',
+  insights:'<b>How this is worked out:</b> we group your prompts by the AI you used and how heavy the model was, then compare what you actually spent against the same prompts run on a lighter model. Nothing you typed is read or stored — only counts.',
+  scope:'<b>Why electricity uses water:</b> part of the water is evaporated on site to stop the servers from overheating. The rest is evaporated at the power stations making the electricity — cooling towers there lose water too, which is why the second bar is usually the bigger one.',
+  sim:'<b>Why this matters:</b> generating a new image makes servers run much hotter than just reading text, requiring more water to cool them down. The same is true of long answers: writing one costs far more than reading your question.',
+  mascot:'Pick the companion that lands for you. All three tell the same story with the same numbers — only the picture changes, and your choice never leaves this device.'
+};
+document.addEventListener('click',e=>{ const b=e.target.closest('.info'); if(!b) return;
+  const t=document.getElementById('tip-'+b.dataset.tip); if(!t) return;
+  const open=!t.classList.contains('open'); t.classList.toggle('open',open); b.setAttribute('aria-expanded',String(open));
+  if(open) t.innerHTML=TIPS[b.dataset.tip]||''; });
 
 /* ===================================================================================== [Insights] */
 function insights(){
@@ -631,7 +877,7 @@ function insights(){
   let saved=0; for(const v of Object.values(agg.vendor)) for(const t of ['lightweight','standard']){ const x=v.tiers[t]; if(x && t!==heaviest) saved += x.ml*(C.tiers[heaviest].wh1k/C.tiers[t].wh1k) - x.ml; }
   const efficientBrand = brands.find(([v,a])=>(a.tiers.standard?.n||0)+(a.tiers.lightweight?.n||0)>0);
   const parts=[`You leaned on <b>${C.brands[topV]||topV}</b> ${scope} — mostly its <b>${C.tiers[topTier].label.toLowerCase()} model</b> (${fmt(top.ml)} mL, ${Math.round(top.ml/agg.ml*100)}% of your water).`];
-  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?' Plant stays green.':''}`); }
+  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?` Your ${mascot().label.toLowerCase()} holds steady.`:''}`); }
   else if(agg.tiers.reasoning && lightN/agg.n<0.5) parts.push(`Most prompts hit a reasoning model (≈10× the water). Try a standard model first.`);
   const tin=T.tin||0, tout=T.tout||0, wt=tin*C.tokenWeights.input+tout*C.tokenWeights.output;
   if(wt>0 && T.n) parts.push(`Your questions were ${fmt(tin)} tokens and the answers ${fmt(tout)} — <b>${Math.round((tout*C.tokenWeights.output)/wt*100)}% of the water went into the answers</b>.`);
@@ -646,14 +892,19 @@ function insights(){
    HTML for the Small (158×158) and Medium (338×158) formats. */
 function widgetModel(){ const T=todayStats(); return { ml:fmt(T.total), unit:'mL', line:`${Math.round(Math.min(999,T.pct*100))}% of ${S.budget} mL budget`, level:Math.max(0,1-Math.min(1,T.pct)), zone:zone(T.pct), color:zoneVar(T.pct) }; }
 function widgetHTML(size='small'){
-  const w=widgetModel();
+  const w=widgetModel(), pct=todayStats().pct;
   const drop=`<div class="wd">${DROP(w.level,w.color).replace(/id="vc"/,`id="wvc${size}"`).replace(/url\(#vc\)/,`url(#wvc${size})`)}</div>`;
   const num=`<div><div class="wn">${w.ml}<small>${w.unit}</small></div><div class="ws">${w.line}</div></div>`;
-  return size==='small' ? `<div class="widget small"><span class="wl">Water today</span>${drop}${num}</div>` : `<div class="widget medium">${drop}<div style="flex:1;min-width:0"><span class="wl">Sipcount · Water today</span>${num}</div></div>`;
+  const eco=`<div class="mini wmini" data-pct="${Math.min(1.5,pct).toFixed(3)}" style="width:${size==='small'?46:62}px;height:${size==='small'?42:56}px"></div>`;
+  return size==='small'
+    ? `<div class="widget small"><span class="wl">Water today</span><div class="row" style="gap:10px;align-items:center">${drop}${eco}</div>${num}</div>`
+    : `<div class="widget medium">${drop}<div style="flex:1;min-width:0"><span class="wl">Sipcount · Water today</span>${num}</div>${eco}</div>`;
 }
+/* the widget carries the mascot's current state too — that is the point of the glance (round 15) */
+function paintMascots(root){ root.querySelectorAll('.wmini').forEach(b=>{ renderEco(b,{lite:true}); applyEco(b, +b.dataset.pct||0, true); }); }
 let widgetSize='small';
 function renderWidget(){
-  $('widgetPreview').innerHTML=widgetHTML(widgetSize);
+  $('widgetPreview').innerHTML=widgetHTML(widgetSize); paintMascots($('widgetPreview'));
   const ua=navigator.userAgent, isIOS=/iPhone|iPad/.test(ua), isAndroid=/Android/.test(ua);
   $('widgetHow').innerHTML = isIOS ? '<b>iPhone:</b> touch and hold your home screen → tap <b>+</b> → search <b>Sipcount</b> → choose Small or Medium → Add Widget.'
     : isAndroid ? '<b>Android:</b> touch and hold your home screen → <b>Widgets</b> → <b>Sipcount</b> → drag it into place. (The app can also open this flow directly.)'
@@ -731,11 +982,16 @@ function renderToday(){
   $('oppCost').textContent=opportunityCost(T.total);
   $('todayBudget').textContent=`${Math.round(T.pct*100)}% of ${S.budget} mL used`;
   $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
-  $('plantPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('plantPill').className='pill '+zonePill(T.pct);
-  $('plantIco').textContent=ZONE_UI[z].ico; $('plantStateTxt').textContent=state; $('plantState').style.color=col;
-  $('plantLine').textContent = T.pct>=1?`${fmt(T.total-S.budget)} mL past the limit.`:`Health ${Math.max(0,Math.round((1-T.pct)*100))}% — fades with every prompt.`;
-  if(!$('plantSvg')) $('plantBox').innerHTML=plantSVG();
-  requestAnimationFrame(()=>setPlant(T.pct));
+  $('ecoPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('ecoPill').className='pill '+zonePill(T.pct);
+  const M=mascot();
+  $('ecoTitle').textContent=M.label; $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=M.state(T.pct); $('ecoState').style.color=col;
+  $('ecoLine').textContent=M.line(T.pct);
+  /* Connected catch-up animation: the mascot starts pristine and degrades in step with the drop's drain. */
+  renderEco($('ecoArt'));
+  const seq=++ecoSeq;
+  if(ecoFresh){ applyEco($('ecoArt'), 0); ecoFresh=false;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(seq===ecoSeq) applyEco($('ecoArt'), T.pct, false, mascotId(), true); })); }
+  else applyEco($('ecoArt'), T.pct);
   const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
   $('bars').innerHTML=keys.map((k,i)=>{const d=new Date(k+'T12:00:00'); const cls=i===6?'today':(vals[i]>avg*1.6?'spike':''); return `<div class="bar"><i class="${cls}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][d.getDay()]}</em></div>`;}).join('');
   const spikes=vals.filter(v=>v>avg*1.6).length; $('trendPill').className='pill '+(spikes?'warn':'good'); $('trendPill').textContent=spikes?`${spikes} spike day${spikes>1?'s':''}`:'Steady';
@@ -749,41 +1005,58 @@ function renderToday(){
   $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
   $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
+  renderEco($('widgetCardArt'),{lite:true}); applyEco($('widgetCardArt'), T.pct, true);
 }
 $('simBtn').onclick=simulateHeavyQuery;
 
 /* ===================================================================================== [ShareModal] */
 let copyIdx=0;
-function storyData(){ const T=todayStats(); return { prompts:T.n, images:T.img||0, state:plantState(T.pct), ml:fmt(T.total), pct:T.pct }; }
+function storyData(){ const T=todayStats(); return { prompts:T.n, images:T.img||0, state:mascot().state(T.pct), mascot:mascot().label.toLowerCase(), ml:fmt(T.total), pct:T.pct }; }
 function storyText(i=copyIdx){ return UI.storyCopy[i](storyData()); }
 function renderShare(){
   const d=storyData();
-  $('storyPreview').innerHTML=`<div class="wm">Sipcount</div><div class="art">${plantSVG().replace('id="plantSvg"','id="plantShare"')}</div><div><div class="num">${d.ml}<small> mL</small></div><div class="hl">${storyText()}</div></div><div class="wm">Sipcount • Track your AI footprint</div>`;
-  const sp=$('plantShare'); if(sp){ sp.classList.add('fast'); requestAnimationFrame(()=>setPlant(d.pct,true,sp)); }
+  $('storyPreview').innerHTML=`<div class="wm">Sipcount</div><div class="art" id="shareArt" style="width:100%;border-radius:14px;overflow:hidden"></div><div><div class="num">${d.ml}<small> mL</small></div><div class="hl">${storyText()}</div></div><div class="wm">Sipcount • Track your AI footprint</div>`;
+  renderEco($('shareArt'),{lite:true}); requestAnimationFrame(()=>applyEco($('shareArt'), d.pct, true));
   $('copyChips').innerHTML=UI.storyCopy.map((_,i)=>`<button class="chip" data-i="${i}" aria-pressed="${i===copyIdx}">Caption ${i+1}</button>`).join('');
 }
-$('copyChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; copyIdx=+b.dataset.i; renderShare(); };
+$('copyChips').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; copyIdx=+b.dataset.i;
+  [...$('copyChips').children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));      // in place: keeps focus
+  $('storyPreview').querySelector('.hl').textContent=storyText(); };
 $('shareBtn').onclick=()=>{ renderShare(); $('shareSheet').classList.add('open'); };
 $('shareClose').onclick=()=>$('shareSheet').classList.remove('open');
-function drawStory(){
+/* Rasterises the chosen mascot at its current state, so the share card matches the dashboard. */
+async function mascotImage(pct, w=920, h=560){
+  const load=src=>new Promise(res=>{ const im=new Image(); const done=r=>res(r); im.onload=()=>done(im); im.onerror=()=>done(null); setTimeout(()=>done(null),3000); im.src=src; });
+  const A=MASCOT_ASSETS[mascotId()];
+  if(A&&A.frames){ const n=A.frames.length, i=Math.min(n-1,Math.round(clamp01(pct)*(n-1))); return await load((A.dir||'')+A.frames[i]); }
+  const box=document.createElement('div'); box.style.cssText=`position:absolute;left:-9999px;top:0;width:${w}px;height:${h}px`;
+  document.body.appendChild(box); renderEco(box,{lite:true}); applyEco(box,pct,true);
+  const svg=box.querySelector('svg');
+  if(!svg){ box.remove(); return null; }
+  svg.setAttribute('width',w); svg.setAttribute('height',h);
+  /* the page stylesheet is not carried into a standalone SVG — inline the one rule the art depends on */
+  svg.insertAdjacentHTML('afterbegin','<style>*{transform-box:view-box}</style>');
+  const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  box.remove();
+  return await load(src);
+}
+async function drawStory(){
   const c=$('storyCanvas'), x=c.getContext('2d'), d=storyData(), W=1080, H=1920;
   const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#000000'); g.addColorStop(.7,'#111111'); g.addColorStop(1,'#0b3b2b'); x.fillStyle=g; x.fillRect(0,0,W,H);
   x.fillStyle='#00F0A0'; x.font='800 40px Manrope, system-ui'; x.fillText('SIPCOUNT', 80, 140);
-  const wilt=d.pct>1?Math.min(1,(d.pct-1)/0.5):0, droop=d.pct>0.5?Math.min(1,(d.pct-0.5)/0.5):0;
-  const leaf = wilt?mix('#FFB020','#5A4A3A',wilt):mix('#00F0A0','#FFB020',droop);
-  x.save(); x.translate(540,940); x.fillStyle='#2A2A2A'; x.beginPath(); x.moveTo(-150,0); x.lineTo(150,0); x.lineTo(120,120); x.lineTo(-120,120); x.fill();
-  x.strokeStyle=wilt?mix('#00B877','#5A4A3A',wilt):'#00B877'; x.lineWidth=20; x.lineCap='round'; x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(droop*60+wilt*120,-200, wilt*160+droop*40,-380+wilt*140); x.stroke();
-  x.fillStyle=leaf; for(const [sx,sy,dir] of [[-1,-90,1],[1,-170,-1],[-1,-250,1]]){ x.save(); x.translate(0,sy+wilt*60); x.rotate(dir*(droop*0.5+wilt*0.9)); x.beginPath(); x.ellipse(sx*110,0,120,45,sx*-0.4,0,Math.PI*2); x.fill(); x.restore(); }
-  x.restore();
+  const art=await mascotImage(d.pct);
+  if(art){ x.save(); const rx=80, ry=520, rw=920, rh=560, r=36;
+    x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+rw,ry,rx+rw,ry+rh,r); x.arcTo(rx+rw,ry+rh,rx,ry+rh,r); x.arcTo(rx,ry+rh,rx,ry,r); x.arcTo(rx,ry,rx+rw,ry,r); x.closePath(); x.clip();
+    x.drawImage(art,rx,ry,rw,rh); x.restore(); }
   x.fillStyle='#fff'; x.font='800 150px Sora, system-ui'; x.fillText(d.ml, 80, 1330); x.font='600 56px Sora, system-ui'; x.fillStyle='#00F0A0'; x.fillText('mL of water today', 80, 1400);
   x.fillStyle='#fff'; x.font='700 60px Sora, system-ui'; wrapText(x, storyText(), 80, 1520, 920, 76);
   x.font='800 34px Manrope, system-ui'; x.fillStyle='#00F0A0'; x.fillText('SIPCOUNT • TRACK YOUR AI FOOTPRINT', 80, 1840);
   return c;
 }
 function wrapText(x,text,px,py,maxW,lh){ const words=text.split(' '); let line=''; for(const w of words){ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ x.fillText(line,px,py); line=w; py+=lh; } else line=t; } x.fillText(line,px,py); }
-async function storyBlob(){ return new Promise(res=>drawStory().toBlob(res,'image/png')); }
-$('shareSave').onclick=async()=>{ const b=await storyBlob(); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sipcount-story.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Saved'); };
-$('shareNative').onclick=async()=>{ const b=await storyBlob(); const file=new File([b],'sipcount-story.png',{type:'image/png'}); if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],text:storyText()+' #Sipcount'}); }catch(e){} } else { try{ await navigator.clipboard.writeText(storyText()+' #Sipcount'); toast('Caption copied — image saved'); }catch(e){} $('shareSave').click(); } };
+async function storyBlob(){ const c=await drawStory(); return new Promise(res=>c.toBlob(res,'image/png')); }
+$('shareSave').onclick=async()=>{ const b=await storyBlob(); if(!b){ toast('Could not build the image'); return; } const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sipcount-story.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Saved'); };
+$('shareNative').onclick=async()=>{ const b=await storyBlob(); if(!b){ toast('Could not build the image'); return; } const file=new File([b],'sipcount-story.png',{type:'image/png'}); if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],text:storyText()+' #Sipcount'}); }catch(e){} } else { try{ await navigator.clipboard.writeText(storyText()+' #Sipcount'); toast('Caption copied — image saved'); }catch(e){} $('shareSave').click(); } };
 
 /* ===================================================================================== [Neutralize] */
 function renderNeutral(){
@@ -818,16 +1091,18 @@ let vendor='openai', task='text';
 const inTokens=()=>Math.max(0,+$('inTok').value||0), outTokens=()=>Math.max(0,+$('outTok').value||0);
 function fillModels(){ $('modelSel').innerHTML=C.models[vendor].map(([n,t])=>`<option value="${t}">${n} · ${C.tiers[t].label}</option>`).join(''); }
 $('vendorSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; vendor=b.dataset.v; [...$('vendorSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); fillModels(); renderEst(); };
-$('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('lenWrap').hidden=task==='image'; if(task!=='image' && C.tasks[task].out) $('outTok').value=C.tasks[task].out; renderEst(); };
+$('taskSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; task=b.dataset.t; [...$('taskSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); $('lenWrap').hidden=task==='image'; if(task!=='image' && C.tasks[task].out){ $('outTok').value=C.tasks[task].out; $('outRange').value=Math.min(4000,C.tasks[task].out); } renderEst(); };
 $('lenRange').oninput=e=>{ const chars=+e.target.value; $('promptBox').value=''; $('inTok').value=tok(chars); renderEst(); };
 $('inTok').oninput=()=>{ $('lenRange').value=Math.min(6000,Math.max(20,inTokens()*C.charsPerToken)); $('promptBox').value=''; renderEst(); };
-$('outTok').oninput=renderEst;
+$('outRange').oninput=e=>{ $('outTok').value=+e.target.value; renderEst(); };
+$('outTok').oninput=()=>{ $('outRange').value=Math.min(4000,outTokens()); renderEst(); };
 $('promptBox').oninput=e=>{ const chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,chars)); $('inTok').value=tok(chars); renderEst(); };
 $('modelSel').onchange=renderEst;
 function current(){ return estimate({tier:$('modelSel').value,task,inputTokens:inTokens(),outputTokens:outTokens(),params:params()}); }
 function renderEst(){
   const tier=$('modelSel').value, e=current();
-  $('lenLabel').textContent=`${(inTokens()*C.charsPerToken).toLocaleString()} characters ≈ ${inTokens()} input tokens`;
+  $('lenLabel').textContent=`Question: ${(inTokens()*C.charsPerToken).toLocaleString()} characters ≈ ${inTokens()} input tokens`;
+  $('outLabel').textContent=`Answer: about ${outTokens()} output tokens ≈ ${Math.round(outTokens()*C.charsPerToken/5)} words`;
   $('estMl').textContent=fmt(e.total,e.total<10?2:1);
   $('estRange').textContent=`Best estimate · likely between ${fmt(e.total*C.range.low,2)} and ${fmt(e.total*C.range.high,1)} mL`;
   $('ioBlock').hidden=task==='image';
@@ -838,6 +1113,12 @@ function renderEst(){
   $('estTokens').textContent=task==='image'?'per image':`${e.inputTokens} in + ${e.outputTokens} out`;
   const sp = e.total>0 ? e.s1/e.total : 0;
   $('estSplit').textContent = e.total>0 ? `${Math.round(sp*100)}% cooling · ${Math.round((1-sp)*100)}% grid` : 'Nothing to estimate yet';
+  /* live mascot preview: how much of today's remaining budget this one prompt would spend (round 15) */
+  const T=todayStats(), projected=(T.total+e.total)/Math.max(1,S.budget);
+  renderEco($('simMascot'),{lite:true}); applyEco($('simMascot'), projected, true);
+  const share=e.total/Math.max(1,S.budget)*100;
+  $('simMascotLine').innerHTML = e.total<=0 ? 'Set a size to see the effect.'
+    : `This prompt alone is <b>${share<1?'under 1':fmt(share,share<10?1:0)}%</b> of today’s budget. Your ${mascot().label.toLowerCase()} after sending: <b>${mascot().state(projected).toLowerCase()}</b>.`;
   const n=$('nudge');
   if(task==='image'){ const ref=estimate({tier:'standard',task:'text',inputTokens:100,outputTokens:300,params:params()}).total; n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One image ≈ <b>${Math.round(e.total/ref)} text prompts</b>. Worth it? Go for it — just know the cost.</span>`; return; }
   const alt=tier==='reasoning'?'standard':(tier==='standard'?'lightweight':null);
@@ -853,6 +1134,8 @@ $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } t
 function renderSettings(){
   $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
   $('modeSub').textContent = S.social?'Alerts and water facts are on for everyone.':'Group features are off for under-13s.';
+  $('mascotChips').innerHTML=Object.entries(ECO).map(([id,m])=>`<button class="chip" data-m="${id}" aria-pressed="${id===mascotId()}">${m.chip}</button>`).join('');
+  $('mascotNote').textContent=`Your dashboard, widget and simulator all show the ${mascot().label.toLowerCase()}. The Water Drop stays either way.`;
   $('sizeSel').value=S.size; $('budgetIn').value=S.budget; $('sessionToggle').checked=S.sessionCheckins!==false;
   const R=C.regions[S.region];
   $('regionSel').innerHTML=Object.entries(C.regions).map(([id,r])=>`<option value="${id}">${r.label}</option>`).join(''); $('regionSel').value=S.region;
@@ -864,6 +1147,11 @@ function renderSettings(){
   $('regionSources').innerHTML=`<li>${R.note}</li>`+R.sources.map(s=>`<li>${s}</li>`).join('');
   $('cVersion').textContent=C.version;
 }
+$('mascotChips').onclick=e=>{ const b=e.target.closest('button'); if(!b||b.dataset.m===mascotId()) return;
+  S.mascot=b.dataset.m; save(); ecoFresh=true;
+  [...$('mascotChips').children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));   // update in place: keeps focus
+  $('mascotNote').textContent=`Your dashboard, widget and simulator all show the ${mascot().label.toLowerCase()}. The Water Drop stays either way.`;
+  renderEst(); toast(`${mascot().label} selected`); };
 $('sizeSel').onchange=e=>{ S.size=e.target.value; save(); applyMode(); };
 $('sessionToggle').onchange=e=>{ S.sessionCheckins=e.target.checked; save(); if(e.target.checked && 'Notification' in window && Notification.permission==='default') Notification.requestPermission(); };
 $('budgetIn').onchange=e=>{ S.budget=Math.max(10,+e.target.value||100); save(); toast('Budget saved'); };
@@ -871,8 +1159,8 @@ $('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.regi
 $('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); };
 $('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
 $('redoAge').onclick=()=>show('splash');
-$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,facts:{},zoneAlert:{}}; S=store.S; save(); drainAnimated=false; toast('Cleared'); show('today'); } };
-$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; drainAnimated=false; toast('Sample week loaded'); show('today'); };
+$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,facts:{},zoneAlert:{}}; S=store.S; save(); drainAnimated=false; ecoFresh=true; toast('Cleared'); show('today'); } };
+$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; drainAnimated=false; ecoFresh=true; toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [App] boot */
 $('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(UI.factCadence.onOpen) setTimeout(()=>showFact('open'),1200); };
