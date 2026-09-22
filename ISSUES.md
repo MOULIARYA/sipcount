@@ -50,6 +50,31 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback round 20 (2026-09-22) — the play proposal approved, plus her own character art. Delivered as v13
+
+Proposal sent as `docs/MASCOT-PLAY-PROPOSAL.md`. Her answers, and what each became:
+
+| # | Her decision | Built |
+|---|---|---|
+| D-23 | "Fun to keep alive never fun to kill is good" | Standing design principle. Nothing rewards or celebrates the decline; every reward sits on the healthy side. |
+| D-24 | "All items 1–5, but it should not take away from the main drop and stats" | All five built. The scrubber stays hidden behind ⚡ Preview, tap-to-react adds no UI at all, and the hero card is untouched. |
+| D-25 | "Unlock new character by doing under budget days is good" | Ladder: plant from the start, polar bear at 3 days under budget, axolotl at 7, snow leopard at 14, glacier at 30. Locked chips show a padlock and the requirement. Loading the sample week unlocks everything for demos. |
+| D-26 | "Yes a good day should heal" | Real streak computed from the day records (consecutive prior days with prompts and under budget). The morning after a good day the character plays a recovery animation once, with a card naming the streak. |
+| D-27 | "Distressed to the point of looking visibly sad, not extreme" | Two-state faces stop at worried eyes and a wavy mouth; sweat, droop and a dropped leaf. No gore, nothing that reads as real suffering, always recoverable. |
+| D-28 | "Naming can be there in settings, also declutter the settings, less text" | Per-character name, device-only, woven into every status line ("Pip is wilting from the heat"). Settings regrouped into Your character / Daily budget / App / Under the hood; sub-labels and the long privacy paragraph cut. |
+
+Her one extra line — *"Make simulate SIMPLE, less text heavy, and explain what Grove is — NO TEXT HEAVY"* — done as **v13.1**:
+- **Simulate** cut from about 1,100 characters of interface text to **420**. Gone: the intro paragraph, the "Task" label, the long "Our best estimate…" sentence, the two full-width demo buttons and the wordy nudges. What is left: the three brand buttons, a model list, four task buttons, two sliders labelled only with a word count ("225 words · a few paragraphs"), the number, one short range line, the mini character, and one short tip. The paste box is folded into a "Paste it instead" disclosure, and the demo actions are small pills at the bottom.
+- **Grove** now says what it is in one line — *"One character. Everyone in the group keeps it alive."* — followed by three numbered steps (join a group · everyone's water counts · keep it alive longest) and the group's **shared character** rendered with the real mascot engine, so the idea is shown rather than explained. The two paragraphs of prose are gone; the screen is down from ~900 characters to 555, most of it now the two leaderboards. The mock numbers were also rebased as a share of a weekly budget, so the demo stays sensible whatever budget is set (they were fixed millilitres tuned to an older default, which made every group look catastrophic).
+
+Also in this round:
+- **⚡ Simulate became ⚡ Preview**, and a one-shot demo became a **scrubber**: drag and the whole day moves together — drop, number, ring, status and character — and dragging back reverses it. ▶ plays 0→120 % over three seconds for screen recording. A blue "Preview" tag sits over the art while it runs, and nothing written during preview touches the real totals (verified).
+- **Tap to react**: tapping the character makes it bounce, with a weaker, sadder version once it is stressed; quiet idle variety (a blink or a nod) every 14–26 s. **Flinch** on every real prompt logged.
+- **Her artwork is in.** Eight 3D claymorphism images (two states each for plant, bear, leopard, glacier) from `AiMeetsSustaianability/Images`, letterboxed onto the card's shape — their backgrounds are pure black so the padding is invisible — converted to WebP at 1024×558, **227 KB for all eight**. The drawn characters remain as the automatic fallback and still serve the axolotl, which has no artwork yet. Breathing, tap reaction and flinch all run on the photographs too.
+- **Two art issues to raise with her.** The glacier pair does not match: the healthy state is a tall thin spire, the melting state a wide mound shot from further back, so the cross-fade reads as two different objects rather than one melting. And the distressed "snow leopard" is a different animal — tan and spotted on rock, not the snow leopard of the healthy frame. Both need a re-generation framed to match their partner. Axolotl art is missing entirely.
+- **Battery guardrail**: every idle animation pauses when the character is off screen or the tab is hidden, and stops entirely under reduced-motion.
+- Verified in both rendering paths (her artwork and the drawn fallback): unlocks fire, the heal moment fires once a day, the scrubber leaves real data untouched, characters switch, locked chips refuse — 0 console errors.
+
 ## Partner feedback rounds 17–19 (three emails, 2026-09-22) — proportions, notifications, sticker mascots. Delivered as v12
 
 Executed in the order sent. Round 19 supersedes part of round 17 (the mascot line "55 % intact. Ice wall breaking." was asked for in the first email and then replaced by a number-free sentence in the third) and retires the photoreal artwork adopted only a day earlier.
