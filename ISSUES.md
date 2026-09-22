@@ -75,6 +75,16 @@ Third art direction, and the one that works. Round 1 was original layered SVG; r
 - **Character art invisible in Settings on iOS.** Could not reproduce here (no iOS), so the two most likely causes were removed rather than guessed at: the gallery now renders a single plain `<img>` in normal flow instead of a stack of absolutely positioned frames — Safari is unreliable with absolutely positioned children inside a `<button>`, which is what the gallery card is — and `-webkit-appearance:none` was added, since Safari clips button content without it. **If it still fails on her phone, the next test is to open `assets/plant-0.webp` directly in her browser**: if that is blank too, it is the file, not the layout.
 - **`docs/test/regression.js` added** — 45 assertions covering the whole prototype, including that the stage picture and the stage words agree. The earlier ad-hoc test scripts lived in a scratch directory and were lost when it was cleared; this one is in the repo.
 
+
+**Launch sequence (2026-09-22) — built in code, no video file.**
+Her concept with the turn we discussed: a robot hand lifts a glowing glass and pours it into a server rack; the view pulls back to find the same thing happening on an endless grid; then **a human hand reaches in and takes one glass back before it can be poured**, and the line lands. Ending on agency rather than doom keeps the splash consistent with the principle she set for the characters — fun to keep alive, never fun to kill.
+
+- Entirely CSS and SVG inside `sipcount.html`: **no video, no external asset, a few KB**, sharp at any screen size, and no watermark or audio to strip. Veo's clip was 2.3 MB for 10 seconds with a Gemini sparkle burnt into the bottom of frame and an audio track.
+- **Plays once, on first launch only** (`S.splashSeen`). `?splash=1` forces it for demos. Tapping anywhere skips it, there is a Skip button, and it never runs under reduced motion. The app is already live behind it, so nothing waits on the animation.
+- Alternatives explored with him in `docs/launch-ideas.html` — five concepts running side by side in a phone frame (the falling drop, kinetic numbers, the character wilting and recovering, the server grid, one glass emptying over ten prompts). 11 KB for all five. Worth keeping as a picker for future decisions.
+- Assertions added to `docs/test/regression.js`; the suite is now **51 checks**.
+- Open: if she wants the illustrated robotic hand rather than the drawn one, the hybrid route stands — generate one still, animate it in code. The clip she generated remains usable as a marketing asset for social even if it is not the splash.
+
 ## Partner feedback rounds 22–23 (2026-09-22, verbal) — dashboard trims, then the Settings pass. Delivered as v14
 
 Reviewed with her before building — the write-up, the conflicts it raised and her answers are in `docs/FEEDBACK-REVIEW-2026-09-22.md`.

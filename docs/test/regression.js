@@ -30,6 +30,15 @@ function run(){
   ok('nav is today/simulate/about/settings', [...d.querySelectorAll('nav button')].map(b=>b.dataset.s).join(',')==='today,log,about,settings');
   ok('grove parked', !$('s-grove'));
 
+  console.log('\nLAUNCH SEQUENCE');
+  ok('plays on first launch', !!$('splash'));
+  ok('all parts drawn', ['sp-rack','sp-glass','sp-robot','sp-human'].every(c=>d.querySelectorAll('.'+c).length===1));
+  ok('grid of servers', d.querySelectorAll('.sp-grid .u').length===25);
+  ok('end line present', /EVERY PROMPT/.test($('spEnd').textContent));
+  $('spSkip').click();
+  ok('skip removes it', !$('splash'));
+  ok('seen flag saved', w.eval('S.splashSeen')===true);
+
   console.log('\nHERO + CHARACTER');
   ok('drop painted', !!$('heroVessel').querySelector('svg'));
   ok('budget line only', !!$('todayBudget') && !d.getElementById('todayLeft'));
