@@ -50,6 +50,27 @@ Status legend: **Open** · **In progress** · **Parked** (deliberately later) ·
 
 Open before building D-1: (a) half-day spike measuring bytes↔tokens and TTFB↔tier using the extension; (b) iOS Network Extension entitlement request to Apple (weeks); (c) VPN permission wording/UX; (d) finish & test the extension first (I-8) since it is the calibration instrument.
 
+## Partner feedback rounds 17–19 (three emails, 2026-09-22) — proportions, notifications, sticker mascots. Delivered as v12
+
+Executed in the order sent. Round 19 supersedes part of round 17 (the mascot line "55 % intact. Ice wall breaking." was asked for in the first email and then replaced by a number-free sentence in the third) and retires the photoreal artwork adopted only a day earlier.
+
+**Email 1 — proportions and the drop.**
+- The catch-up drain now **replays every time the dashboard mounts**, not once per session: the drop paints full, waits 380 ms so the eye lands on it, then falls to today's level over 3 s on an ease-out. It also honours `prefers-reduced-motion` by jumping straight to the level. Her "the drop is static on load" was most likely this: it only ever ran once, so a second visit showed a still drop.
+- **Mascot card** rebuilt around the art: a full-width 190 px cover image on top, then one quiet row (state + ⚡ Simulate + ⓘ) and one small muted sentence. The picture is now the card.
+- **Widget discovery** compressed from a stacked card to a single thin row — one small line plus a compact `⊞ Add` button. (Round 12 asked for a pill, round 15 for a prominent card, round 17 for a thin row; third change on this element.)
+
+**Email 2 — analytics and notifications.**
+- **Detailed analytics** is metric-first: a 2×2 grid where the number is 2.1 em and the label is a 0.68 em uppercase whisper, hairline dividers, then the 7-day chart, the all-time figure and the split bar under tiny section keys. Every explanatory sentence is gone from that section, including the plain-English scope line added in round 16.
+- **Notifications** moved out of the top edge entirely: they now sit in the **vertical centre, anchored right, sliding in from the right edge**, with **no auto-dismiss at all** — they wait until the reader taps them open or closes them. Collapsed is one hook line plus "Tap to read"; tapping reveals two or three short lines and an ✕.
+
+**Email 3 — sticker characters.**
+- Photoreal frames replaced by **animated vector characters**: flat vibrant sticker art on true black, each with a two-state face (happy / distressed), CSS-keyframe idle motion (breathing; the axolotl floats), sweat drops that only run once the character is stressed, and a distress state that switches on at 50 % of the budget.
+- **Roster expanded to five**: Plant (leaves droop, brown and drop), Polar bear (ice block shrinks under him), **Axolotl** (tank water level falls until he is stranded on dry glass), **Snow leopard** (snow mound shrinks and greys to rock), Glacier (shrinks, sweats, calves chunks).
+- **All numbers removed from the mascot text.** Status is two words ("Breaking apart"), the line below is one sentence ("The ice wall is breaking apart.").
+- Geometry is written to the SVG `transform` attribute with the origin baked in, rather than CSS `transform-origin` — it renders identically in the card, the 62 px widget preview and the exported share PNG, and it can't collide with the idle keyframe animation (which owns `transform` on the animated groups). This was a real bug caught by rendering the characters to PNG: the bear's slump was being overwritten by its own breathing animation.
+- The 15 photoreal WebP frames are **not deleted** — they moved to `assets/photoreal/` and `MASCOT_ASSETS` still accepts them (or Lottie/Rive files) as a one-line swap. Cost of the reversal: the generated artwork is unused for now; the prompts remain in `docs/ASSET-PROMPTS.md`.
+- Verified: all five characters render and degrade, roster switches from Settings, alerts persist and expand, drop replays on every mount, metric grid populates, simulator unchanged — 0 console errors. Golden check still 1.2959 mL.
+
 ## Partner feedback round 16 (received 2026-09-21) — "progressive disclosure" polish for beginners. Delivered as v11
 
 Spec: the top of the dashboard carries only the emotional story; dense analytics go behind an accordion; jargon out of the main feed; notifications become snackable hooks that expand on tap; the simulator loses its formulas; the widget card sits between hero and insights; Neutralize moves exclusively to About; About gets her new copy in an editorial layout.

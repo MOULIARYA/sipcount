@@ -62,20 +62,25 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .ring i.z-green{background:var(--green)}
 .ring i.z-amber{background:repeating-linear-gradient(135deg,var(--amber) 0 5px,#8a6400 5px 8px)}
 .ring i.z-red{background:repeating-linear-gradient(45deg,var(--red) 0 3px,#7a1c17 3px 5px),repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.35) 3px 5px)}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{background:var(--surface);border-radius:14px;padding:14px}
-.tile .v{font-family:var(--display);font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.tile .l{font-size:.78em;color:var(--muted);margin-top:2px;letter-spacing:.02em}
+/* metric grid: giant number, whisper of a label (round 18) */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#1E1E1E;border:1px solid #1E1E1E;border-radius:14px;overflow:hidden}
+.metric{background:var(--ink);padding:18px 16px}
+.metric .n{font-family:var(--display);font-size:2.1em;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.metric .k{font-size:.68em;color:#6E6E6E;margin-top:6px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.k2{font-size:.68em;color:#6E6E6E;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
 .hero{display:flex;gap:20px;align-items:center}
 .hero-card{padding:22px 18px;border:1px solid var(--line)}
 .drop{width:124px;height:156px;flex:none}
 .drop svg{width:100%;height:100%;display:block}
-.fill{transition:transform .9s cubic-bezier(.2,.8,.2,1),fill .6s}
-/* Ecosystem module (round 15): the companion mascot beside the drop — plant, polar bear or glacier */
-.eco{display:flex;gap:14px;align-items:stretch;padding:14px 16px}
-.ecoart{width:132px;height:120px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0A;border:1px solid var(--line)}
+.fill{transition:transform 3s cubic-bezier(.22,.61,.36,1),fill .6s}
+/* Ecosystem module: the mascot is the focal point — art on top, small quiet text under it (round 17) */
+.eco{display:flex;flex-direction:column;gap:10px;padding:12px 12px 14px}
+.ecoart{width:100%;height:190px;border-radius:14px;overflow:hidden;background:#070707;border:1px solid var(--line)}
 .ecoart svg,.ecoart img{width:100%;height:100%;display:block;object-fit:cover}
-.mini{width:62px;height:56px;flex:none;border-radius:10px;overflow:hidden;background:#0A0A0A;border:1px solid var(--line)}
+.eco .meta{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:0 4px}
+.eco .state{font-family:var(--display);font-size:.95em;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.eco .ecoline{font-size:.82em;color:var(--muted);line-height:1.45;padding:0 4px;margin:0}
+.mini{width:62px;height:56px;flex:none;border-radius:10px;overflow:hidden;background:#070707;border:1px solid var(--line)}
 .mini svg,.mini img{width:100%;height:100%;display:block;object-fit:cover}
 .ecoline{font-size:.85em;color:#A3A3A3;border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
 /* click-to-expand explainers — keeps the dashboard free of jargon (round 15) */
@@ -83,10 +88,11 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .info:hover{color:var(--text);border-color:#3A3A3A} .info[aria-expanded=true]{color:var(--green);border-color:var(--green)}
 .tip{display:none;background:#121212;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:11px 13px;font-size:.85em;color:#D8D8D8;line-height:1.55;margin-top:-6px}
 .tip.open{display:block} .tip b{color:var(--green)}
-/* widget discovery card: elevated surface + soft blue glow, still true black around it */
-.widgetcard{background:#121212;border:1px solid rgba(59,130,246,.3);border-radius:18px;padding:14px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 0 0 1px rgba(59,130,246,.06),0 10px 34px rgba(59,130,246,.14)}
-.widgetcard .cta{background:#2563EB;color:#fff;border:0;font:inherit;font-weight:800;font-size:.85em;padding:10px 14px;border-radius:12px;cursor:pointer;min-height:40px;white-space:nowrap}
-.widgetcard .cta:hover{background:#1D4ED8}
+/* widget discovery: a single thin row, never competing with the numbers (round 17) */
+.widgetrow{background:#121212;border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:8px 10px 8px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.widgetrow .sub{font-size:.8em}
+.widgetrow .cta{background:#2563EB;color:#fff;border:0;font:inherit;font-weight:800;font-size:.78em;padding:5px 11px;border-radius:9px;cursor:pointer;min-height:30px;white-space:nowrap}
+.widgetrow .cta:hover{background:#1D4ED8}
 .io{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .iobar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex}
 .iobar i{display:block;height:100%;transition:width .4s}
@@ -158,10 +164,11 @@ nav{display:flex;border-top:1px solid var(--line);background:#0A0A0A;padding:6px
 nav button{flex:1;border:0;background:transparent;color:var(--dim);font:inherit;font-size:.68em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button[aria-current=page]{color:var(--green)}
-/* in-app slide-in alerts — always BELOW the header row, never over the Sipcount logo (round 13) */
-.alerts{position:absolute;top:64px;left:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
-.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 40px 12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 12px 30px rgba(0,0,0,.7);transform:translateY(-120%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .3s;pointer-events:auto;font-size:.93em;position:relative;cursor:default;user-select:none}
-.alert.in{transform:translateY(0);opacity:1}
+/* Notifications live in the vertical centre and slide in from the right edge — never over the header,
+   never on a timer; they wait until the reader deals with them (round 18). */
+.alerts{position:absolute;top:50%;right:14px;transform:translateY(-50%);width:min(300px,calc(100% - 28px));display:flex;flex-direction:column;gap:10px;z-index:6;pointer-events:none}
+.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 38px 12px 14px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 18px 44px rgba(0,0,0,.8);transform:translateX(125%);opacity:0;transition:transform .5s cubic-bezier(.2,.9,.3,1.15),opacity .35s;pointer-events:auto;font-size:.93em;position:relative;user-select:none}
+.alert.in{transform:translateX(0);opacity:1}
 .alert .ic{font-size:1.35em;line-height:1;margin-top:1px}
 .alert b{font-family:var(--display);font-weight:700;font-size:.93em;display:block;line-height:1.35}
 .alert .more{display:none;color:#D8D8D8;margin-top:8px;font-size:.88em;line-height:1.55;border-top:1px solid var(--line);padding-top:8px}
@@ -170,10 +177,7 @@ nav button[aria-current=page]{color:var(--green)}
 .alert.open{background:#1E1E1E;cursor:default}
 .alert.open .tap{display:none}
 .alert .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.85em;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.alert .timer{position:absolute;left:0;bottom:0;height:2px;background:var(--green);width:100%;transform-origin:left;animation:shrink var(--dur,9s) linear forwards}
-.alert.paused .timer{animation-play-state:paused}
-@keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
-.alert.fact{border-left-color:var(--amber)} .alert.fact .timer{background:var(--amber)}
+.alert.fact{border-left-color:var(--amber)}
 /* All-time impact card: darker, muted, deliberately quieter than the daily metrics */
 .lifetime{background:#0C0C0C;border-color:#222}
 .lifenum{font-family:var(--display);font-size:2.1em;font-weight:700;color:#A3A3A3;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:6px}
@@ -228,12 +232,25 @@ nav button[aria-current=page]{color:var(--green)}
 .splash h1{font-size:1.9em;font-weight:800;letter-spacing:-.02em}
 .splash input{font-family:var(--display);font-size:2.6em;font-weight:800;text-align:center;width:170px;padding:12px;border-radius:20px;border-color:var(--green)}
 .splash .mark{width:64px;height:64px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#000;font-size:1.8em}
-/* mascot transitions: the ecosystem degrades over the same beat as the drop drains (2.4 s) */
-.scene *{transform-box:view-box;transition:transform 2.4s cubic-bezier(.3,.1,.2,1),opacity 2.4s ease,stroke-opacity 2.4s ease,fill 2.4s ease}
-.scene.fast *{transition-duration:.7s}
+/* ---- sticker characters (round 19): alive when idle, visibly distressed when the water runs low ---- */
+.sticker *{transform-box:view-box;transition:transform 2.4s cubic-bezier(.3,.1,.2,1),opacity 1.2s ease,fill 2.4s ease,stroke 2.4s ease}
+.sticker.fast *{transition-duration:.7s}
+.sticker .idle,.sticker .bob{animation:breathe 3.8s ease-in-out infinite;transform-origin:100px 150px}
+.sticker .pose,.sticker .ice,.sticker .water,.sticker .pet,.sticker .berg,.sticker .peak,.sticker .lf,.sticker .stem,.sticker .tail,.sticker .chunk,.sticker .fallen{transition:transform 2.4s cubic-bezier(.3,.1,.2,1),fill 2.4s ease,stroke 2.4s ease,opacity 1.2s ease}
+@keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2.5px) scale(1.018)}}
+.sticker .bob{animation:bobfloat 4.8s ease-in-out infinite}
+@keyframes bobfloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-5px) rotate(-2.5deg)}}
+.sticker.stressed .idle,.sticker.stressed .bob{animation-duration:1.6s}
+.sticker .faceBad{opacity:0} .sticker.stressed .faceOk{opacity:0} .sticker.stressed .faceBad{opacity:1}
+.sticker .faceOk,.sticker .faceBad{transition:opacity .6s ease}
+.sticker .sweat{opacity:0}
+.sticker.stressed .sweat{animation:sweatfall 2.4s ease-in infinite}
+.sticker.stressed .sweat.b{animation-delay:1.2s}
+@keyframes sweatfall{0%{transform:translateY(0) scale(.7);opacity:0}18%{opacity:.95}100%{transform:translateY(18px) scale(1);opacity:0}}
+.sticker .drip{opacity:0;transition:opacity 1.2s} .sticker.stressed .drip{opacity:.8}
+@media (prefers-reduced-motion:reduce){.sticker .idle,.sticker .bob,.sticker .sweat{animation:none!important}}
 .plant .leafy,.plant .stem,.plant .bud{transition:transform 3s cubic-bezier(.4,0,.2,1),fill 3s ease,stroke 3s ease,opacity 3s ease;transform-box:view-box}
 .plant.fast .leafy,.plant.fast .stem,.plant.fast .bud{transition-duration:.9s}
-.scene.fast .plant .leafy,.scene.fast .plant .stem,.scene.fast .plant .bud{transition-duration:.7s}
 .story{aspect-ratio:9/16;width:100%;max-width:270px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(170deg,#000 0%,#111 70%,#0b3b2b 100%);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22px 18px;font-family:var(--body)}
 .story .hl{font-family:var(--display);font-size:1.1em;font-weight:700;line-height:1.2}
 .story .num{font-family:var(--display);font-size:3.2em;font-weight:800;line-height:1;letter-spacing:-.03em}
@@ -285,27 +302,23 @@ nav button[aria-current=page]{color:var(--green)}
       </div>
     </div>
 
-    <!-- Companion Ecosystem module (round 15): plant · polar bear · glacier, degrading with the drop -->
+    <!-- Companion Ecosystem module: the character is the focal point, the words stay out of its way -->
     <div class="panel eco">
       <div class="ecoart" id="ecoArt" aria-hidden="true"></div>
-      <div class="stack" style="flex:1;min-width:0">
-        <div class="row between"><span class="eyebrow" id="ecoTitle">Ecosystem</span><button class="info" data-tip="eco" aria-controls="tip-eco" aria-expanded="false" aria-label="Why the ecosystem changes">i</button></div>
-        <div class="row between wrap"><h3 id="ecoState" style="font-family:var(--display);font-size:1.15em;font-weight:800"><span id="ecoIco"></span> <span id="ecoStateTxt"></span></h3><button class="btn line small" id="simBtn" style="padding:6px 10px;font-size:.78em">⚡ Simulate</button></div>
-        <div class="sub" id="ecoLine" style="font-size:.85em"></div>
+      <div class="meta">
+        <h3 class="state" id="ecoState"><span id="ecoIco"></span> <span id="ecoStateTxt"></span></h3>
+        <div class="row" style="gap:6px"><button class="btn line small" id="simBtn" style="padding:5px 9px;font-size:.72em">⚡ Simulate</button><button class="info" data-tip="eco" aria-controls="tip-eco" aria-expanded="false" aria-label="Why the ecosystem changes">i</button></div>
       </div>
+      <p class="ecoline" id="ecoLine"></p>
     </div>
     <div class="tip" id="tip-eco" role="region" aria-label="Explainer"></div>
     <div class="ecoline" id="oppCost"></div>
     <!-- ↑ everything above is the story: the number, the drop, the mascot, one plain line (round 16) -->
 
-    <!-- widget discovery sits between the hero and the insights (round 16) -->
-    <div class="widgetcard" id="widgetCard">
-      <div class="mini" id="widgetCardArt" aria-hidden="true"></div>
-      <div class="stack" style="flex:1;min-width:0;gap:2px">
-        <b style="font-family:var(--display);font-size:.98em">Keep your footprint in check.</b>
-        <span class="sub" style="font-size:.85em">Add Sipcount to your home screen.</span>
-      </div>
-      <button class="cta" id="widgetAdd">Add Widget</button>
+    <!-- widget discovery: one thin line between the hero and the insights (round 17) -->
+    <div class="widgetrow" id="widgetCard">
+      <span class="sub">Add Sipcount to your home screen.</span>
+      <button class="cta" id="widgetAdd" aria-label="Add the Sipcount widget">⊞ Add</button>
     </div>
 
     <div class="nudge" id="todayNudge"></div>
@@ -320,27 +333,30 @@ nav button[aria-current=page]{color:var(--green)}
     <!-- every number beyond the story lives behind one tap (round 16) -->
     <details class="analytics" id="analytics">
       <summary>Detailed analytics</summary>
-      <div class="stack" style="gap:16px;padding-bottom:14px">
-        <div class="panel">
-          <div class="row between"><h2>Last 7 days</h2><span class="pill" id="trendPill"></span></div>
+      <!-- metric-first: the number is the hero, the label is a whisper, no sentences (round 18) -->
+      <div class="stack" style="gap:18px;padding-bottom:16px">
+        <div class="metrics">
+          <div class="metric"><div class="n" id="tPrompts">0</div><div class="k">Prompts today</div></div>
+          <div class="metric"><div class="n" id="tImages">0</div><div class="k">Images today</div></div>
+          <div class="metric"><div class="n" id="tWeek">0</div><div class="k">mL this week</div></div>
+          <div class="metric"><div class="n" id="tStreak">0</div><div class="k">Days alive</div></div>
+        </div>
+        <div class="stack" style="gap:8px">
+          <div class="row between"><span class="k2">Last 7 days</span><span class="pill" id="trendPill"></span></div>
           <div class="bars" id="bars"></div>
         </div>
-        <div class="tiles">
-          <div class="tile"><div class="v" id="tPrompts">0</div><div class="l">Prompts today</div></div>
-          <div class="tile"><div class="v" id="tImages">0</div><div class="l">Images today</div></div>
-          <div class="tile"><div class="v" id="tWeek">0 mL</div><div class="l">Last 7 days</div></div>
-          <div class="tile"><div class="v" id="tStreak">0</div><div class="l">Days ecosystem alive</div></div>
-        </div>
-        <div class="panel lifetime">
-          <div class="row between"><h2 style="color:#8A8A8A">All-time impact</h2><span class="since" id="lifeSince"></span></div>
-          <div class="lifenum"><span id="lifeVal">0</span><small id="lifeUnit">mL</small></div>
+        <div class="stack" style="gap:8px">
+          <span class="k2">All time</span>
+          <div class="row between" style="align-items:flex-end">
+            <div class="lifenum"><span id="lifeVal">0</span><small id="lifeUnit">mL</small></div>
+            <span class="since" id="lifeSince"></span>
+          </div>
           <div class="lifesub" id="lifeEq">—</div>
         </div>
-        <div class="stack">
-          <h2>Where the water goes</h2>
+        <div class="stack" style="gap:8px">
+          <span class="k2">Where it goes</span>
           <div class="scopebar"><i id="sb1" style="width:15%;background:var(--green)"></i><i id="sb2" style="width:85%;background:var(--green-deep)"></i></div>
-          <div class="legend"><span><b style="background:var(--green)"></b>Cooling the servers <span id="p1">15%</span></span><span><b style="background:var(--green-deep)"></b>Making the electricity <span id="p2">85%</span></span></div>
-          <p class="sub" id="scopePlain" style="font-size:.85em;margin:4px 0 0;line-height:1.5"></p>
+          <div class="legend"><span><b style="background:var(--green)"></b>Server cooling <span id="p1">15%</span></span><span><b style="background:var(--green-deep)"></b>Power plants <span id="p2">85%</span></span></div>
         </div>
       </div>
     </details>
@@ -562,7 +578,9 @@ function show(id){
   $('s-splash').classList.toggle('active', id==='splash'); $('nav').hidden = id==='splash' || !S.mode;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id));
   document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
-  if(id==='today') renderToday(); if(id==='settings') renderSettings(); if(id==='grove') renderGrove();
+  /* arriving on Today always replays the catch-up: the drop fills, then drains to where you are (round 17) */
+  if(id==='today'){ drainAnimated=false; ecoFresh=true; renderToday(); }
+  if(id==='settings') renderSettings(); if(id==='grove') renderGrove();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
 function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
@@ -573,13 +591,17 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
    to today's level in front of the user, so the day's use is something you watch happen. */
 const DROP=(l,c)=>{ const y=130*(1-l); return `<svg viewBox="0 0 100 130"><defs><clipPath id="vc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`; };
 let drainAnimated=false, dropSeq=0, ecoFresh=true, ecoSeq=0;
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* The catch-up drain runs every time the dashboard mounts (round 17): the drop is painted full, waits a
+   beat so the user is looking at it, then falls to today's level on a natural ease-out. */
 function renderDrop(pct, col){
   const lvl=Math.max(0,1-Math.min(1,pct)), width=Math.min(100,pct*100).toFixed(1)+'%', seq=++dropSeq;
   const settle=dur=>{ const r=$('heroVessel').querySelector('.fill'); if(!r||seq!==dropSeq) return;   // a newer render wins
     r.style.transitionDuration=dur; r.style.transform=`translateY(${(130*(1-lvl)).toFixed(1)}px)`; r.style.fill=col; $('budgetRing').style.width=width; };
-  if(!$('heroVessel').firstChild || !drainAnimated){            // first paint of the session: start full, then drain
+  if(!$('heroVessel').firstChild || !drainAnimated){
     drainAnimated=true; $('heroVessel').innerHTML=DROP(1,col); $('budgetRing').style.width='0%';
-    requestAnimationFrame(()=>requestAnimationFrame(()=>settle('2.4s')));
+    if(REDUCED){ settle('0s'); return; }
+    requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>settle('3s'),380)));
   } else settle('');
 }
 
@@ -589,26 +611,20 @@ function renderDrop(pct, col){
 /* One notification component (round 16): a 5–8 word hook plus "Tap to read". The explanation only
    appears when the card is tapped, and tapping also stops the auto-dismiss timer. */
 let alertN=0;
-function alertCard(icon, title, more='', cls='', seconds=6){
+/* One hook line, no timer. It waits in the middle of the screen until the reader taps it open or
+   closes it; tapping reveals two or three short lines and nothing more (round 18). */
+function alertCard(icon, title, more=''){
   while($('alerts').children.length>=2) $('alerts').firstChild.remove();
   const id='alertbody'+(++alertN);
-  const el=document.createElement('div'); el.className='alert '+cls; el.style.setProperty('--dur', seconds+'s');
-  /* the hook is a real <button>, so Enter/Space work natively; ✕ and any source link are its siblings,
-     never its descendants (no nested interactive content inside one control) */
-  const head = more ? `<button class="hook" aria-expanded="false" aria-controls="${id}"><b>${title}</b><span class="tap">Tap to read ›</span></button><div class="more" id="${id}">${more}</div>`
+  const el=document.createElement('div'); el.className='alert'+(arguments[3]?' '+arguments[3]:'');
+  const head = more ? `<button class="hook" aria-expanded="false" aria-controls="${id}"><b>${title}</b><span class="tap">Tap to read</span></button><div class="more" id="${id}">${more}</div>`
                     : `<b>${title}</b>`;
-  el.innerHTML=`<span class="ic">${icon}</span><div style="flex:1;min-width:0">${head}</div><button class="x" aria-label="Dismiss">✕</button><span class="timer"></span>`;
+  el.innerHTML=`<span class="ic">${icon}</span><div style="flex:1;min-width:0">${head}</div><button class="x" aria-label="Close">✕</button>`;
   $('alerts').appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
-  let gone=false, remaining=seconds*1000, started=Date.now();
-  const dismiss=()=>{ if(gone) return; gone=true; el.classList.remove('in'); setTimeout(()=>el.remove(),450); };
-  let timer=setTimeout(dismiss, remaining);
-  const hold=()=>{ if(gone||el.classList.contains('open')) return; clearTimeout(timer); remaining-=Date.now()-started; el.classList.add('paused'); };
-  const release=()=>{ if(gone||el.classList.contains('open')||!el.classList.contains('paused')) return; started=Date.now(); el.classList.remove('paused'); timer=setTimeout(dismiss, Math.max(1800,remaining)); };
-  el.addEventListener('pointerenter',hold); el.addEventListener('pointerleave',release);
-  el.addEventListener('focusin',hold); el.addEventListener('focusout',release);
+  let gone=false;
+  const dismiss=()=>{ if(gone) return; gone=true; el.classList.remove('in'); setTimeout(()=>el.remove(),500); };
   if(more){ const hook=el.querySelector('.hook');
-    const expand=()=>{ if(el.classList.contains('open')) return; el.classList.add('open'); hook.setAttribute('aria-expanded','true');
-      clearTimeout(timer); const t=el.querySelector('.timer'); if(t) t.remove(); };
+    const expand=()=>{ if(el.classList.contains('open')) return; el.classList.add('open'); hook.setAttribute('aria-expanded','true'); };
     hook.addEventListener('click',expand);
     el.addEventListener('click',e=>{ if(!e.target.closest('.x') && !e.target.closest('a') && !e.target.closest('.hook')) expand(); }); }
   el.querySelector('.x').onclick=e=>{ e.stopPropagation(); dismiss(); };
@@ -622,7 +638,7 @@ function showFact(){
   const pool=C.facts.map((_,i)=>i).filter(i=>!f.shown.includes(i)); if(!pool.length) return;
   const i=pool[Math.floor(Math.random()*pool.length)], fact=C.facts[i];
   f.shown.push(i); f.count++; save();
-  alertCard(fact.e, fact.hook, `${fact.t}<a href="${fact.url}" target="_blank" rel="noopener">Source: ${fact.s} ↗</a>`, 'fact', 9);
+  alertCard(fact.e, fact.hook, `${fact.t}<a href="${fact.url}" target="_blank" rel="noopener">Source: ${fact.s} ↗</a>`, 'fact');
 }
 /* Budget-crossing alerts replace the old cup milestones (round 14): one card the first time the day
    crosses 50 %, 70 % and 100 % of the budget, plus one for a single unusually heavy prompt. */
@@ -648,155 +664,187 @@ function checkAlerts(promptMl){
    per mascot (index 0 = pristine → 4 = collapsed). The module then renders <img> frames with a
    cross-fade instead of the SVG, and nothing else in this file changes. Frames belong in assets/ and
    should be WebP at 2× the largest display size (≈ 528×480).                                        */
-const F=(n)=>({ dir:'assets/', frames:[0,1,2,3,4].map(i=>`${n}-${i}.webp`) });
-const MASCOT_ASSETS = { plant:F('plant'), bear:F('bear'), glacier:F('glacier') };
-/*  Photoreal frames generated 2026-09-21 (Gemini, prompts in docs/ASSET-PROMPTS.md), 900 px WebP,
-    ~35 KB each, 517 KB for all fifteen. Set a mascot to null to fall back to its SVG; a failed image
-    load does the same automatically, so the app still works if the assets are missing.               */
+const MASCOT_ASSETS = { plant:null, bear:null, axolotl:null, leopard:null, glacier:null };
+/*  Round 19 retires the photoreal frames in favour of the animated characters below. The frames are
+    kept in assets/photoreal/ (unused) and the slot still works: give a mascot { dir, frames:[…] } — five
+    images, pristine → collapsed — and it renders those instead, with a Lottie/Rive container being
+    the same one-line swap if animated files are commissioned later.                                 */
 let uidN=0; const uid=()=>'e'+(++uidN);
 const clamp01=v=>Math.max(0,Math.min(1,v));
-/* shared scene defs: sky, sea, ice, fur, plus a fractal-noise filter used as a texture overlay */
-const sceneDefs=(u,lite)=>`
-  <linearGradient id="sky${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1826"/><stop offset=".7" stop-color="#1B3348"/><stop offset="1" stop-color="#2C4D66"/></linearGradient>
-  <linearGradient id="sea${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4863"/><stop offset=".35" stop-color="#0E3149"/><stop offset="1" stop-color="#061722"/></linearGradient>
-  <linearGradient id="ice${u}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".35" stop-color="#E4F0F8"/><stop offset=".72" stop-color="#C2DAEA"/><stop offset="1" stop-color="#9BC0D6"/></linearGradient>
-  <linearGradient id="icewall${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BBD8E9"/><stop offset=".5" stop-color="#7FAECB"/><stop offset="1" stop-color="#2B5B7B"/></linearGradient>
-  <linearGradient id="fur${u}" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F0F5F9"/><stop offset="1" stop-color="#BFD1DE"/></linearGradient>
-  <radialGradient id="glow${u}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8FD7FF" stop-opacity=".45"/><stop offset="1" stop-color="#8FD7FF" stop-opacity="0"/></radialGradient>
-  ${lite?'':`<filter id="noise${u}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" seed="9" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>`}`;
-const texture=(u,lite,clip,op=.16)=>lite?'':`<g clip-path="url(#${clip})"><rect x="0" y="0" width="200" height="170" filter="url(#noise${u})" opacity="${op}" style="mix-blend-mode:overlay"/></g>`;
-const waves=(y,n,o=.07)=>[...Array(n)].map((_,i)=>`<path d="M${-10+i*7} ${y+i*9} q 26 ${i%2?-4:4} 52 0 t 52 0 t 52 0 t 52 0" fill="none" stroke="#DCF2FF" stroke-opacity="${o}" stroke-width="1.6" stroke-linecap="round"/>`).join('');
 
-/* ---------- mascot 1: polar bear on a shrinking ice floe ---------- */
-function bearSVG(u, lite){
-  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="bear">
-    <defs>${sceneDefs(u,lite)}
-      <clipPath id="floeC${u}"><path d="M44 110 L74 99 L128 99 L156 111 L146 124 L56 124 Z"/></clipPath>
-</defs>
-    <rect width="200" height="170" fill="url(#sky${u})"/>
-    <path d="M0 92 L26 84 L58 90 L86 82 L118 89 L150 83 L182 90 L200 86 L200 100 L0 100 Z" fill="#9FC4DB" opacity=".18"/>
-    <rect y="96" width="200" height="74" fill="url(#sea${u})"/>
-    ${waves(104,7)}
-    <g class="floe" style="transform-origin:100px 120px">
-      <ellipse cx="100" cy="126" rx="62" ry="11" fill="#0B2B3D" opacity=".6"/>
-      <path d="M56 124 L146 124 L138 139 L64 139 Z" fill="url(#icewall${u})"/>
-      <path d="M44 110 L74 99 L128 99 L156 111 L146 124 L56 124 Z" fill="url(#ice${u})"/>
-      <path d="M74 99 L88 110 L64 118 L44 110 Z" fill="#FFFFFF" opacity=".35"/>
-      <path d="M128 99 L156 111 L134 119 L118 108 Z" fill="#FFFFFF" opacity=".22"/>
-      <path d="M56 124 L146 124" stroke="#EAF6FF" stroke-opacity=".5" stroke-width="1.5"/>
-      <path d="M78 126 L74 139 M96 126 L95 139 M118 126 L121 139" stroke="#1C4A66" stroke-opacity=".5" stroke-width="1.2"/>
-      ${texture(u,lite,'floeC'+u,.2)}
+/* ---------- shared sticker parts ----------------------------------------------------------------
+   Every character is built from the same kit: a soft halo, a ground shadow, a body in flat vibrant
+   colour, a two-state face (happy / distressed, cross-faded by CSS) and sweat drops that only run
+   once the character is stressed. Idle motion comes from CSS keyframes, so the characters are alive
+   even when nothing is happening. */
+const stickerDefs=(u,halo)=>`
+  <radialGradient id="halo${u}" cx=".5" cy=".58" r=".62"><stop offset="0" stop-color="${halo}" stop-opacity=".5"/><stop offset="1" stop-color="${halo}" stop-opacity="0"/></radialGradient>
+  <linearGradient id="ice${u}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#E8FAFF"/><stop offset="1" stop-color="#7FD4F0"/></linearGradient>
+  <linearGradient id="wat${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5CC7EE"/><stop offset="1" stop-color="#2A8CC4"/></linearGradient>`;
+const halo=(u)=>`<ellipse cx="100" cy="92" rx="92" ry="78" fill="url(#halo${u})"/>`;
+const shade=(cx=100,cy=156,rx=46)=>`<ellipse class="shade" cx="${cx}" cy="${cy}" rx="${rx}" ry="8" fill="#000" opacity=".55"/>`;
+/* face: two versions in the same spot, swapped by the .stressed class */
+const face=(x,y,s=1,ink='#12181C')=>`<g class="face" style="transform:translate(${x}px,${y}px) scale(${s})">
+  <g class="faceOk"><circle cx="-8" cy="0" r="3" fill="${ink}"/><circle cx="8" cy="0" r="3" fill="${ink}"/><path d="M-5 7 q5 5 10 0" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+  <g class="faceBad"><path d="M-12 -3 l7 4 M-5 -3 l-7 4" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/><path d="M5 -3 l7 4 M12 -3 l-7 4" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/><path d="M-6 9 q3 -4 6 0 q3 4 6 0" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+</g>`;
+/* Geometry is written to the SVG `transform` attribute with the origin baked in, rather than relying
+   on CSS transform-origin: it renders identically in the card, the widget and an exported PNG, and it
+   never collides with the idle keyframe animation (which owns `transform` on .idle / .bob). */
+function xf(el,{x=0,y=0,rot=0,sx=1,sy=null,ox=100,oy=150}={}){ if(!el) return; sy=(sy==null?sx:sy);
+  el.setAttribute('transform',`translate(${x.toFixed(2)} ${y.toFixed(2)}) translate(${ox} ${oy}) rotate(${rot.toFixed(2)}) scale(${sx.toFixed(3)} ${sy.toFixed(3)}) translate(${-ox} ${-oy})`); }
+const sweat=(pts)=>pts.map(([x,y],i)=>`<path class="sweat${i?' b':''}" d="M${x} ${y} q4 5 0 8 q-4 -3 0 -8" fill="#8FD7FF" style="transform-origin:${x}px ${y}px"/>`).join('');
+
+/* ---------- 1 · plant ---------------------------------------------------------------------------- */
+function plantSticker(u){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet" class="sticker" data-k="plant">
+    <defs>${stickerDefs(u,'#1D8A55')}</defs>
+    <rect width="200" height="170" fill="#070707"/>${halo(u)}${shade(100,158,44)}
+    <g class="fallen" opacity="0"><ellipse cx="54" cy="152" rx="16" ry="7" transform="rotate(-20 54 152)" fill="#9A6B33"/></g>
+    <g class="idle" style="transform-origin:100px 156px">
+      <path class="stem" d="M100 122 C97 104 100 88 100 70" stroke="#1FA862" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <g class="lf" data-i="0"><ellipse cx="70" cy="92" rx="29" ry="16" transform="rotate(-20 70 92)" fill="#3FD983"/></g>
+      <g class="lf" data-i="1"><ellipse cx="130" cy="82" rx="29" ry="16" transform="rotate(18 130 82)" fill="#35C877"/></g>
+      <g class="lf" data-i="2"><ellipse cx="100" cy="60" rx="20" ry="26" fill="#4AE68E"/></g>
+      <path d="M70 116 h60 l-8 32 a10 10 0 0 1 -10 9 h-24 a10 10 0 0 1 -10 -9 z" fill="#3C444B"/>
+      <rect x="66" y="108" width="68" height="14" rx="7" fill="#505961"/>
+      ${face(100,138,1,'#0E1418')}
     </g>
-    <g class="bear" style="transform-origin:100px 104px">
-      <ellipse cx="112" cy="84" rx="30" ry="21" fill="url(#fur${u})"/>
-      <ellipse cx="128" cy="90" rx="17" ry="14" fill="url(#fur${u})"/>
-      <path d="M92 96 q -3 -12 8 -14 q 10 -2 11 10 z" fill="#E7EEF3"/>
-      <g class="head" style="transform-origin:82px 74px">
-        <circle cx="74" cy="64" r="5" fill="#EDF3F7"/><circle cx="92" cy="61" r="5" fill="#E3EBF1"/>
-        <ellipse cx="82" cy="72" rx="16" ry="14" fill="url(#fur${u})"/>
-        <path d="M68 74 q -8 2 -9 8 q 6 4 12 1 z" fill="#F4F8FB"/>
-        <circle cx="60" cy="81" r="2.4" fill="#2B2B2B"/>
-        <circle cx="76" cy="69" r="2.2" fill="#23323C"/><circle cx="90" cy="68" r="2.2" fill="#23323C"/>
-        <path class="tear" d="M76 73 q 1 5 0 8" stroke="#8FD7FF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0"/>
+    ${sweat([[132,110],[70,114]])}
+  </svg>`;
+}
+/* ---------- 2 · polar bear ------------------------------------------------------------------------ */
+function bearSticker(u){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet" class="sticker" data-k="bear">
+    <defs>${stickerDefs(u,'#1E6C8C')}</defs>
+    <rect width="200" height="170" fill="#070707"/>${halo(u)}
+    <ellipse cx="100" cy="150" rx="70" ry="12" fill="#0E2B3A"/>
+    <g class="ice">
+      <rect x="48" y="122" width="104" height="28" rx="11" fill="url(#ice${u})"/>
+      <rect x="48" y="122" width="104" height="9" rx="4.5" fill="#FFFFFF" opacity=".75"/>
+      <path d="M62 150 l4 8 M100 150 l0 9 M138 150 l-4 8" stroke="#8FD7FF" stroke-width="2.6" stroke-linecap="round" class="drip"/>
+    </g>
+    <g class="pose"><g class="idle">
+      <ellipse cx="100" cy="98" rx="36" ry="28" fill="#FFFFFF"/>
+      <circle cx="77" cy="53" r="10" fill="#F2F8FC"/><circle cx="112" cy="50" r="10" fill="#F2F8FC"/>
+      <circle cx="77" cy="53" r="5" fill="#E2CBD2"/><circle cx="112" cy="50" r="5" fill="#E2CBD2"/>
+      <ellipse cx="94" cy="70" rx="25" ry="21" fill="#FFFFFF"/>
+      <ellipse cx="94" cy="80" rx="12" ry="8" fill="#F1F7FB"/><circle cx="94" cy="77" r="3.2" fill="#2A3338"/>
+      <ellipse cx="72" cy="120" rx="13" ry="7" fill="#F4F9FC"/><ellipse cx="126" cy="120" rx="13" ry="7" fill="#F4F9FC"/>
+      ${face(94,68,.92,'#2A3338')}
+    </g></g>
+    ${sweat([[126,62],[66,68]])}
+  </svg>`;
+}
+/* ---------- 3 · axolotl --------------------------------------------------------------------------- */
+function axolotlSticker(u){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet" class="sticker" data-k="axolotl">
+    <defs>${stickerDefs(u,'#2B7FB0')}</defs>
+    <rect width="200" height="170" fill="#070707"/>${halo(u)}
+    <g class="water"><rect x="44" y="44" width="112" height="102" rx="8" fill="url(#wat${u})" opacity=".62"/></g>
+    <g class="pet">
+      <g class="bob">
+        <path d="M128 96 q22 -6 26 10 q-16 8 -26 0z" fill="#FF9CC8"/>
+        <ellipse cx="100" cy="96" rx="34" ry="20" fill="#FFB3D6"/>
+        <g fill="#FF7FBC"><path d="M74 84 q-14 -12 -22 -6 q8 8 18 12z"/><path d="M70 96 q-16 -4 -22 4 q10 6 22 2z"/><path d="M74 108 q-14 8 -20 18 q12 0 20 -10z"/></g>
+        <ellipse cx="100" cy="102" rx="22" ry="11" fill="#FFD0E6" opacity=".8"/>
+        ${face(96,92,.9,'#7A2B52')}
       </g>
-      <path d="M96 96 q 4 8 14 8 q 10 0 12 -8 z" fill="#E9F0F5"/>
-      <ellipse cx="128" cy="100" rx="13" ry="5" fill="#DCE7EE"/>
-      <ellipse cx="100" cy="101" rx="11" ry="4.5" fill="#E6EEF4"/>
     </g>
-    <g class="drips" opacity="0">
-      <path d="M62 138 q 1 6 0 9" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-      <path d="M100 139 q 1 7 0 11" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-      <path d="M136 137 q -1 6 0 9" stroke="#9FD9F5" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-    </g>
-    <g class="ripple" opacity=".5"><ellipse cx="100" cy="150" rx="46" ry="6" fill="none" stroke="#BFE6FF" stroke-opacity=".25"/><ellipse cx="100" cy="158" rx="66" ry="8" fill="none" stroke="#BFE6FF" stroke-opacity=".16"/></g>
+    <rect x="42" y="42" width="116" height="108" rx="10" fill="none" stroke="#9FD9F5" stroke-width="3" opacity=".65"/>
+    <rect x="42" y="42" width="116" height="10" rx="5" fill="#9FD9F5" opacity=".35"/>
+    ${sweat([[132,74],[66,74]])}
   </svg>`;
 }
-/* ---------- mascot 2: a calving glacier ---------- */
-function glacierSVG(u, lite){
-  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="glacier">
-    <defs>${sceneDefs(u,lite)}<clipPath id="wallC${u}"><path d="M8 122 L8 44 L52 30 L104 40 L150 26 L192 42 L192 122 Z"/></clipPath></defs>
-    <rect width="200" height="170" fill="url(#sky${u})"/>
-    <rect y="112" width="200" height="58" fill="url(#sea${u})"/>
-    ${waves(120,6)}
-    <g class="wall" style="transform-origin:100px 122px">
-      <path d="M8 122 L8 44 L52 30 L104 40 L150 26 L192 42 L192 122 Z" fill="url(#icewall${u})"/>
-      <path d="M8 44 L52 30 L104 40 L150 26 L192 42 L192 58 L150 44 L104 56 L52 46 L8 60 Z" fill="url(#ice${u})" opacity=".92"/>
-      <path d="M40 34 L46 122 M88 40 L84 122 M126 32 L132 122 M166 32 L162 122" stroke="#5E93B4" stroke-opacity=".45" stroke-width="1.4"/>
-      <path class="crack" d="M70 46 l 8 26 l -7 20 l 9 26" stroke="#0E3A54" stroke-opacity=".0" stroke-width="2" fill="none"/>
-      <path class="crack" d="M144 44 l -7 30 l 8 22 l -5 24" stroke="#0E3A54" stroke-opacity="0" stroke-width="2" fill="none"/>
-      <path class="melt" d="M30 60 q 3 26 -1 50 M108 62 q -3 24 2 46 M178 58 q 2 28 -2 52" stroke="#BFEAFF" stroke-opacity="0" stroke-width="1.6" fill="none"/>
-      ${texture(u,lite,'wallC'+u,.22)}
-    </g>
-    <g class="bergs" opacity="0">
-      <g><ellipse cx="34" cy="143" rx="18" ry="4" fill="#03111A" opacity=".55"/><path d="M18 138 L27 126 L40 123 L50 134 L44 141 Z" fill="url(#ice${u})"/><path d="M27 126 L40 123 L36 133 Z" fill="#FFFFFF" opacity=".4"/><path d="M18 138 L44 141" stroke="#5E93B4" stroke-opacity=".6" stroke-width="1.2"/></g>
-      <g><ellipse cx="166" cy="148" rx="20" ry="4" fill="#03111A" opacity=".55"/><path d="M149 145 L157 130 L172 128 L183 141 L176 147 Z" fill="url(#ice${u})"/><path d="M157 130 L172 128 L166 139 Z" fill="#FFFFFF" opacity=".35"/><path d="M149 145 L176 147" stroke="#5E93B4" stroke-opacity=".6" stroke-width="1.2"/></g>
-      <g><ellipse cx="97" cy="153" rx="13" ry="3" fill="#03111A" opacity=".5"/><path d="M86 151 L92 141 L103 140 L109 149 L104 153 Z" fill="url(#ice${u})" opacity=".95"/><path d="M92 141 L103 140 L99 147 Z" fill="#FFFFFF" opacity=".3"/></g>
-    </g>
-    <ellipse cx="100" cy="126" rx="96" ry="9" fill="url(#glow${u})"/>
-    <g class="ripple" opacity=".45"><ellipse cx="100" cy="146" rx="60" ry="7" fill="none" stroke="#BFE6FF" stroke-opacity=".22"/><ellipse cx="100" cy="158" rx="82" ry="9" fill="none" stroke="#BFE6FF" stroke-opacity=".14"/></g>
+/* ---------- 4 · snow leopard ---------------------------------------------------------------------- */
+function leopardSticker(u){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet" class="sticker" data-k="leopard">
+    <defs>${stickerDefs(u,'#4C6B85')}</defs>
+    <rect width="200" height="170" fill="#070707"/>${halo(u)}
+    <g class="peak"><path class="snow" d="M26 152 q16 -34 74 -34 q58 0 74 34 z" fill="#EAF6FF"/></g>
+    ${shade(100,154,40)}
+    <g class="pose"><g class="idle">
+      <path class="tail" d="M136 126 q30 6 26 -16 q-2 -14 -14 -12" stroke="#C9D6E0" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <ellipse cx="100" cy="112" rx="32" ry="26" fill="#DCE8F2"/>
+      <path d="M78 78 l-4 -18 l17 9z" fill="#DCE8F2"/><path d="M122 78 l4 -18 l-17 9z" fill="#DCE8F2"/>
+      <path d="M78 78 l-2 -11 l10 5z" fill="#F0A7BC"/><path d="M122 78 l2 -11 l-10 5z" fill="#F0A7BC"/>
+      <ellipse cx="100" cy="82" rx="26" ry="22" fill="#E8F1F8"/>
+      <g fill="#9FB3C4" opacity=".75"><circle cx="82" cy="108" r="3.4"/><circle cx="100" cy="118" r="3.4"/><circle cx="118" cy="106" r="3.4"/><circle cx="90" cy="126" r="3"/><circle cx="112" cy="126" r="3"/></g>
+      <ellipse cx="100" cy="90" rx="10" ry="7" fill="#FBFDFF"/><path d="M100 87 l-4 3 h8z" fill="#7A8794"/>
+      ${face(100,80,.95,'#33414C')}
+    </g></g>
+    ${sweat([[128,70],[70,72]])}
   </svg>`;
 }
-/* ---------- mascot 3: the plant (default, carried over from v5) ---------- */
-function plantScene(u, lite){
-  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" class="scene" data-k="plant">
-    <defs>${sceneDefs(u,lite)}
-      <linearGradient id="leaf${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00F076"/><stop offset="1" stop-color="#00A85A"/></linearGradient>
-      <linearGradient id="pot${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A4A4A"/><stop offset="1" stop-color="#242424"/></linearGradient>
-      <clipPath id="potC${u}"><path d="M74 128 h52 l-6 30 h-40 z"/></clipPath></defs>
-    <rect width="200" height="170" fill="#0A0A0A"/>
-    <ellipse cx="100" cy="70" rx="78" ry="62" fill="url(#glow${u})" opacity=".35"/>
-    <ellipse cx="100" cy="160" rx="52" ry="7" fill="#000" opacity=".6"/>
-    <g class="plant">
-      <path class="stem" d="M100 130 C100 104 98 82 100 52" stroke="#00B85A" stroke-width="5" fill="none" stroke-linecap="round" style="transform-origin:100px 130px"/>
-      <path class="leafy" d="M100 112 C82 112 66 100 64 82 C82 82 98 92 100 112z" fill="url(#leaf${u})" style="transform-origin:100px 112px"/>
-      <path class="leafy" d="M100 98 C118 98 134 86 136 68 C118 68 102 78 100 98z" fill="url(#leaf${u})" style="transform-origin:100px 98px"/>
-      <path class="leafy" d="M100 84 C86 84 72 74 70 58 C86 58 98 68 100 84z" fill="url(#leaf${u})" style="transform-origin:100px 84px"/>
-      <g class="bud" style="transform-origin:100px 48px"><ellipse cx="100" cy="42" rx="8" ry="13" fill="url(#leaf${u})"/><ellipse cx="100" cy="42" rx="3.5" ry="8" fill="#000" opacity=".2"/></g>
+/* ---------- 5 · glacier --------------------------------------------------------------------------- */
+function glacierSticker(u){
+  return `<svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet" class="sticker" data-k="glacier">
+    <defs>${stickerDefs(u,'#2C86AE')}</defs>
+    <rect width="200" height="170" fill="#070707"/>${halo(u)}
+    <ellipse cx="100" cy="152" rx="76" ry="12" fill="#0E2B3A"/>
+    <g class="chunk a" opacity="0"><path d="M34 148 l10 -14 l16 4 l4 12z" fill="#BEE9FA"/></g>
+    <g class="chunk b" opacity="0"><path d="M140 150 l12 -16 l16 6 l2 12z" fill="#BEE9FA"/></g>
+    <g class="berg">
+      <g class="idle">
+        <path d="M100 30 L150 118 a14 14 0 0 1 -12 22 H62 a14 14 0 0 1 -12 -22 Z" fill="url(#ice${u})"/>
+        <path d="M100 30 L128 78 L100 92 L72 78 Z" fill="#FFFFFF" opacity=".55"/>
+        <path d="M84 140 l4 -22 M116 140 l-4 -22" stroke="#7FC6E4" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+        ${face(100,106,1.05,'#1B4A63')}
+      </g>
     </g>
-    <path d="M74 128 h52 l-6 30 h-40 z" fill="url(#pot${u})"/>
-    <ellipse cx="100" cy="128" rx="26" ry="5" fill="#3A2A20"/>
-    <ellipse cx="100" cy="128" rx="26" ry="5" fill="none" stroke="#5A5A5A" stroke-width="1"/>
-    ${texture(u,lite,'potC'+u,.25)}
+    ${sweat([[132,96],[68,100]])}
   </svg>`;
 }
 
-/* ---------- registry: how each mascot is drawn, named and degraded ---------- */
+/* ---------- registry ------------------------------------------------------------------------------
+   state() is a two-word status; line() is one plain sentence with no numbers in it at all (round 19).
+   apply() sets only geometry and the mood class — every bit of motion lives in CSS.                  */
 const ECO = {
-  plant: { label:'Plant', chip:'🪴 Plant', svg:plantScene,
-    state:t=>t>=0.7?'Wilting':t>=0.5?'Drooping':'Thriving',
-    line:t=>t>=1?'Past the limit — it can’t recover today.':`Health ${Math.round((1-Math.min(1,t))*100)}% — it fades with every prompt.`,
-    apply(root,t,fast){ const p=root.querySelector('.plant'); if(!p) return; p.classList.toggle('fast',!!fast);
-      const c=Math.min(1,t), w=clamp01((t-1)/0.5), droop=c*45+w*30, lean=c*8+w*12;
-      const leaf = w>0 ? mix('#FF4D5E','#5A4A3A',w) : c<0.5 ? mix('#00F076','#FFB020',c/0.5) : mix('#FFB020','#FF4D5E',(c-0.5)/0.5);
-      p.querySelectorAll('.leafy').forEach((l,i)=>{ const dir=i===1?-1:1; l.style.transform=`rotate(${dir*droop*(0.7+i*0.2)}deg) scaleY(${1-c*0.15-w*0.3})`; l.style.fill=leaf; l.style.opacity=String(1-c*0.15-w*0.3); });
-      const st=p.querySelector('.stem'); st.style.transform=`rotate(${lean}deg) scaleY(${1-c*0.08-w*0.15})`; st.style.stroke=w>0?mix('#8A5A2B','#5A4A3A',w):mix('#00B877','#8A5A2B',c);
-      const bud=p.querySelector('.bud'); bud.style.transform=`rotate(${lean*2.5}deg) scale(${1-c*0.5-w*0.5})`; bud.style.opacity=String(1-c*0.5-w*0.5); } },
+  plant: { label:'Plant', chip:'🪴 Plant', svg:plantSticker,
+    state:t=>t>=0.7?'Drying out':t>=0.5?'Wilting':'Thriving',
+    line:t=>t>=0.7?'Your plant has dried out and is dropping leaves.':t>=0.5?'Your plant is wilting from the heat.':'Your plant is plump and green.',
+    apply(root,t){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
+      const col = c<0.5 ? mix('#3FD983','#F2C14E',c/0.5) : mix('#F2C14E','#B4553C',(c-0.5)/0.5);
+      root.querySelectorAll('.lf').forEach((l,i)=>{ const dir=i===1?-1:1;
+        xf(l,{rot:dir*(c*38+w*22), sx:1-c*0.16-w*0.2, ox:100, oy:104});
+        const e=l.querySelector('ellipse'); if(e) e.style.fill=w>0?mix(col,'#7A5A3A',w):col; });
+      const st=root.querySelector('.stem'); if(st){ xf(st,{rot:c*7, sx:1, sy:1-c*0.1, ox:100, oy:122}); st.style.stroke=mix('#1FA862','#8A5A2B',c); }
+      const f=root.querySelector('.fallen'); if(f){ f.style.opacity=String(clamp01((c-0.6)/0.3)); xf(f,{x:-c*6,y:c*4,ox:54,oy:152}); } } },
 
-  bear: { label:'Polar bear', chip:'🐻‍❄️ Polar bear', svg:bearSVG,
-    state:t=>t>=0.7?'Ice breaking up':t>=0.5?'Ice thinning':'Ice holding',
-    line:t=>`Ice floe at ${Math.round((1-0.4*Math.min(1,t))*100)}% of its size${t>=1?' — and still melting.':'.'}`,
-    apply(root,t,fast){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
-      const floe=root.querySelector('.floe'), bear=root.querySelector('.bear'), head=root.querySelector('.head');
-      if(!floe) return;
-      /* the floe melts down to 60 % of its size across the day's budget (round 15 spec) */
-      floe.style.transform=`translateY(${(c*5+w*4).toFixed(2)}px) scale(${(1-0.4*c-0.08*w).toFixed(3)})`;
-      /* the bear shrinks far less than its ice, so it looks increasingly cramped but still stands on it */
-      if(bear) bear.style.transform=`translate(${(-5*c).toFixed(2)}px, ${(5.6*c+4*w).toFixed(2)}px) scale(${(1-0.16*c-0.04*w).toFixed(3)})`;
-      if(head) head.style.transform=`rotate(${(c*11+w*8).toFixed(1)}deg)`;
-      const set=(sel,o)=>{ const e=root.querySelector(sel); if(e) e.style.opacity=String(o); };
-      set('.drips', c*0.9); set('.tear', clamp01((c-0.55)/0.35)); set('.ripple', 0.5+c*0.4); } },
+  bear: { label:'Polar bear', chip:'🐻‍❄️ Polar bear', svg:bearSticker,
+    state:t=>t>=0.7?'Stranded':t>=0.5?'Restless':'Comfortable',
+    line:t=>t>=0.7?'The bear is balancing on the last of the ice.':t>=0.5?'The ice is shrinking under the bear.':'The bear has plenty of ice to sit on.',
+    apply(root,t){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
+      xf(root.querySelector('.ice'), {y:c*4, sx:1-0.55*c-0.1*w, sy:1-0.3*c, ox:100, oy:150});
+      xf(root.querySelector('.pose'), {y:c*7, rot:c*5, sx:1-0.08*c, ox:100, oy:124}); } },
 
-  glacier: { label:'Glacier', chip:'🧊 Glacier', svg:glacierSVG,
-    state:t=>t>=0.7?'Calving':t>=0.5?'Retreating':'Holding fast',
-    line:t=>`Ice wall down to ${Math.round((1-0.45*Math.min(1,t))*100)}% of its height${t>=1?' — chunks are breaking off.':'.'}`,
-    apply(root,t,fast){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
-      const wall=root.querySelector('.wall'); if(!wall) return;
-      wall.style.transform=`scale(${(1-0.05*c).toFixed(3)}, ${(1-0.45*c-0.1*w).toFixed(3)})`;
-      root.querySelectorAll('.crack').forEach(e=>e.style.strokeOpacity=String(clamp01((c-0.35)/0.4)*0.75));
-      const set=(sel,o)=>{ const e=root.querySelector(sel); if(e) e.style.opacity=String(o); };
-      set('.bergs', clamp01((c-0.45)/0.4)); set('.melt', c*0.8); set('.ripple', 0.45+c*0.45);
-      root.querySelectorAll('.melt').forEach(e=>e.style.strokeOpacity=String(c*0.7)); } }
+  axolotl: { label:'Axolotl', chip:'🦎 Axolotl', svg:axolotlSticker,
+    state:t=>t>=0.7?'Stranded':t>=0.5?'Low water':'Swimming happily',
+    line:t=>t>=0.7?'The axolotl is stranded on dry glass.':t>=0.5?'The water in the tank is getting low.':'The axolotl is swimming happily.',
+    apply(root,t){ const c=Math.min(1,t);
+      xf(root.querySelector('.water'), {sx:1, sy:1-0.88*c, ox:100, oy:146});
+      xf(root.querySelector('.pet'), {y:c*34, rot:c*6, sx:1, sy:1-0.18*c, ox:100, oy:100});
+      const bob=root.querySelector('.bob'); if(bob) bob.style.animationPlayState = c>=0.7?'paused':'running'; } },
+
+  leopard: { label:'Snow leopard', chip:'🐆 Snow leopard', svg:leopardSticker,
+    state:t=>t>=0.7?'Nowhere cool':t>=0.5?'Restless':'Resting easy',
+    line:t=>t>=0.7?'She is sitting on bare, grey rock.':t>=0.5?'The snow is thinning under her.':'The leopard is resting on deep snow.',
+    apply(root,t){ const c=Math.min(1,t);
+      const snow=root.querySelector('.snow'); if(snow) snow.style.fill=mix('#EAF6FF','#5B5F66',c);
+      xf(root.querySelector('.peak'), {sx:1-0.12*c, sy:1-0.45*c, ox:100, oy:152});
+      xf(root.querySelector('.pose'), {y:c*9, sx:1, sy:1-0.07*c, ox:100, oy:140});
+      xf(root.querySelector('.tail'), {rot:c*26, ox:136, oy:126}); } },
+
+  glacier: { label:'Glacier', chip:'🧊 Glacier', svg:glacierSticker,
+    state:t=>t>=0.7?'Breaking apart':t>=0.5?'Melting':'Solid',
+    line:t=>t>=0.7?'The ice wall is breaking apart.':t>=0.5?'The glacier is sweating and melting away.':'The glacier is holding solid.',
+    apply(root,t){ const c=Math.min(1,t), w=clamp01((t-1)/0.5);
+      xf(root.querySelector('.berg'), {sx:1-0.18*c, sy:1-0.5*c-0.12*w, ox:100, oy:150});
+      const a=root.querySelector('.chunk.a'), b=root.querySelector('.chunk.b'), k=clamp01((c-0.45)/0.35);
+      if(a){ a.style.opacity=String(k); xf(a,{x:-14*k, y:6*k, rot:-12*k, ox:48, oy:140}); }
+      if(b){ b.style.opacity=String(k); xf(b,{x:14*k, y:6*k, rot:12*k, ox:154, oy:140}); } } }
 };
+
 const mascot=()=>ECO[S.mascot]||ECO.plant;
 const mascotId=()=>ECO[S.mascot]?S.mascot:'plant';
 /* Renders the chosen mascot into a container. Returns the element that `applyEco` animates.
@@ -828,10 +876,14 @@ function applyEco(box, pct, fast=false, id=mascotId(), timelapse=false){
     else show(target);
     return;
   }
-  const s=box.querySelector('svg'); if(!s) return; s.classList.toggle('fast',!!fast); ECO[id].apply(s,pct,fast);
+  const s=box.querySelector('svg'); if(!s) return;
+  s.classList.toggle('fast',!!fast);
+  s.classList.toggle('stressed', pct>=UI.plant.thriving);      // 50 % of the budget: the character starts to suffer
+  s.classList.toggle('critical', pct>=UI.plant.drooping);
+  ECO[id].apply(s,pct,fast);
 }
 
-/* ===================================================================================== [Plant] kept for the Grove mock and the share card */
+/* ============================================================== [Plant] the old v7 plant, kept only for the Grove mock */
 function plantSVG(){
   return `<svg class="plant" id="plantSvg" viewBox="0 0 160 190">
     <ellipse cx="80" cy="178" rx="48" ry="8" fill="var(--soil)"/>
@@ -945,7 +997,7 @@ function trackSession(promptMl, now=Date.now()){
   if(S.sessionCheckins!==false && !SESSION.notified && now-SESSION.start >= SESSION_RULES.checkInMin*60000){
     SESSION.notified=true;
     const title=`You’ve been prompting for ${mins} minutes.`, body=`That session has evaporated ${fmt(SESSION.ml)} mL of water. A good moment for a breather.`;
-    alertCard('⏱️', title, body, '', 12);
+    alertCard('⏱️', title, body);
     if('Notification' in window && Notification.permission==='granted') new Notification('Sipcount', { body:`${title} ${body}` });
   }
 }
@@ -997,7 +1049,7 @@ function renderToday(){
   $('todayLeft').textContent=T.total>S.budget?`${fmt(T.total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
   $('ecoPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('ecoPill').className='pill '+zonePill(T.pct);
   const M=mascot();
-  $('ecoTitle').textContent=M.label; $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=M.state(T.pct); $('ecoState').style.color=col;
+  $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=M.state(T.pct); $('ecoState').style.color=col;
   $('ecoLine').textContent=M.line(T.pct);
   /* Connected catch-up animation: the mascot starts pristine and degrades in step with the drop's drain. */
   renderEco($('ecoArt'));
@@ -1012,15 +1064,13 @@ function renderToday(){
   $('brandBars').innerHTML=I.brands.map(([n,ml,cnt])=>`<div class="brand"><span class="nm">${n}</span><div class="bar2"><i style="width:${Math.round(ml/(I.total||1)*100)}%"></i></div><span class="v">${fmt(ml)} mL · ${cnt}</span></div>`).join('');
   $('tPrompts').textContent=T.n; $('tImages').textContent=T.img||0;
   let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
-  $('tWeek').textContent=fmt(w)+' mL'; $('tStreak').textContent=state==='Wilting'?0:S.streak;
+  $('tWeek').textContent=fmt(w); $('tStreak').textContent=state==='Wilting'?0:S.streak;
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15, a=Math.round(p1*100), b=100-a;
   $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=a+'%'; $('p2').textContent=b+'%';
-  $('scopePlain').textContent=`${a}% of your footprint cools the AI servers directly. ${b}% is used by the power plants generating electricity for those servers.`;
   const light='Asking for a <b>shorter answer</b> saves more water than asking a shorter question.';
   $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
   $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
-  renderEco($('widgetCardArt'),{lite:true}); applyEco($('widgetCardArt'), T.pct, true);
 }
 $('simBtn').onclick=simulateHeavyQuery;
 
@@ -1050,7 +1100,8 @@ async function mascotImage(pct, w=920, h=560){
   if(!svg){ box.remove(); return null; }
   svg.setAttribute('width',w); svg.setAttribute('height',h);
   /* the page stylesheet is not carried into a standalone SVG — inline the one rule the art depends on */
-  svg.insertAdjacentHTML('afterbegin','<style>*{transform-box:view-box}</style>');
+  const stressed=svg.classList.contains('stressed');
+  svg.insertAdjacentHTML('afterbegin',`<style>*{transform-box:view-box}.faceOk{opacity:${stressed?0:1}}.faceBad{opacity:${stressed?1:0}}.sweat{opacity:${stressed?.9:0}}</style>`);
   const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
   box.remove();
   return await load(src);
