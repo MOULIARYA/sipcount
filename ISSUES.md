@@ -68,6 +68,13 @@ Third art direction, and the one that works. Round 1 was original layered SVG; r
 - **"Unlock all" added to Settings** for review sessions, beside Export CSV and Load sample week; it toggles back to whatever has actually been earned. Loading the sample week already unlocked everything — this just makes it obvious. **Remove before release.**
 - Open: the four characters have very different proportions (bear 0.75:1, glacier 1.77:1), so the glacier nearly fills the card while the bear sits about 140 px wide in a 340 px space. A per-character scale would even them out — waiting on her opinion after she sees it on a device.
 
+
+**Round 26 (2026-09-22, after the first push).**
+- **Five stages of art now have five stages of words.** The status text was still on the old three-step scale, so the picture and the label disagreed. Both are now driven by one `stageOf()` calculation, which makes disagreement impossible. Plant: Thriving · Thirsty · Wilting · Drying out · Parched. Bear: Comfortable · Uneasy · Restless · Balancing · Stranded. Leopard: Resting easy · Warming up · Restless · Too warm · Nowhere cool. Glacier: Solid · Dripping · Melting · Cracking · Breaking apart. The sentence under the character now appears from stage 2 rather than at the halfway mark.
+- **Explainer popover was being clipped.** It was positioned inside `.phone`, which has `overflow:hidden`, so any popover near the bottom of the screen was cut off. It now lives outside the frame, positioned in viewport coordinates, clamped to stay on screen, and flips above the ⓘ when there is no room below. It closes on scroll.
+- **Character art invisible in Settings on iOS.** Could not reproduce here (no iOS), so the two most likely causes were removed rather than guessed at: the gallery now renders a single plain `<img>` in normal flow instead of a stack of absolutely positioned frames — Safari is unreliable with absolutely positioned children inside a `<button>`, which is what the gallery card is — and `-webkit-appearance:none` was added, since Safari clips button content without it. **If it still fails on her phone, the next test is to open `assets/plant-0.webp` directly in her browser**: if that is blank too, it is the file, not the layout.
+- **`docs/test/regression.js` added** — 45 assertions covering the whole prototype, including that the stage picture and the stage words agree. The earlier ad-hoc test scripts lived in a scratch directory and were lost when it was cleared; this one is in the repo.
+
 ## Partner feedback rounds 22–23 (2026-09-22, verbal) — dashboard trims, then the Settings pass. Delivered as v14
 
 Reviewed with her before building — the write-up, the conflicts it raised and her answers are in `docs/FEEDBACK-REVIEW-2026-09-22.md`.
