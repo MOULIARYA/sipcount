@@ -74,20 +74,21 @@ h2{font-family:var(--body);font-size:.78em;font-weight:800;letter-spacing:.12em;
 .drop svg{width:100%;height:100%;display:block}
 .fill{transition:transform 3s cubic-bezier(.22,.61,.36,1),fill .6s}
 /* Ecosystem module: the mascot is the focal point — art on top, small quiet text under it (round 17) */
-.eco{display:flex;flex-direction:column;gap:10px;padding:12px 12px 14px}
-.ecoart{width:100%;height:190px;border-radius:14px;overflow:hidden;background:#070707;border:1px solid var(--line)}
-.ecoart svg,.ecoart img{width:100%;height:100%;display:block;object-fit:cover}
+.eco{display:flex;flex-direction:column;gap:8px;padding:4px 4px 10px;background:transparent;border:0}
+.ecoart{width:100%;height:190px;border-radius:14px;overflow:hidden;background:transparent;border:0}
+.ecoart svg{width:100%;height:100%;display:block;object-fit:cover;border-radius:14px}
+.ecoart img{width:100%;height:100%;display:block;object-fit:contain}   /* cut-out art: whole, never cropped */
 .eco .meta{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:0 4px}
 .eco .state{font-family:var(--display);font-size:.95em;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.eco .alive{font-family:var(--body);font-size:.62em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-left:2px}
 .eco .ecoline{font-size:.82em;color:var(--muted);line-height:1.45;padding:0 4px;margin:0}
-.mini{width:62px;height:56px;flex:none;border-radius:10px;overflow:hidden;background:#070707;border:1px solid var(--line)}
-.mini svg,.mini img{width:100%;height:100%;display:block;object-fit:cover}
+.mini{width:62px;height:56px;flex:none;border-radius:10px;overflow:hidden;background:transparent;border:0}
+.mini svg{width:100%;height:100%;display:block;object-fit:cover}
+.mini img{width:100%;height:100%;display:block;object-fit:contain}
 .ecoline{font-size:.85em;color:#A3A3A3;border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
 /* click-to-expand explainers — keeps the dashboard free of jargon (round 15) */
 .info{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.72em;font-weight:800;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
 .info:hover{color:var(--text);border-color:#3A3A3A} .info[aria-expanded=true]{color:var(--green);border-color:var(--green)}
-.tip{display:none;background:#121212;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:11px 13px;font-size:.85em;color:#D8D8D8;line-height:1.55;margin-top:-6px}
-.tip.open{display:block} .tip b{color:var(--green)}
 /* widget discovery: a single thin row, never competing with the numbers (round 17) */
 .widgetrow{background:#121212;border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:8px 10px 8px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
 .widgetrow .sub{font-size:.8em}
@@ -164,11 +165,12 @@ nav{display:flex;border-top:1px solid var(--line);background:#0A0A0A;padding:6px
 nav button{flex:1;border:0;background:transparent;color:var(--dim);font:inherit;font-size:.68em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:8px 2px 6px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:var(--tap)}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button[aria-current=page]{color:var(--green)}
-/* Notifications live in the vertical centre and slide in from the right edge — never over the header,
-   never on a timer; they wait until the reader deals with them (round 18). */
-.alerts{position:absolute;top:50%;right:14px;transform:translateY(-50%);width:min(300px,calc(100% - 28px));display:flex;flex-direction:column;gap:10px;z-index:6;pointer-events:none}
-.alert{background:#181818;color:var(--text);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:12px 38px 12px 14px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 18px 44px rgba(0,0,0,.8);transform:translateX(125%);opacity:0;transition:transform .5s cubic-bezier(.2,.9,.3,1.15),opacity .35s;pointer-events:auto;font-size:.93em;position:relative;user-select:none}
-.alert.in{transform:translateX(0);opacity:1}
+/* Notifications rise from the bottom, just above the tab bar: the number and the character stay in
+   view, nothing is covered at the top, and they still wait to be dealt with (round 22, option B). */
+.alerts{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;z-index:6;pointer-events:none;padding:0 10px 10px}
+.alert{background:#1A1A1A;color:var(--text);border:1px solid var(--line);border-top:3px solid var(--green);border-radius:16px 16px 12px 12px;padding:13px 38px 14px 14px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 -10px 40px rgba(0,0,0,.85);transform:translateY(115%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.1),opacity .3s;pointer-events:auto;font-size:.93em;position:relative;user-select:none;touch-action:pan-y}
+.alert.in{transform:translateY(0);opacity:1}
+.alert::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:34px;height:3px;border-radius:99px;background:#3A3A3A}
 .alert .ic{font-size:1.35em;line-height:1;margin-top:1px}
 .alert b{font-family:var(--display);font-weight:700;font-size:.93em;display:block;line-height:1.35}
 .alert .more{display:none;color:#D8D8D8;margin-top:8px;font-size:.88em;line-height:1.55;border-top:1px solid var(--line);padding-top:8px}
@@ -177,7 +179,7 @@ nav button[aria-current=page]{color:var(--green)}
 .alert.open{background:#1E1E1E;cursor:default}
 .alert.open .tap{display:none}
 .alert .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:.85em;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.alert.fact{border-left-color:var(--amber)}
+.alert.fact{border-top-color:var(--amber)}
 /* All-time impact card: darker, muted, deliberately quieter than the daily metrics */
 .lifetime{background:#0C0C0C;border-color:#222}
 .lifenum{font-family:var(--display);font-size:2.1em;font-weight:700;color:#A3A3A3;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:6px}
@@ -207,6 +209,7 @@ nav button[aria-current=page]{color:var(--green)}
 .alert{cursor:pointer}
 .alert .hook{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;display:block}
 .alert .hook:focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:6px}
+.alert b{padding-top:2px}
 .alert .tap{color:var(--green);font-weight:800;font-size:.76em;letter-spacing:.02em;display:inline-block;margin-top:3px}
 .alert.fact{border-left-color:var(--amber)} .alert.fact .tap{color:var(--amber)}
 .alert:hover{background:#1E1E1E}
@@ -223,6 +226,10 @@ nav button[aria-current=page]{color:var(--green)}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;padding:10px 16px;border-radius:99px;font-weight:800;font-size:.93em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;z-index:12}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .demo{font-size:.78em;color:var(--dim);text-align:center;margin:0}
+.popcatch{position:absolute;inset:0;z-index:11}
+.pop{position:absolute;z-index:12;width:min(290px,calc(100% - 28px));background:#171717;border:1px solid #2E2E2E;border-radius:12px;padding:10px 12px;font-size:.8em;line-height:1.55;color:#C2C2C2;box-shadow:0 14px 34px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);transition:opacity .16s,transform .16s}
+.pop.in{opacity:1;transform:translateY(0)}
+.pop::after{content:"";position:absolute;top:-5px;right:14px;width:9px;height:9px;background:#171717;border-left:1px solid #2E2E2E;border-top:1px solid #2E2E2E;transform:rotate(45deg)}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
 .sheet.open{display:flex}
 .sheet .card{background:var(--surface);border-radius:22px;padding:22px 18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto;border:1px solid var(--line)}
@@ -277,8 +284,24 @@ nav button[aria-current=page]{color:var(--green)}
 .previewtag{position:absolute;top:10px;left:10px;background:#2563EB;color:#fff;font-size:.62em;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
 .ecoart{position:relative}
 /* locked characters */
-.chip[data-locked]{opacity:.45;cursor:not-allowed}
-.chip[data-locked]::after{content:"🔒";margin-left:2px;font-size:.9em}
+/* character gallery: you can see what you haven't earned yet — that is the point (round 23) */
+.roster{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pick{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:5px;cursor:pointer;font:inherit;color:var(--text);text-align:left;min-height:0}
+.pick .art{display:block;height:94px;border-radius:10px;overflow:hidden;background:transparent}
+.pick .art svg{width:100%;height:100%;display:block;object-fit:cover}
+.pick .art img{width:100%;height:100%;display:block;object-fit:contain}
+.pick .nm{font-family:var(--display);font-weight:800;font-size:.86em;letter-spacing:-.01em}
+.pick .req{font-size:.63em;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;font-weight:800}
+.pick[aria-pressed=true]{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.pick[aria-pressed=true] .art svg,.pick[aria-pressed=true] .art img{animation:pickfloat 3.4s ease-in-out infinite}
+@keyframes pickfloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.04)}}
+.pick[data-locked]{cursor:not-allowed}
+.pick[data-locked] .art{filter:grayscale(1) brightness(.45)}
+.pick[data-locked] .nm{color:var(--muted)}
+.pick[data-locked]::after{content:"🔒";position:absolute;top:14px;right:14px;font-size:1.05em;opacity:.9}
+.pick.fresh{animation:shimmer 1.9s ease-out 2}
+@keyframes shimmer{0%{box-shadow:0 0 0 0 rgba(0,240,118,.5)}100%{box-shadow:0 0 0 16px rgba(0,240,118,0)}}
+@media (prefers-reduced-motion:reduce){.pick .art svg,.pick .art img,.pick.fresh{animation:none!important}}
 /* battery: nothing animates while the character is off screen (round 20 guardrail) */
 .sticker.still .idle,.sticker.still .bob,.sticker.still .sweat{animation-play-state:paused}
 /* the supplied artwork breathes and reacts exactly like the drawn characters (round 20) */
@@ -308,6 +331,9 @@ nav button[aria-current=page]{color:var(--green)}
 <body>
 <div class="phone">
   <div class="alerts" id="alerts" aria-live="polite"></div>
+  <!-- explainer: a quiet note hanging under the ⓘ you tapped — no backdrop, no buttons (round 24) -->
+  <div class="popcatch" id="popCatch" hidden></div>
+  <div class="pop" id="tipPop" role="note" hidden></div>
 
   <!-- ============ AGE SPLASH ============ -->
   <section class="splash" id="s-splash">
@@ -337,7 +363,7 @@ nav button[aria-current=page]{color:var(--green)}
           <span class="eyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
           <div class="ring" style="margin-top:10px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
-          <div class="row between wrap" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span><span class="sub" id="todayLeft" style="font-size:.8em">—</span></div>
+          <div class="row" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span></div>
         </div>
       </div>
     </div>
@@ -346,8 +372,8 @@ nav button[aria-current=page]{color:var(--green)}
     <div class="panel eco">
       <div class="ecoart" id="ecoArt" aria-hidden="true"></div>
       <div class="meta">
-        <h3 class="state" id="ecoState"><span id="ecoIco"></span> <span id="ecoStateTxt"></span></h3>
-        <div class="row" style="gap:6px"><button class="btn line small" id="simBtn" style="padding:5px 9px;font-size:.72em" aria-expanded="false">⚡ Preview</button><button class="info" data-tip="eco" aria-controls="tip-eco" aria-expanded="false" aria-label="Why the ecosystem changes">i</button></div>
+        <h3 class="state" id="ecoState"><span id="ecoIco"></span> <span id="ecoStateTxt"></span> <span class="alive" id="ecoAlive"></span></h3>
+        <div class="row" style="gap:6px"><button class="btn line small" id="simBtn" style="padding:5px 9px;font-size:.72em" aria-expanded="false">⚡ Preview</button><button class="info" data-tip="eco" aria-haspopup="dialog" aria-label="Why the ecosystem changes">i</button></div>
       </div>
       <p class="ecoline" id="ecoLine"></p>
       <!-- preview scrubber: hidden until asked for, so it never crowds the number (round 20) -->
@@ -357,24 +383,21 @@ nav button[aria-current=page]{color:var(--green)}
         <button class="btn line small" id="scrubExit" aria-label="Close preview">✕</button>
       </div>
     </div>
-    <div class="tip" id="tip-eco" role="region" aria-label="Explainer"></div>
     <div class="ecoline" id="oppCost"></div>
     <!-- ↑ everything above is the story: the number, the drop, the mascot, one plain line (round 16) -->
 
-    <!-- widget discovery: one thin line between the hero and the insights (round 17) -->
-    <div class="widgetrow" id="widgetCard">
+    <!-- widget discovery shows once, on the first run, then lives in Settings (round 22) -->
+    <div class="widgetrow" id="widgetCard" hidden>
       <span class="sub">Add Sipcount to your home screen.</span>
-      <button class="cta" id="widgetAdd" aria-label="Add the Sipcount widget">⊞ Add</button>
+      <div class="row" style="gap:6px"><button class="cta" id="widgetAdd" aria-label="Add the Sipcount widget">⊞ Add</button><button class="pillbtn" id="widgetDismiss" aria-label="Not now">✕</button></div>
     </div>
 
-    <div class="nudge" id="todayNudge"></div>
 
     <div class="panel stack">
-      <div class="row between"><div class="row" style="gap:8px"><h2>Insights</h2><button class="info" data-tip="insights" aria-controls="tip-insights" aria-expanded="false" aria-label="How insights are worked out">i</button></div><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
+      <div class="row between"><div class="row" style="gap:8px"><h2>Insights</h2><button class="info" data-tip="insights" aria-haspopup="dialog" aria-label="How insights are worked out">i</button></div><span class="sub" id="insightScope" style="font-size:.8em">today</span></div>
       <div id="insightText" style="line-height:1.5"></div>
       <div id="brandBars"></div>
     </div>
-    <div class="tip" id="tip-insights" role="region" aria-label="Explainer"></div>
 
     <!-- every number beyond the story lives behind one tap (round 16) -->
     <details class="analytics" id="analytics">
@@ -383,13 +406,7 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="stack" style="gap:18px;padding-bottom:16px">
         <div class="metrics">
           <div class="metric"><div class="n" id="tPrompts">0</div><div class="k">Prompts today</div></div>
-          <div class="metric"><div class="n" id="tImages">0</div><div class="k">Images today</div></div>
-          <div class="metric"><div class="n" id="tWeek">0</div><div class="k">mL this week</div></div>
-          <div class="metric"><div class="n" id="tStreak">0</div><div class="k">Days alive</div></div>
-        </div>
-        <div class="stack" style="gap:8px">
-          <div class="row between"><span class="k2">Last 7 days</span><span class="pill" id="trendPill"></span></div>
-          <div class="bars" id="bars"></div>
+          <div class="metric"><div class="n" id="tWeek">0</div><div class="k">mL last 7 days</div></div>
         </div>
         <div class="stack" style="gap:8px">
           <span class="k2">All time</span>
@@ -413,8 +430,7 @@ nav button[aria-current=page]{color:var(--green)}
 
   <!-- ============ SIMULATE — kept to a picker, two sliders and one number (round 21) ============ -->
   <section class="screen" id="s-log">
-    <div class="row between"><h1>Try a prompt</h1><button class="info" data-tip="sim" aria-controls="tip-sim" aria-expanded="false" aria-label="How this estimate is made">i</button></div>
-    <div class="tip" id="tip-sim" role="region" aria-label="Explainer"></div>
+    <div class="row between"><h1>Try a prompt</h1><button class="info" data-tip="sim" aria-haspopup="dialog" aria-label="How this estimate is made">i</button></div>
 
     <div class="seg" id="vendorSeg" role="group" aria-label="AI tool">
       <button aria-pressed="true" data-v="openai">ChatGPT</button>
@@ -454,32 +470,6 @@ nav button[aria-current=page]{color:var(--green)}
     <div class="row" style="justify-content:center;gap:8px"><button class="pillbtn" id="logTen">+10 prompts</button><button class="pillbtn" id="sessionDemo">30-min session</button></div>
   </section>
 
-  <!-- ============ GROVE — explained in three steps, mock data (round 21) ============ -->
-  <section class="screen" id="s-grove">
-    <div class="row between wrap"><h1>Grove</h1><span class="pill">Demo</span></div>
-    <p class="sub" style="margin:-8px 0 0;font-size:.9em">One character. Everyone in the group keeps it alive.</p>
-
-    <div class="panel eco">
-      <div class="ecoart" id="groveArt" aria-hidden="true"></div>
-      <div class="meta">
-        <h3 class="state" id="groveState">—</h3>
-        <span class="pill good" id="grovePill">Alive 12 days</span>
-      </div>
-      <p class="ecoline" id="groveLine"></p>
-    </div>
-
-    <div class="steps">
-      <div class="step"><span class="n">1</span>Join a group</div>
-      <div class="step"><span class="n">2</span>Everyone's water counts</div>
-      <div class="step"><span class="n">3</span>Keep it alive longest</div>
-    </div>
-
-    <div class="stack" style="gap:8px"><span class="k2">This week</span><div class="panel list" id="groupList"></div></div>
-    <div class="stack" style="gap:8px"><span class="k2">Your group</span><div class="panel list" id="memberList"></div></div>
-    <button class="btn ghost" id="joinBtn">Join or create a group</button>
-    <p class="demo">Sample data. Real groups: opt-in, nickname only, daily totals — never prompts.</p>
-  </section>
-
   <!-- ============ ABOUT (copy supplied by the product owner, round 16; only "exact" → "estimated") ==== -->
   <section class="screen" id="s-about">
     <div class="about">
@@ -507,11 +497,10 @@ nav button[aria-current=page]{color:var(--green)}
 
     <!-- Your character: picker, name, unlocks — one block, almost no prose (round 20) -->
     <div class="stack" style="gap:10px">
-      <div class="row" style="gap:8px"><span class="k2">Your character</span><button class="info" data-tip="mascot" aria-controls="tip-mascot" aria-expanded="false" aria-label="About the characters">i</button></div>
-      <div class="chips" id="mascotChips" role="group" aria-label="Choose your character"></div>
+      <div class="row" style="gap:8px"><span class="k2">Your character</span><button class="info" data-tip="mascot" aria-haspopup="dialog" aria-label="About the characters">i</button></div>
+      <div class="roster" id="mascotChips" role="group" aria-label="Choose your character"></div>
       <label class="f" style="font-size:.8em">Name<input type="text" id="mascotName" maxlength="16" placeholder="Pip" autocomplete="off"></label>
       <span class="sub" id="mascotNote" style="font-size:.8em"></span>
-      <div class="tip" id="tip-mascot" role="region" aria-label="Explainer"></div>
     </div>
 
     <div class="stack" style="gap:10px">
@@ -523,8 +512,9 @@ nav button[aria-current=page]{color:var(--green)}
 
     <div class="stack" style="gap:10px">
       <span class="k2">App</span>
-      <label class="toggle"><span>Session check-ins</span><input type="checkbox" id="sessionToggle"></label>
+      <label class="toggle"><span>Remind me during long sessions</span><input type="checkbox" id="sessionToggle"></label>
       <label class="f" style="font-size:.8em">Text size<select id="sizeSel"><option value="standard">Standard</option><option value="dense">Compact</option><option value="large">Large print</option></select></label>
+      <div class="row between" style="font-size:.85em"><span class="sub">Home screen widget</span><button class="btn ghost small" id="widgetAdd2">⊞ Add widget</button></div>
       <div class="row between" style="font-size:.85em"><span class="sub" id="modeLabel"></span><button class="btn ghost small" id="redoAge">Change age</button></div>
     </div>
 
@@ -546,13 +536,13 @@ nav button[aria-current=page]{color:var(--green)}
     </details>
     <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
     <details><summary>Privacy</summary><p>Nothing you type ever leaves this device. We keep daily totals and your preferences here, and nothing else.</p></details>
-    <div class="row" style="gap:8px"><button class="btn danger small" id="wipeBtn">Clear my data</button><button class="btn ghost small" id="sampleBtn">Load sample week</button></div>
+    <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="csvBtn">Export CSV</button><button class="btn ghost small" id="sampleBtn">Load sample week</button><button class="btn ghost small" id="unlockBtn">Unlock all</button></div>
+    <button class="btn danger small" id="wipeBtn" style="align-self:flex-start">Clear my data</button>
   </section>
 
   <nav aria-label="Sections" id="nav">
     <button data-s="today" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/></svg>Today</button>
     <button data-s="log"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>Simulate</button>
-    <button data-s="grove" id="navGrove"><svg viewBox="0 0 24 24"><path d="M12 22v-8M12 14c-4 0-7-3-7-7 4 0 7 3 7 7zM12 14c4 0 7-3 7-7-4 0-7 3-7 7z"/></svg>Grove</button>
     <button data-s="about"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.2A4 4 0 0 1 17 17z"/><path d="M12 21v-4"/></svg>About</button>
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
@@ -574,7 +564,7 @@ nav button[aria-current=page]{color:var(--green)}
 <!-- ============ WEEKLY REPORT (full screen) ============ -->
 <div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Weekly digital sobriety report">
   <div class="inner">
-    <div class="row between"><span class="pill good">Sunday review</span><button class="btn ghost small" id="reportClose">Close</button></div>
+    <div class="row between"><span class="pill good">Weekly review</span><button class="btn ghost small" id="reportClose">Close</button></div>
     <div id="reportBody" class="stack" style="gap:14px"></div>
     <button class="btn" id="reportNeutral">Neutralize my water footprint</button>
   </div>
@@ -607,7 +597,7 @@ nav button[aria-current=page]{color:var(--green)}
    engine.js (one source of truth, mirrored by the Flutter app). Only UI-only settings live here. */
 const UI = {
   plant: { thriving:0.5, drooping:0.7 },                     // matches C.zones (green 0.5 / amber 0.7)
-  factCadence: { onOpen:true, everyPrompts:5, maxPerDay:3, seconds:9 },
+  factCadence: { onOpen:false, everyPrompts:5, maxPerDay:2 },   // round 22: quieter, and never on open
   /* All-time impact units — water-to-water only, no beverages (round 14). Volumes assumed (I-26):
      bathtub ≈ 150 L typical fill; fire truck ≈ 2,500 L pumper tank; Olympic pool = 2,500,000 L. */
   macro: [ ['Olympic pools',2500000], ['Fire trucks',2500], ['Bathtubs',150], ['Standard water bottles',0.5] ].map(([label,l])=>({label, ml:l*1000})),
@@ -638,9 +628,10 @@ function countTo(el, to, decimals=2, ms=700){
   const t0=performance.now(); const ease=x=>1-Math.pow(1-x,3);
   (function step(now){ const p=Math.min(1,(now-t0)/ms), v=from+(to-from)*ease(p); el.textContent=decimals?v.toFixed(decimals):fmt(v); if(p<1) requestAnimationFrame(step); })(t0);
 }
-function applyMode(){ document.documentElement.dataset.size=S.size||'standard'; $('navGrove').hidden=!S.social; $('nav').hidden=!S.mode; }
+function applyMode(){ document.documentElement.dataset.size=S.size||'standard'; $('nav').hidden=!S.mode; }
 function applyAge(age){ S.mode = age>=18?'min':'edu'; S.social = age>=13; save(); applyMode(); }
 function show(id){
+  if(id==='grove') id='today';                       // the group feature is parked (2026-09-22)
   $('s-splash').classList.toggle('active', id==='splash'); $('nav').hidden = id==='splash' || !S.mode;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+id));
   document.querySelectorAll('nav button').forEach(b=>{ if(b.dataset.s===id) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
@@ -648,7 +639,7 @@ function show(id){
   if(id!=='today' && preview!=null) exitPreview();
   document.querySelectorAll('.sticker,.ecoart,.mini').forEach(x=>x.classList.toggle('still', id!=='today'));
   if(id==='today'){ drainAnimated=false; ecoFresh=true; renderToday(); }
-  if(id==='settings') renderSettings(); if(id==='grove') renderGrove();
+  if(id==='settings') renderSettings();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
 function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
@@ -696,6 +687,10 @@ function alertCard(icon, title, more=''){
     hook.addEventListener('click',expand);
     el.addEventListener('click',e=>{ if(!e.target.closest('.x') && !e.target.closest('a') && !e.target.closest('.hook')) expand(); }); }
   el.querySelector('.x').onclick=e=>{ e.stopPropagation(); dismiss(); };
+  /* swipe it down to send it away — the usual gesture for a sheet like this */
+  let y0=null;
+  el.addEventListener('pointerdown',e=>{ y0=e.clientY; });
+  el.addEventListener('pointerup',e=>{ if(y0!=null && e.clientY-y0>40) dismiss(); y0=null; });
   return el;
 }
 /* Facts ride the same component: the hook is the headline, the sentence and its source appear
@@ -732,13 +727,13 @@ function checkAlerts(promptMl){
    per mascot (index 0 = pristine → 4 = collapsed). The module then renders <img> frames with a
    cross-fade instead of the SVG, and nothing else in this file changes. Frames belong in assets/ and
    should be WebP at 2× the largest display size (≈ 528×480).                                        */
-const F2=n=>({ dir:'assets/', frames:[`${n}-0.webp`,`${n}-1.webp`] });   // 0 = well, 1 = in trouble
-const MASCOT_ASSETS = { plant:F2('plant'), bear:F2('bear'), axolotl:null, leopard:F2('leopard'), glacier:F2('glacier') };
-/*  Round 20: the product owner supplied 3D claymorphism characters — two states each (well / in
-    trouble) for plant, bear, leopard and glacier. They render here; the axolotl has no artwork yet, so
-    it falls back to its drawn character below, as does anything whose image fails to load. The idle
-    breathing, the tap reaction and the flinch run on the artwork just as they do on the drawings.
-    More states later = more frames in this list, nothing else changes.                              */
+const F5=n=>({ dir:'assets/', frames:[0,1,2,3,4].map(i=>`${n}-${i}.webp`) });   // 0 = well … 4 = at the limit
+const MASCOT_ASSETS = { plant:F5('plant'), bear:F5('bear'), axolotl:null, leopard:F5('leopard'), glacier:F5('glacier') };
+/*  Round 25: hand-drawn characters, five stages each (plant, bear, leopard, glacier), generated on a
+    chromakey field and keyed to true transparency here, so the app's own black shows through. All five
+    stages of a character share one crop, so the character never jumps size or position as it declines.
+    The axolotl has no artwork, so it falls back to the drawn character below — as does anything whose
+    image fails to load. Breathing, the tap reaction and the flinch run on the artwork too.           */
 let uidN=0; const uid=()=>'e'+(++uidN);
 const clamp01=v=>Math.max(0,Math.min(1,v));
 
@@ -919,17 +914,34 @@ const ECO = {
    The principle the product owner set: fun to keep alive, never fun to kill. Everything rewarding here
    sits on the healthy side — tapping the character, days under budget, unlocking the next one. Nothing
    celebrates the decline, and none of it can touch the real numbers. */
-const UNLOCKS=[['plant',0],['bear',3],['axolotl',7],['leopard',14],['glacier',30]];
+/* The roster in the order people meet it. The axolotl stays drawn in this file but is out of the
+   picker until it has artwork of its own (round 23). */
+const UNLOCKS=[['plant',0],['bear',3],['leopard',7],['glacier',14]];
+const ROSTER=UNLOCKS.map(u=>u[0]);
 const need=id=>(UNLOCKS.find(u=>u[0]===id)||[,0])[1];
 const unlocked=id=>(S.unlocked||[]).includes(id);
-const petName=(id=mascotId())=>(S.names&&S.names[id])||ECO[id].subject;
+const petName=(id=mascotId())=>(S.names&&S.names[id])||ECO[id].subject;   // "Your plant is wilting…"
+const petLabel=(id=mascotId())=>(S.names&&S.names[id])||ECO[id].label;    // "Pip · Thriving" / "Plant · Thriving"
+/* Days alive = consecutive days ending today where the character never hit the limit; a day with no AI
+   use counts as survived. Deliberately different from the unlock streak below, which needs real usage
+   so nobody unlocks characters by not using the app. */
+function aliveDays(){
+  let n=0; const born=new Date(S.installedAt||Date.now());
+  for(let i=0;i<180;i++){ const d=new Date(); d.setDate(d.getDate()-i);
+    if(d < new Date(born.getFullYear(),born.getMonth(),born.getDate())) break;
+    const b=S.days[dayKey(d)], t=b?(b.s1||0)+(b.s2||0):0;
+    if(t>=S.budget) break; n++; }
+  return n;
+}
 /* consecutive days before today that had prompts and stayed under budget */
 function streakDays(){ let n=0; for(let i=1;i<=90;i++){ const d=new Date(); d.setDate(d.getDate()-i); const b=S.days[dayKey(d)];
     if(!b) break; const t=(b.s1||0)+(b.s2||0); if(b.n>0 && t<S.budget) n++; else break; } return n; }
+let recentUnlocks=[];
 function checkUnlocks(quiet){
   const st=Math.max(streakDays(), S.bestStreak||0); S.bestStreak=st; const fresh=[];
   UNLOCKS.forEach(([id,d])=>{ if(st>=d && !unlocked(id)){ S.unlocked.push(id); if(d>0) fresh.push(id); } });
   save();
+  if(fresh.length) recentUnlocks=[...new Set([...recentUnlocks,...fresh])];
   if(fresh.length && !quiet){ const m=ECO[fresh[0]];
     alertCard('🎉', `${m.label} unlocked.`, `${st} days under budget in a row. ${m.label} is waiting for you in Settings — every character you look after well brings out the next one.`); }
   return fresh;
@@ -969,14 +981,14 @@ function exitPreview(){ preview=null; $('scrub').hidden=true; $('simBtn').setAtt
   document.querySelector('.eco').classList.remove('previewing'); renderToday(); }
 
 const mascot=()=>ECO[S.mascot]||ECO.plant;
-const mascotId=()=>ECO[S.mascot]?S.mascot:'plant';
+const mascotId=()=>ROSTER.includes(S.mascot)&&ECO[S.mascot]?S.mascot:'plant';
 /* Renders the chosen mascot into a container. Returns the element that `applyEco` animates.
    If MASCOT_ASSETS has frames for this mascot, photographic frames are used instead of the SVG. */
 function renderEco(box, {lite=false, id=mascotId()}={}){
   const A=MASCOT_ASSETS[id], key=`${id}:${A&&A.frames?'img':'svg'}:${lite}`;
   if(box.dataset.k===key) return box;
   box.dataset.k=key;
-  box.innerHTML = A&&A.frames ? A.frames.map((f,i)=>`<img class="frame" data-i="${i}" src="${A.dir||''}${f}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i?0:1};transition:opacity .55s ease">`).join('')
+  box.innerHTML = A&&A.frames ? A.frames.map((f,i)=>`<img class="frame" data-i="${i}" src="${A.dir||''}${f}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:${i?0:1};transition:opacity .55s ease">`).join('')
                               : ECO[id].svg(uid(), lite).replace('</svg>','<g class="spark"><circle cx="58" cy="52" r="3" fill="#8FF0C2"/><circle cx="142" cy="46" r="2.4" fill="#8FF0C2"/><circle cx="100" cy="34" r="2.8" fill="#8FF0C2"/></g></svg>');
   box.style.position = A&&A.frames ? 'relative' : '';
   box.classList.toggle('imgmode', !!(A&&A.frames));
@@ -1052,15 +1064,22 @@ function playDay(){
 }
 /* ---------- click-to-expand explainers: plain English, no PUE/WUE anywhere on the dashboard ---------- */
 const TIPS={
-  eco:'<b>Why this matters:</b> your mascot mirrors the day’s water. Every prompt runs servers that are cooled with real freshwater, and the power stations feeding them evaporate more. As your total climbs toward your daily budget, the ecosystem beside the drop gives way — plant wilts, ice floe shrinks, glacier calves.',
-  insights:'<b>How this is worked out:</b> we group your prompts by the AI you used and how heavy the model was, then compare what you actually spent against the same prompts run on a lighter model. Nothing you typed is read or stored — only counts.',
-  sim:'<b>Why this matters:</b> generating a new image makes servers run much hotter than just reading text, requiring more water to cool them down. The same is true of long answers: writing one costs far more than reading your question.',
-  mascot:'Pick the companion that lands for you. All three tell the same story with the same numbers — only the picture changes, and your choice never leaves this device.'
+  eco:'Your character follows the day’s water. The closer you get to your budget, the worse it fares.',
+  insights:'Worked out from which AI you used and how heavy the model was — counts only, never what you typed.',
+  sim:'Images run the servers hotter than text, and long answers cost far more than your question.',
+  mascot:'Choose the one you’d miss. Every prompt takes a little water from something that’s actually out there.'
 };
-document.addEventListener('click',e=>{ const b=e.target.closest('.info'); if(!b) return;
-  const t=document.getElementById('tip-'+b.dataset.tip); if(!t) return;
-  const open=!t.classList.contains('open'); t.classList.toggle('open',open); b.setAttribute('aria-expanded',String(open));
-  if(open) t.innerHTML=TIPS[b.dataset.tip]||''; });
+function closeTip(){ $('tipPop').classList.remove('in'); $('tipPop').hidden=true; $('popCatch').hidden=true; }
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.info');
+  if(!b){ if(!$('tipPop').hidden && !e.target.closest('#tipPop')) closeTip(); return; }
+  const t=TIPS[b.dataset.tip]; if(!t) return;
+  const pop=$('tipPop'), ph=document.querySelector('.phone').getBoundingClientRect(), r=b.getBoundingClientRect();
+  pop.textContent=t; pop.hidden=false; $('popCatch').hidden=false;
+  pop.style.top=(r.bottom-ph.top+8)+'px'; pop.style.right=Math.max(10,ph.right-r.right-4)+'px';
+  requestAnimationFrame(()=>pop.classList.add('in'));
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('tipPop').hidden) closeTip(); });
 
 /* ===================================================================================== [Insights] */
 function insights(){
@@ -1078,7 +1097,7 @@ function insights(){
   if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?` Your ${mascot().label.toLowerCase()} holds steady.`:''}`); }
   else if(agg.tiers.reasoning && lightN/agg.n<0.5) parts.push(`Most prompts hit a reasoning model (≈10× the water). Try a standard model first.`);
   const tin=T.tin||0, tout=T.tout||0, wt=tin*C.tokenWeights.input+tout*C.tokenWeights.output;
-  if(wt>0 && T.n) parts.push(`Your questions were ${fmt(tin)} tokens and the answers ${fmt(tout)} — <b>${Math.round((tout*C.tokenWeights.output)/wt*100)}% of the water went into the answers</b>.`);
+  if(wt>0 && T.n) parts.push(`<b>${Math.round((tout*C.tokenWeights.output)/wt*100)}% of your water went into the answers</b>, not the questions.`);
   if(T.img){ const P=params(), one=estimate({tier:'standard',task:'image',params:P}).total, ref=estimate({tier:'standard',task:'text',inputTokens:100,outputTokens:300,params:P}).total;
     parts.push(`${T.img} image${T.img>1?'s':''} today ≈ ${Math.round(T.img*one/ref)} text prompts' worth of water.`); }
   return { scope, text:parts.join(' '), brands:brands.map(([v,a])=>[C.brands[v]||v, a.ml, a.n]), total:agg.ml };
@@ -1110,7 +1129,8 @@ function renderWidget(){
   [...$('widgetSizeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.w===widgetSize));
 }
 $('widgetSizeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; widgetSize=b.dataset.w; renderWidget(); };
-$('widgetAdd').onclick=()=>{ renderWidget(); $('widgetSheet').classList.add('open'); };
+$('widgetAdd').onclick=$('widgetAdd2').onclick=()=>{ renderWidget(); $('widgetSheet').classList.add('open'); S.widgetSeen=true; save(); };
+$('widgetDismiss').onclick=()=>{ S.widgetSeen=true; save(); $('widgetCard').hidden=true; };
 $('widgetClose').onclick=()=>$('widgetSheet').classList.remove('open');
 $('weeklyBtn').onclick=weeklyReport;
 $('reportClose').onclick=()=>$('reportSheet').classList.remove('open');
@@ -1142,8 +1162,8 @@ $('sessionDemo').onclick=()=>{ if(!SESSION.start){ SESSION.start=Date.now()-31*6
 function weeklyReport(){
   const A=weeklyAnalysis(store), max=Math.max(1,...A.vals);
   const bars=A.keys.map((k,i)=>`<div class="bar"><i class="${i===6?'today':''}" style="height:${Math.max(2,A.vals[i]/max*100)}%"><span>${fmt(A.vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][new Date(k+'T12:00:00').getDay()]}</em></div>`).join('');
-  const io = (A.tin||A.tout) ? `<div class="panel stack"><h2>Questions vs answers</h2><div class="iobar"><i style="width:${Math.round((1-A.outShare)*100)}%;background:var(--muted)"></i><i style="width:${Math.round(A.outShare*100)}%;background:var(--green)"></i></div><div class="row between" style="font-size:.78em;color:var(--muted);margin-top:6px"><span>${fmt(A.tin)} tokens asked</span><span>${fmt(A.tout)} tokens answered</span></div><div class="sub" style="margin-top:6px">About <b>${Math.round(A.outShare*100)}%</b> of this week's water went into generating answers, not reading your questions. Asking for shorter answers saves more than asking shorter questions.</div></div>` : '';
-  $('reportBody').innerHTML=`<span class="eyebrow" style="color:var(--green)">Weekly digital sobriety report</span><h1>${fmt(A.total)} mL this week</h1><div class="sub">${A.n} prompts · ${A.keys[0]} → ${A.keys[6]} · ${opportunityCost(A.total,'this week')}</div>
+  const io = (A.tin||A.tout) ? `<div class="panel stack"><h2>Questions vs answers</h2><div class="iobar"><i style="width:${Math.round((1-A.outShare)*100)}%;background:var(--muted)"></i><i style="width:${Math.round(A.outShare*100)}%;background:var(--green)"></i></div><div class="row between" style="font-size:.78em;color:var(--muted);margin-top:6px"><span>Your questions</span><span>The answers</span></div><div class="sub" style="margin-top:6px">About <b>${Math.round(A.outShare*100)}%</b> of the water went into generating answers, not reading your questions. Asking for shorter answers saves more than asking shorter questions.</div></div>` : '';
+  $('reportBody').innerHTML=`<h1>${fmt(A.total)} mL last 7 days</h1><div class="sub">${A.n} prompts · ${A.keys[0]} → ${A.keys[6]} · ${opportunityCost(A.total,'in the last 7 days')}</div>
     <div class="panel"><h2>7-day history</h2><div class="bars" style="margin-top:8px">${bars}</div></div>
     <div class="panel stack"><h2>Most used</h2><div>${A.top?`<b>${C.brands[A.top[0]]||A.top[0]}</b> — ${fmt(A.top[1])} mL (${Math.round(A.top[1]/(A.total||1)*100)}%)`:'No AI use recorded'}${A.topTier?` · mostly <b>${C.tiers[A.topTier[0]]?.label.toLowerCase()||A.topTier[0]}</b> models`:''}</div></div>
     ${io}
@@ -1180,11 +1200,13 @@ function renderToday(){
   $('budgetRing').className='z-'+z;
   $('oppCost').textContent=opportunityCost(total);
   $('todayBudget').textContent=`${Math.round(pct*100)}% of ${S.budget} mL used`;
-  $('todayLeft').textContent=total>S.budget?`${fmt(total-S.budget)} mL over budget`:`${fmt(left)} mL left in the drop`;
   $('ecoPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('ecoPill').className='pill '+zonePill(pct);
   const M=mascot();
-  $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=M.state(pct); $('ecoState').style.color=col;
-  $('ecoLine').textContent=M.line(pct, petName());
+  $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=`${petLabel()} · ${M.state(pct)}`; $('ecoState').style.color=col;
+  const ad=aliveDays(); $('ecoAlive').textContent=`${ad} ${ad===1?'day':'days'} alive`;
+  /* the sentence only earns its place once things start going wrong (round 22) */
+  const rough = pct>=UI.plant.thriving;
+  $('ecoLine').hidden=!rough; if(rough) $('ecoLine').textContent=M.line(pct, petName());
   /* Connected catch-up animation: the mascot starts pristine and degrades in step with the drop's drain. */
   renderEco($('ecoArt'));
   $('ecoArt').querySelector('.previewtag')?.remove();
@@ -1193,20 +1215,16 @@ function renderToday(){
   if(ecoFresh && !pv){ applyEco($('ecoArt'), 0); ecoFresh=false;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(seq===ecoSeq) applyEco($('ecoArt'), pct, false, mascotId(), true); })); }
   else applyEco($('ecoArt'), pct, pv);
-  const keys=last7(), vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;}), max=Math.max(1,...vals), avg=vals.reduce((a,b)=>a+b,0)/7;
-  $('bars').innerHTML=keys.map((k,i)=>{const d=new Date(k+'T12:00:00'); const cls=i===6?'today':(vals[i]>avg*1.6?'spike':''); return `<div class="bar"><i class="${cls}" style="height:${Math.max(2,vals[i]/max*100)}%"><span>${fmt(vals[i])}</span></i><em>${['S','M','T','W','T','F','S'][d.getDay()]}</em></div>`;}).join('');
-  const spikes=vals.filter(v=>v>avg*1.6).length; $('trendPill').className='pill '+(spikes?'warn':'good'); $('trendPill').textContent=spikes?`${spikes} spike day${spikes>1?'s':''}`:'Steady';
+  const keys=last7();
   const I=insights(); $('insightScope').textContent=I.scope; $('insightText').innerHTML=I.text;
   $('brandBars').innerHTML=I.brands.map(([n,ml,cnt])=>`<div class="brand"><span class="nm">${n}</span><div class="bar2"><i style="width:${Math.round(ml/(I.total||1)*100)}%"></i></div><span class="v">${fmt(ml)} mL · ${cnt}</span></div>`).join('');
-  $('tPrompts').textContent=T.n; $('tImages').textContent=T.img||0;
+  $('tPrompts').textContent=T.n;
   let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
-  $('tWeek').textContent=fmt(w); $('tStreak').textContent=state==='Wilting'?0:S.streak;
+  $('tWeek').textContent=fmt(w);
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15, a=Math.round(p1*100), b=100-a;
   $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=a+'%'; $('p2').textContent=b+'%';
-  const light='Asking for a <b>shorter answer</b> saves more water than asking a shorter question.';
-  $('todayNudge').className='nudge'+(state==='Thriving'?' quiet':''); $('todayNudge').style.borderLeftColor=state==='Thriving'?'':col;
-  $('todayNudge').innerHTML = state==='Wilting' ? `<span>🥀</span><span>${T.pct>=1?`${fmt(T.total-S.budget)} mL over budget`:`Red zone — ${fmt(left)} mL left`}. ${light}</span>` : state==='Drooping' ? `<span>🌱</span><span>Amber zone — ${fmt(left)} mL left. ${light}</span>` : `<span>🌿</span><span>${T.n?`Green zone — ${fmt(left)} mL left today.`:'Log a prompt to see its footprint.'} Nothing you type is ever stored — only the count.</span>`;
   $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
+  $('widgetCard').hidden = !!S.widgetSeen;   // first run only; afterwards it lives in Settings
 }
 $('simBtn').onclick=openPreview;
 $('scrubRange').oninput=e=>setPreview(+e.target.value/100);
@@ -1280,7 +1298,10 @@ const GROVE_MOCK = {
   members:[['You',0],['aanya_k',0.34],['rohan.dev',0.48],['maya',0.71],['dhruv',0.95]]
 };
 const weekBudget=()=>Math.max(1,S.budget*7);
+/* PARKED (2026-09-22): the group feature is out of the app for now — no tab, no screen. The logic is
+   kept here so it can come back without being rewritten; its markup is in git history. */
 function renderGrove(){
+  if(!$('groveArt')) return;
   const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
   /* one shared character for the whole group — the same engine as your own, at the group's level */
   const mine=GROVE_MOCK.groups[2], gp=Math.min(1.3, mine[1]);
@@ -1294,7 +1315,6 @@ function renderGrove(){
   const me=GROVE_MOCK.members.find(m=>m[0]==='You'); me[1]=wk/weekBudget();
   $('memberList').innerHTML=[...GROVE_MOCK.members].sort((a,b)=>a[1]-b[1]).map((m,i)=>`<div class="it"><span><span class="rank">${i+1}</span>${m[0]}</span><span class="r">${fmt(m[1]*weekBudget())} mL</span></div>`).join('');
 }
-$('joinBtn').onclick=()=>toast('Groups coming soon — opt-in, nickname only');
 
 /* ===================================================================================== [Simulate]
    Round 13: the question and the answer are estimated separately, because they do not cost the same.
@@ -1344,9 +1364,14 @@ $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } t
 function renderSettings(){
   $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
   checkUnlocks(true);
-  $('mascotChips').innerHTML=Object.entries(ECO).map(([id,m])=>
-    `<button class="chip" data-m="${id}"${unlocked(id)?'':` data-locked="${need(id)}"`} aria-pressed="${id===mascotId()}" title="${unlocked(id)?m.label:need(id)+' days under budget'}">${m.chip}</button>`).join('');
+  $('mascotChips').innerHTML=ROSTER.map(id=>{ const m=ECO[id], lock=!unlocked(id);
+    return `<button class="pick${recentUnlocks.includes(id)?' fresh':''}" data-m="${id}"${lock?` data-locked="${need(id)}"`:''} aria-pressed="${id===mascotId()}">
+      <span class="art" data-art="${id}"></span><span class="nm">${m.label}</span>
+      <span class="req">${lock?`${need(id)} days under budget`:(id===mascotId()?'Chosen':'Unlocked')}</span></button>`; }).join('');
+  /* each card shows the character itself, in good health */
+  $('mascotChips').querySelectorAll('.art').forEach(el=>{ renderEco(el,{lite:true,id:el.dataset.art}); applyEco(el, 0.08, true, el.dataset.art); });
   $('mascotName').value=(S.names&&S.names[mascotId()])||'';
+  $('unlockBtn').textContent = S.unlocked.length>=ROSTER.length ? 'Lock again' : 'Unlock all';
   const nextLock=UNLOCKS.find(([id])=>!unlocked(id));
   $('mascotNote').textContent = nextLock ? `${ECO[nextLock[0]].label} unlocks at ${nextLock[1]} days under budget — you're on ${S.bestStreak||0}.`
                                          : 'Every character unlocked. Nice going.';
@@ -1376,8 +1401,28 @@ $('regionSel').onchange=e=>{ S.region=e.target.value; S.cooling=C.regions[S.regi
 $('coolingSel').onchange=e=>{ S.cooling=e.target.value; save(); renderSettings(); renderEst(); };
 $('hydroToggle').onchange=e=>{ S.hydro=e.target.checked; save(); renderSettings(); renderEst(); };
 $('redoAge').onclick=()=>show('splash');
+/* Daily totals only — there is no prompt text to export, because none is ever kept. */
+function exportCSV(){
+  const brands=['openai','anthropic','google'];
+  const head=['date','prompts','images','ml_total','ml_cooling','ml_grid','tokens_in','tokens_out',...brands.map(b=>'ml_'+b)];
+  const rows=[head].concat(Object.keys(S.days).sort().map(k=>{ const b=S.days[k]||{};
+    return [k, b.n||0, b.img||0, ((b.s1||0)+(b.s2||0)).toFixed(2), (b.s1||0).toFixed(2), (b.s2||0).toFixed(2), b.tin||0, b.tout||0,
+            ...brands.map(v=>((b.vendor&&b.vendor[v]&&b.vendor[v].ml)||0).toFixed(2))]; }));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  try{
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download=`sipcount-${dayKey(new Date())}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast(`Exported ${rows.length-1} days`);
+  }catch(e){ navigator.clipboard?.writeText(csv); toast('CSV copied'); }
+}
+$('csvBtn').onclick=exportCSV;
+/* For review sessions: every character available without waiting out the streaks. Remove before release. */
+$('unlockBtn').onclick=()=>{ const all=S.unlocked.length>=ROSTER.length;
+  S.unlocked = all ? ['plant'] : [...ROSTER];
+  if(all && !S.unlocked.includes(S.mascot)) S.mascot='plant';
+  save(); renderSettings(); toast(all?'Locked back to what you’ve earned':'All characters unlocked'); };
 $('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,facts:{},zoneAlert:{}}; S=store.S; save(); drainAnimated=false; ecoFresh=true; toast('Cleared'); show('today'); } };
-$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; S.unlocked=UNLOCKS.map(u=>u[0]); save(); drainAnimated=false; ecoFresh=true; toast('Sample week loaded'); show('today'); };
+$('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; S.unlocked=[...ROSTER]; save(); drainAnimated=false; ecoFresh=true; toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [App] boot */
 $('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(UI.factCadence.onOpen) setTimeout(showFact,1200); checkUnlocks(); maybeHeal(); };
