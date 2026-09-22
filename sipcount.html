@@ -231,6 +231,19 @@ nav button[aria-current=page]{color:var(--green)}
 .pop.in{opacity:1;transform:translateY(0)}
 .pop::after{content:"";position:absolute;top:-5px;left:var(--arrow,50%);margin-left:-5px;width:9px;height:9px;background:#171717;border-left:1px solid #2E2E2E;border-top:1px solid #2E2E2E;transform:rotate(45deg)}
 .pop.above::after{top:auto;bottom:-5px;border:0;border-right:1px solid #2E2E2E;border-bottom:1px solid #2E2E2E}
+/* ---- sync: the pair code and the device list ---- */
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.02em;letter-spacing:.06em;text-align:center;word-break:break-all;
+  background:#101010;border:1px solid #262626;border-radius:12px;padding:14px 10px;color:var(--green);user-select:all}
+.codein{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95em;letter-spacing:.04em;text-align:center;text-transform:uppercase;
+  background:#101010;border:1px solid #262626;border-radius:12px;padding:13px 10px;color:#fff;width:100%}
+.codein:focus{outline:none;border-color:var(--green)}
+.devs{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.dev{display:flex;align-items:center;gap:8px;background:#101010;border:1px solid #1E1E1E;border-radius:10px;padding:8px 10px;font-size:.85em}
+.dev .nm{flex:1;font-weight:600}
+.dev .tag{color:var(--muted);font-size:.86em}
+.dev .x{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:0 2px;line-height:1}
+.dev .x:hover{color:var(--red)}
+.restore{background:none;border:0;color:var(--muted);font:inherit;font-size:.82em;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
 .sheet.open{display:flex}
 .sheet .card{background:var(--surface);border-radius:22px;padding:22px 18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto;border:1px solid var(--line)}
@@ -328,33 +341,10 @@ nav button[aria-current=page]{color:var(--green)}
 .charity:last-child{border-bottom:0}
 .charity a{color:var(--green);font-weight:800;text-decoration:none}
 .charity small{color:var(--muted)}
-/* ---- launch sequence: pour · pull back · a human hand takes one glass back ---- */
-.splash{position:fixed;inset:0;z-index:40;background:#000;overflow:hidden;animation:spOut .45s ease both 4s}
-@keyframes spOut{ to{ opacity:0; visibility:hidden; } }
-.sp-stage{position:absolute;inset:0;display:grid;place-items:center;animation:spPull 1s cubic-bezier(.4,0,.2,1) both 1.9s}
-@keyframes spPull{ 0%{transform:scale(1)} 100%{transform:scale(.46)} }
-.sp-hero{position:relative;width:200px;height:200px}
-.sp-rack{position:absolute;left:96px;top:74px;width:56px;opacity:0;animation:spFade .5s ease both 1s}
-@keyframes spFade{ to{opacity:1} }
-.sp-run{opacity:0;animation:spRun 1.1s ease-in both 1.5s}
-@keyframes spRun{ 0%{transform:translateY(0);opacity:0} 12%{opacity:1} 100%{transform:translateY(122px);opacity:0} }
-.sp-glass{position:absolute;left:58px;top:64px;width:48px;filter:drop-shadow(0 0 16px rgba(0,230,118,.5));transform-origin:24px 60px;animation:spTilt 4s ease both}
-@keyframes spTilt{ 0%,22%{transform:rotate(0)} 38%,54%{transform:rotate(58deg) translate(18px,-6px)} 62%,72%{transform:rotate(0)} 84%,100%{transform:rotate(-10deg) translate(-56px,-34px)} }
-.sp-water{animation:spEmpty 4s ease both}
-@keyframes spEmpty{ 0%,30%{y:8} 52%,70%{y:66} 82%,100%{y:8} }
-.sp-robot{position:absolute;left:96px;top:44px;width:132px;animation:spRobot 4s ease both}
-@keyframes spRobot{ 0%{transform:translateX(150px)} 20%,54%{transform:translateX(6px)} 70%,100%{transform:translateX(150px)} }
-.sp-human{position:absolute;left:-70px;top:44px;width:132px;opacity:0;animation:spHuman 4s ease both}
-@keyframes spHuman{ 0%,66%{transform:translateX(-150px);opacity:0} 74%{opacity:1} 84%,92%{transform:translateX(24px);opacity:1} 100%{transform:translateX(-40px);opacity:1} }
-.sp-grid{position:absolute;inset:-40%;display:grid;grid-template-columns:repeat(5,1fr);gap:26px;place-items:center;opacity:0;animation:spGrid .9s ease both 2s}
-@keyframes spGrid{ to{opacity:.5} }
-.sp-grid .u{width:34px;height:58px;border:2px solid #24404C;border-radius:3px;background:#060D11;position:relative;overflow:hidden}
-.sp-grid .u::after{content:"";position:absolute;left:3px;right:3px;top:-12px;height:10px;background:rgba(0,230,118,.7);border-radius:2px;animation:spUnit 1.4s ease-in infinite}
-@keyframes spUnit{ 0%{transform:translateY(0);opacity:0} 15%{opacity:1} 100%{transform:translateY(64px);opacity:0} }
-.sp-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;animation:spEndIn .6s ease both 3.35s}
-@keyframes spEndIn{ to{opacity:1} }
-.sp-end p{margin:0;font-family:var(--display);font-weight:800;font-size:1.05em;letter-spacing:.07em;text-align:center;line-height:1.5;color:#fff}
-.sp-skip{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));background:transparent;border:1px solid #2A2A2A;color:#7A7A7A;font:inherit;font-size:.72em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:99px;cursor:pointer;z-index:2}
+/* ---- launch sequence (placeholder): full-bleed video on black, skippable ---- */
+.launch{position:fixed;inset:0;z-index:40;background:#000;display:grid;place-items:center}
+.launch video{width:100%;height:100%;object-fit:contain;background:#000}
+.lx-skip{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));background:transparent;border:1px solid #2A2A2A;color:#7A7A7A;font:inherit;font-size:.72em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:99px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -374,6 +364,9 @@ nav button[aria-current=page]{color:var(--green)}
     </div>
     <input type="number" id="ageIn" inputmode="numeric" min="5" max="120" placeholder="18" aria-label="Your age">
     <button class="btn" id="ageGo" style="max-width:260px">Continue</button>
+    <!-- for someone who already syncs and is setting up a new device: they need a way in before
+         this device has any data of its own. Answering the age question still comes first. -->
+    <button class="restore" id="splashRestore">Already syncing? Use my code</button>
   </section>
 
   <!-- ============ DASHBOARD ============ -->
@@ -538,6 +531,11 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="conf" id="regionConf"></div>
     </div>
 
+    <div class="stack" style="gap:10px" id="syncBlock">
+      <div class="row" style="gap:8px"><span class="k2">Your devices</span><button class="info" data-tip="sync" aria-haspopup="dialog" aria-label="How syncing works">i</button></div>
+      <div id="syncBody"></div>
+    </div>
+
     <div class="stack" style="gap:10px">
       <span class="k2">App</span>
       <label class="toggle"><span>Remind me during long sessions</span><input type="checkbox" id="sessionToggle"></label>
@@ -575,43 +573,13 @@ nav button[aria-current=page]{color:var(--green)}
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
 </div>
-<!-- ============ LAUNCH SEQUENCE (four seconds, drawn in code — no video, no asset) ============ -->
-<div class="splash" id="splash" hidden>
-  <div class="sp-stage">
-    <div class="sp-grid" id="spGrid"></div>
-    <div class="sp-hero">
-      <svg class="sp-rack" viewBox="0 0 56 96" aria-hidden="true">
-        <defs><linearGradient id="spFlow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#00E676" stop-opacity="0"/><stop offset="1" stop-color="#00E676" stop-opacity=".9"/></linearGradient></defs>
-        <rect x="3" y="3" width="50" height="90" rx="4" fill="#060D11" stroke="#31505E" stroke-width="2.5"/>
-        <g stroke="#24404C" stroke-width="2.5" stroke-linecap="round"><path d="M11 18h34M11 30h34M11 42h34M11 54h34M11 66h34M11 78h34"/></g>
-        <rect class="sp-run" x="4" y="-26" width="48" height="26" fill="url(#spFlow)"/>
-      </svg>
-      <svg class="sp-glass" viewBox="0 0 48 66" aria-hidden="true">
-        <defs><clipPath id="spCup"><path d="M9 4h30l-4 50a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6z"/></clipPath></defs>
-        <g clip-path="url(#spCup)"><rect class="sp-water" x="0" y="8" width="48" height="58" fill="#00E676"/></g>
-        <path d="M9 4h30l-4 50a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6z" fill="none" stroke="#D7E2E8" stroke-width="3" stroke-linejoin="round"/>
-      </svg>
-      <svg class="sp-robot" viewBox="0 0 132 92" aria-hidden="true">
-        <g fill="#AEBAC4" stroke="#0D1418" stroke-width="3" stroke-linejoin="round">
-          <rect x="74" y="26" width="54" height="30" rx="8"/>
-          <rect x="44" y="24" width="34" height="15" rx="7"/><rect x="42" y="41" width="32" height="14" rx="7"/>
-          <rect x="48" y="57" width="28" height="13" rx="6"/><rect x="66" y="12" width="26" height="13" rx="6"/></g>
-        <g fill="#0D1418"><circle cx="46" cy="31" r="2.6"/><circle cx="44" cy="48" r="2.6"/><circle cx="50" cy="63" r="2.4"/></g>
-      </svg>
-      <svg class="sp-human" viewBox="0 0 132 92" aria-hidden="true">
-        <g fill="#F0DCC6" stroke="#0D1418" stroke-width="3" stroke-linejoin="round">
-          <path d="M6 30h48a10 10 0 0 1 0 28H6z"/><path d="M54 22h30a7 7 0 0 1 0 14H54z"/>
-          <path d="M56 38h34a7 7 0 0 1 0 14H56z"/><path d="M56 54h26a7 7 0 0 1 0 13H56z"/><path d="M44 14h22a6 6 0 0 1 0 12H44z"/></g>
-      </svg>
-    </div>
-  </div>
-  <div class="sp-end" id="spEnd">
-    <svg viewBox="0 0 100 130" width="44" height="57" aria-hidden="true">
-      <path d="M50 10C50 10 16 54 16 82a34 34 0 0 0 68 0C84 54 50 10 50 10Z" fill="none" stroke="#00E676" stroke-width="6"/></svg>
-    <p>EVERY PROMPT<br>HAS A PRICE</p>
-  </div>
-  <button class="sp-skip" id="spSkip">Skip</button>
+<!-- ============ LAUNCH SEQUENCE — placeholder ==============================================
+     No launch animation ships today. When a video is ready, drop it in assets/ and name it in
+     LAUNCH_VIDEO below; this overlay then plays it once on first launch with a skip control.
+     With no video configured the app goes straight to the age screen, as it always did.      -->
+<div class="launch" id="launch" hidden>
+  <video id="launchVideo" playsinline muted preload="auto"></video>
+  <button class="lx-skip" id="lxSkip">Skip</button>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -650,6 +618,14 @@ nav button[aria-current=page]{color:var(--green)}
   </div>
 </div>
 
+<!-- ============ PAIR MODAL: show a code, or take one ============ -->
+<div class="sheet" id="pairSheet" role="dialog" aria-modal="true" aria-labelledby="pairTitle">
+  <div class="card">
+    <div class="row between"><h1 id="pairTitle" style="font-size:1.1em">Add another device</h1><button class="btn ghost small" id="pairClose" aria-label="Close">✕</button></div>
+    <div id="pairBody" class="stack" style="gap:12px"></div>
+  </div>
+</div>
+
 <!-- ============ NEUTRALIZE MODAL ============ -->
 <div class="sheet" id="neutralSheet" role="dialog" aria-modal="true" aria-labelledby="neutralTitle">
   <div class="card">
@@ -682,10 +658,14 @@ const UI = {
 const $=id=>document.getElementById(id);
 const store=makeStore('sipcount.v10',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
   mascot:'plant', unlocked:['plant'], names:{}, bestStreak:0, healDay:null,
-  mode:null, social:true, saved:0, streak:0, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null });
+  mode:null, social:true, adult:null, saved:0, streak:0, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null,
+  sync:null, devLabel:null, syncAsked:false, peers:{} });
 let S=store.S; const save=store.save;
+/* Every screen reads day totals through DAYS(): this device's own days summed with any paired
+   device's (engine.js §multi-device merge). With nothing paired it is the same object as S.days. */
+const DAYS=()=>store.days();
 S.facts ||= {}; S.zoneAlert ||= {}; S.names ||= {}; S.unlocked ||= ['plant']; if(!S.unlocked.includes('plant')) S.unlocked.push('plant');
-if(!S.installedAt){ const ks=Object.keys(S.days||{}).sort(); S.installedAt = ks.length ? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
+if(!S.installedAt){ const ks=Object.keys(DAYS()).sort(); S.installedAt = ks.length ? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
 save();
 const last7=()=>store.last7(), todayStats=()=>store.todayStats(), params=()=>store.params();
 const isEdu=()=>S.mode==='edu';
@@ -699,7 +679,13 @@ function countTo(el, to, decimals=2, ms=700){
   (function step(now){ const p=Math.min(1,(now-t0)/ms), v=from+(to-from)*ease(p); el.textContent=decimals?v.toFixed(decimals):fmt(v); if(p<1) requestAnimationFrame(step); })(t0);
 }
 function applyMode(){ document.documentElement.dataset.size=S.size||'standard'; $('nav').hidden=!S.mode; }
-function applyAge(age){ S.mode = age>=18?'min':'edu'; S.social = age>=13; save(); applyMode(); }
+/* S.adult drives one thing only: whether syncing across devices is offered. India's DPDP Rules
+   treat everyone under 18 as a child and require verifiable parental consent before their data is
+   processed at all, so under-18s stay entirely on-device, where there is no processing to consent
+   to. Anything already paired is disconnected if the answer changes. (docs/SYNC-AND-ACCOUNTS.md §4) */
+function applyAge(age){ S.mode = age>=18?'min':'edu'; S.social = age>=13; S.adult = age>=18;
+  if(!S.adult && (S.sync||Object.keys(S.peers||{}).length)) stopSync();
+  save(); applyMode(); }
 function show(id){
   if(id==='grove') id='today';                       // the group feature is parked (2026-09-22)
   $('s-splash').classList.toggle('active', id==='splash'); $('nav').hidden = id==='splash' || !S.mode;
@@ -1011,15 +997,15 @@ const petLabel=(id=mascotId())=>(S.names&&S.names[id])||ECO[id].label;    // "Pi
    use counts as survived. Deliberately different from the unlock streak below, which needs real usage
    so nobody unlocks characters by not using the app. */
 function aliveDays(){
-  let n=0; const born=new Date(S.installedAt||Date.now());
+  let n=0; const born=new Date(S.installedAt||Date.now()), D=DAYS();
   for(let i=0;i<180;i++){ const d=new Date(); d.setDate(d.getDate()-i);
     if(d < new Date(born.getFullYear(),born.getMonth(),born.getDate())) break;
-    const b=S.days[dayKey(d)], t=b?(b.s1||0)+(b.s2||0):0;
+    const b=D[dayKey(d)], t=b?(b.s1||0)+(b.s2||0):0;
     if(t>=S.budget) break; n++; }
   return n;
 }
 /* consecutive days before today that had prompts and stayed under budget */
-function streakDays(){ let n=0; for(let i=1;i<=90;i++){ const d=new Date(); d.setDate(d.getDate()-i); const b=S.days[dayKey(d)];
+function streakDays(){ let n=0; const D=DAYS(); for(let i=1;i<=90;i++){ const d=new Date(); d.setDate(d.getDate()-i); const b=D[dayKey(d)];
     if(!b) break; const t=(b.s1||0)+(b.s2||0); if(b.n>0 && t<S.budget) n++; else break; } return n; }
 let recentUnlocks=[];
 function checkUnlocks(quiet){
@@ -1155,7 +1141,8 @@ const TIPS={
   eco:'Your character follows the day’s water. The closer you get to your budget, the worse it fares.',
   insights:'Worked out from which AI you used and how heavy the model was — counts only, never what you typed.',
   sim:'Images run the servers hotter than text, and long answers cost far more than your question.',
-  mascot:'Choose the one you’d miss. Every prompt takes a little water from something that’s actually out there.'
+  mascot:'Choose the one you’d miss. Every prompt takes a little water from something that’s actually out there.',
+  sync:'Your devices share one code and add up their totals. We never see the code, so we can’t read what they send.'
 };
 function closeTip(){ $('tipPop').classList.remove('in'); $('tipPop').hidden=true; $('popCatch').hidden=true; }
 document.addEventListener('click',e=>{
@@ -1182,7 +1169,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('tipPop').hid
 function insights(){
   const keys=last7(), agg={vendor:{},tiers:{},n:0,ml:0}, T=todayStats();
   const scope = T.n?'today':'this week'; const days = T.n?[dayKey(new Date())]:keys;
-  days.forEach(k=>{ const b=S.days[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in (b.vendor[v].tiers||{})){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
+  const D=DAYS(); days.forEach(k=>{ const b=D[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in (b.vendor[v].tiers||{})){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
   const brands=Object.entries(agg.vendor).sort((a,b)=>b[1].ml-a[1].ml);
   if(!agg.n || !agg.ml || !brands.length) return { scope, total:agg.ml, text: !agg.n?'Log a prompt and the insights appear here.':!agg.ml?'Nothing measurable yet — those prompts used no tokens.':'Older data has no brand breakdown yet — new prompts will show which AI you used.', brands:[] };
   const [topV, top]=brands[0]; const topTier=Object.entries(top.tiers||{}).sort((a,b)=>b[1].ml-a[1].ml)[0]?.[0] ?? 'standard';
@@ -1272,7 +1259,7 @@ function weekKey(d){ const x=new Date(d); x.setDate(x.getDate()-x.getDay()); ret
 function maybeWeeklyReport(){ const now=new Date(); if(now.getDay()===0 && now.getHours()>=18 && S.lastReport!==weekKey(now) && S.mode) setTimeout(weeklyReport, 2500); }
 
 /* ===================================================================================== [Lifetime] */
-function lifetimeMl(){ return Object.values(S.days).reduce((a,b)=>a+(b.s1||0)+(b.s2||0),0); }
+function lifetimeMl(){ return Object.values(DAYS()).reduce((a,b)=>a+(b.s1||0)+(b.s2||0),0); }
 function scaleVolume(ml){ // mL → L → m³ as it grows
   if(ml<1000) return { v:fmt(ml, ml<10?1:0), u:'mL' };
   if(ml<1e6)  return { v:(ml/1000).toFixed(ml<1e4?2:1), u:'L' };
@@ -1316,7 +1303,7 @@ function renderToday(){
   const I=insights(); $('insightScope').textContent=I.scope; $('insightText').innerHTML=I.text;
   $('brandBars').innerHTML=I.brands.map(([n,ml,cnt])=>`<div class="brand"><span class="nm">${n}</span><div class="bar2"><i style="width:${Math.round(ml/(I.total||1)*100)}%"></i></div><span class="v">${fmt(ml)} mL · ${cnt}</span></div>`).join('');
   $('tPrompts').textContent=T.n;
-  let w=0,ws1=0,ws2=0; keys.forEach(k=>{const b=S.days[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
+  let w=0,ws1=0,ws2=0; const DW=DAYS(); keys.forEach(k=>{const b=DW[k]; if(b){w+=b.s1+b.s2; ws1+=b.s1; ws2+=b.s2;}});
   $('tWeek').textContent=fmt(w);
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15, a=Math.round(p1*100), b=100-a;
   $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=a+'%'; $('p2').textContent=b+'%';
@@ -1381,7 +1368,7 @@ $('shareNative').onclick=async()=>{ const b=await storyBlob(); if(!b){ toast('Co
 
 /* ===================================================================================== [Neutralize] */
 function renderNeutral(){
-  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
+  const wk=last7().reduce((a,k)=>{const b=DAYS()[k]; return a+(b?b.s1+b.s2:0);},0);
   const L=wk/1000; const cents=Math.max(1, Math.round(L*C.charities[0].per_l_usd*100));
   $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">About ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
   $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
@@ -1399,7 +1386,7 @@ const weekBudget=()=>Math.max(1,S.budget*7);
    kept here so it can come back without being rewritten; its markup is in git history. */
 function renderGrove(){
   if(!$('groveArt')) return;
-  const wk=last7().reduce((a,k)=>{const b=S.days[k]; return a+(b?b.s1+b.s2:0);},0);
+  const wk=last7().reduce((a,k)=>{const b=DAYS()[k]; return a+(b?b.s1+b.s2:0);},0);
   /* one shared character for the whole group — the same engine as your own, at the group's level */
   const mine=GROVE_MOCK.groups[2], gp=Math.min(1.3, mine[1]);
   renderEco($('groveArt')); applyEco($('groveArt'), gp, true);
@@ -1457,8 +1444,198 @@ function logOne(){ const e=current(); store.record(e,$('modelSel').value,task,ve
 $('logBtn').onclick=()=>{ const e=logOne(); toast(`Logged · ${fmt(e.total,2)} mL`); };
 $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } toast(`Logged 10 · ${fmt(t,1)} mL`); };
 
+/* ===================================================================================== [Sync]
+   Phase 1 — pair code, no account (decision 2026-09-22, docs/SYNC-AND-ACCOUNTS.md).
+
+   One device makes a 25-character code. Any other device that is given the code joins the same
+   room and the two add up their day totals. There is no email, no password and no profile: the
+   code IS the identity, it is generated on the device and it is never sent anywhere. The server
+   only ever sees room = SHA-256(code) and a blob encrypted with a key derived from the same code,
+   so it cannot read a single number it stores — which is what lets the privacy line stay true.
+
+   What travels: day totals (date, counts, mL, tokens, which brand), the budget and the region.
+   What never travels: anything you typed, any timestamp finer than a date, your age, your email.
+   Day granularity is deliberate — per-prompt times would turn this into a log of when you work.
+
+   Phase 2 (sign in with Google / Apple) is a logged requirement, not built: it exists only to
+   recover a lost code, and it brings obligations this phase does not have. See the doc.          */
+const SYNC = {
+  /* No relay is running yet. Set this to the deployment's base URL and sync goes live; until then
+     every call reports 'no-server' and the app stays exactly as local as it is today. */
+  endpoint: null,
+  version: 1
+};
+/* Crockford base32: no I, L, O or U, so a code read off a screen can't be mistyped into another
+   room. 25 characters = 125 bits of key, shown as five blocks of five. */
+const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function newSyncKey(){
+  const a=new Uint8Array(25);
+  try{ (window.crypto||globalThis.crypto).getRandomValues(a); }
+  catch(e){ for(let i=0;i<25;i++) a[i]=Math.floor(Math.random()*256); }
+  return [...a].map(b=>B32[b%32]).join('');            // 256 is a multiple of 32 → no modulo bias
+}
+const fmtKey=k=>(k||'').match(/.{1,5}/g).join('-');
+/* Accepts what people actually type: lower case, spaces, and the letters Crockford folds. */
+function parseKey(s){
+  const k=String(s||'').toUpperCase().replace(/O/g,'0').replace(/[IL]/g,'1').replace(/[^0-9A-Z]/g,'');
+  return /^[0-9A-HJKMNP-TV-Z]{25}$/.test(k) ? k : null;
+}
+async function sha256Hex(str){
+  const sub=(window.crypto||globalThis.crypto||{}).subtle;
+  if(!sub) throw Object.assign(new Error('no-crypto'),{code:'no-crypto'});
+  const b=await sub.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+/* Two different derivations from the same code: the room is public to the server, the data key
+   never leaves the device. Deriving both from one secret keeps the user with one thing to keep. */
+const roomOf = key => sha256Hex('sipcount-room-v1|'+key).then(h=>h.slice(0,32));
+async function dataKey(key){
+  const sub=(window.crypto||globalThis.crypto).subtle;
+  const raw=await sub.digest('SHA-256', new TextEncoder().encode('sipcount-data-v1|'+key));
+  return sub.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+}
+const b64=u8=>btoa(String.fromCharCode(...u8));
+const unb64=s=>Uint8Array.from(atob(s), c=>c.charCodeAt(0));
+async function seal(key, obj){
+  const sub=(window.crypto||globalThis.crypto).subtle, iv=new Uint8Array(12);
+  (window.crypto||globalThis.crypto).getRandomValues(iv);
+  const ct=new Uint8Array(await sub.encrypt({name:'AES-GCM',iv}, await dataKey(key), new TextEncoder().encode(JSON.stringify(obj))));
+  const out=new Uint8Array(iv.length+ct.length); out.set(iv); out.set(ct,iv.length); return b64(out);
+}
+async function unseal(key, blob){
+  const sub=(window.crypto||globalThis.crypto).subtle, raw=unb64(blob);
+  const pt=await sub.decrypt({name:'AES-GCM',iv:raw.slice(0,12)}, await dataKey(key), raw.slice(12));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+/* The only thing this device ever uploads. Built fresh each push so nothing can leak in by accident. */
+function syncPayload(){
+  return { v:SYNC.version, dev:S.devId, label:S.devLabel||deviceLabel(), days:store.ownDays,
+           budget:S.budget, region:S.region, at:Date.now() };
+}
+function deviceLabel(){
+  const w=Math.min(screen.width||1024, screen.height||768);
+  return w<500 ? 'Phone' : w<900 ? 'Tablet' : 'Computer';
+}
+/* Transport. With no endpoint configured both calls fail closed and nothing is attempted. */
+const relay = {
+  get live(){ return !!SYNC.endpoint; },
+  async push(room, blob){ if(!this.live) throw Object.assign(new Error('no relay'),{code:'no-server'});
+    const r=await fetch(`${SYNC.endpoint}/room/${room}/${S.devId}`, {method:'PUT', headers:{'content-type':'text/plain'}, body:blob});
+    if(!r.ok) throw Object.assign(new Error('push failed'),{code:'http-'+r.status}); },
+  async pull(room){ if(!this.live) throw Object.assign(new Error('no relay'),{code:'no-server'});
+    const r=await fetch(`${SYNC.endpoint}/room/${room}`);
+    if(!r.ok) throw Object.assign(new Error('pull failed'),{code:'http-'+r.status});
+    return r.json(); }                                  // { devId: blob, ... }
+};
+const canSync = () => S.adult===true;                   // 18+ only — see docs/SYNC-AND-ACCOUNTS.md §4
+const syncOn  = () => !!(S.sync && S.sync.key);
+async function syncNow(quiet){
+  if(!syncOn() || !canSync()) return {ok:false, code:'off'};
+  try{
+    const key=S.sync.key, room=S.sync.room || await roomOf(key);
+    S.sync.room=room;
+    await relay.push(room, await seal(key, syncPayload()));
+    const bag=await relay.pull(room);
+    for(const id in bag){ if(id===S.devId) continue;
+      try{ const p=await unseal(key, bag[id]); store.setPeer(id, p.days, {label:p.label}); }catch(e){}   /* a blob we can't open isn't ours to worry about */
+    }
+    S.sync.last=Date.now(); S.sync.err=null; save(); renderToday();
+    if(!quiet) toast('Devices up to date');
+    return {ok:true};
+  }catch(e){ S.sync.err=e.code||'failed'; save(); if(!quiet) toast(e.code==='no-server'?'No sync server yet':'Sync failed'); return {ok:false, code:e.code}; }
+}
+function startSync(key){
+  S.sync={ key, room:null, last:null, err:null, since:Date.now() };
+  S.devLabel ||= deviceLabel(); save();
+  roomOf(key).then(r=>{ S.sync.room=r; save(); }).catch(()=>{});
+  syncNow(true);
+}
+function stopSync(alsoDrop){
+  S.sync=null; if(alsoDrop!==false) store.dropAllPeers();
+  save(); renderToday(); renderSettings();
+}
+/* ---------- the pair sheet: show a code, or take one ---------- */
+let pairMode='show';
+function openPair(mode){
+  pairMode=mode||'show';
+  if(pairMode==='show' && !syncOn()) startSync(newSyncKey());
+  renderPair(); $('pairSheet').classList.add('open');
+}
+function renderPair(){
+  const live=relay.live;
+  const note = live ? '' : `<p class="sub" style="margin:0;font-size:.8em">The sync service isn’t switched on yet, so nothing is being sent. Your code is saved on this device and will start working the moment it is.</p>`;
+  if(pairMode==='show'){
+    const k=S.sync&&S.sync.key;
+    $('pairTitle').textContent='Add another device';
+    $('pairBody').innerHTML=`
+      <p class="sub" style="margin:0">Open Sipcount on your other device, go to <b>Settings › Your devices</b> and enter this code.</p>
+      <div class="code" id="pairCode">${fmtKey(k)}</div>
+      <div class="row" style="gap:8px"><button class="btn" id="pairCopy">Copy code</button><button class="btn ghost" id="pairSwap">I have a code</button></div>
+      <p class="sub" style="margin:0;font-size:.8em">Keep it somewhere safe. It is the only way back to your totals, and we have no copy of it — if it is lost the numbers on each device stay, but they stop adding up together.</p>${note}`;
+    $('pairCopy').onclick=()=>{ try{ navigator.clipboard.writeText(fmtKey(k)); toast('Code copied'); }catch(e){ toast('Select and copy the code'); } };
+    $('pairSwap').onclick=()=>{ pairMode='enter'; renderPair(); };
+  } else {
+    $('pairTitle').textContent='Enter your code';
+    $('pairBody').innerHTML=`
+      <p class="sub" style="margin:0">Type the code from your other device. Capitals and dashes don’t matter.</p>
+      <input class="codein" id="pairIn" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <div class="row" style="gap:8px"><button class="btn" id="pairJoin">Connect</button><button class="btn ghost" id="pairSwap2">Show my code</button></div>
+      <p class="sub" style="margin:0;font-size:.8em">This device keeps its own totals either way — connecting adds the other device’s on top.</p>${note}`;
+    $('pairIn').focus();
+    $('pairJoin').onclick=()=>{ const k=parseKey($('pairIn').value);
+      if(!k){ toast('That code isn’t right'); $('pairIn').focus(); return; }
+      startSync(k); closePair(); renderSettings(); toast('Device connected'); };
+    $('pairSwap2').onclick=()=>{ pairMode='show'; if(!syncOn()) startSync(newSyncKey()); renderPair(); };
+  }
+}
+function closePair(){ $('pairSheet').classList.remove('open'); }
+/* ---------- the settings block ---------- */
+function renderSync(){
+  const el=$('syncBody'); if(!el) return;
+  if(!canSync()){
+    el.innerHTML=`<p class="sub" style="margin:0;font-size:.85em">Syncing across devices is available from 18. Everything on this device keeps working exactly as it does now.</p>`;
+    return;
+  }
+  if(!syncOn()){
+    el.innerHTML=`<p class="sub" style="margin:0;font-size:.85em">Only this device is counting. Connect another and their totals add up into one number.</p>
+      <div class="row wrap" style="gap:8px;margin-top:10px"><button class="btn small" id="syncStart">Set up sync</button><button class="btn ghost small" id="syncJoin">I have a code</button></div>`;
+    $('syncStart').onclick=()=>openPair('show'); $('syncJoin').onclick=()=>openPair('enter');
+    return;
+  }
+  const peers=Object.entries(S.peers||{});
+  const when=t=>{ if(!t) return 'not yet'; const m=Math.round((Date.now()-t)/60000);
+    return m<2?'just now':m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} h ago`:`${Math.round(m/1440)} d ago`; };
+  const state = relay.live ? (S.sync.err?`Last try failed · ${when(S.sync.last)}`:`Up to date · ${when(S.sync.last)}`)
+                           : 'Code saved — the sync service isn’t live yet';
+  el.innerHTML=`<p class="sub" style="margin:0;font-size:.85em">${state}</p>
+    <div class="devs">
+      <div class="dev"><span class="nm">${S.devLabel||deviceLabel()}</span><span class="tag">this one</span></div>
+      ${peers.map(([id,p])=>`<div class="dev"><span class="nm">${(p.label||'Another device')}</span><span class="tag">${when(p.seen)}</span><button class="x" data-drop="${id}" aria-label="Forget this device">✕</button></div>`).join('')}
+    </div>
+    <div class="row wrap" style="gap:8px;margin-top:10px">
+      <button class="btn ghost small" id="syncAdd">Add another device</button>
+      <button class="btn ghost small" id="syncShow">Show my code</button>
+      ${relay.live?'<button class="btn ghost small" id="syncNow">Sync now</button>':''}
+      <button class="btn danger small" id="syncStop">Stop syncing</button>
+    </div>`;
+  $('syncAdd').onclick=$('syncShow').onclick=()=>openPair('show');
+  if($('syncNow')) $('syncNow').onclick=()=>syncNow();
+  $('syncStop').onclick=()=>{ if(!confirm('Stop syncing? Totals from your other devices are removed from this one. Nothing this device counted is touched.')) return;
+    stopSync(); toast('Sync stopped'); };
+  el.querySelectorAll('[data-drop]').forEach(b=>b.onclick=()=>{ store.dropPeer(b.dataset.drop); save(); renderSettings(); renderToday(); toast('Device forgotten'); });
+}
+/* One quiet nudge, once, when there is finally something worth protecting (round 27). */
+function maybeSyncNudge(){
+  if(!canSync() || syncOn() || S.syncAsked) return;
+  if(aliveDays() < 7 && (S.unlocked||[]).length < 2) return;
+  S.syncAsked=true; save();
+  alertCard('🔗','Keep your streak on every device.',
+    'Your phone and your laptop each count only what they see. Connect them in Settings › Your devices and they add up into one number — no account, no email, just a code you keep.');
+}
+
 /* ===================================================================================== [Settings] */
 function renderSettings(){
+  renderSync();
   $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
   checkUnlocks(true);
   $('mascotChips').innerHTML=ROSTER.map(id=>{ const m=ECO[id], lock=!unlocked(id);
@@ -1503,7 +1680,8 @@ $('redoAge').onclick=()=>show('splash');
 function exportCSV(){
   const brands=['openai','anthropic','google'];
   const head=['date','prompts','images','ml_total','ml_cooling','ml_grid','tokens_in','tokens_out',...brands.map(b=>'ml_'+b)];
-  const rows=[head].concat(Object.keys(S.days).sort().map(k=>{ const b=S.days[k]||{};
+  const D=DAYS();
+  const rows=[head].concat(Object.keys(D).sort().map(k=>{ const b=D[k]||{};
     return [k, b.n||0, b.img||0, ((b.s1||0)+(b.s2||0)).toFixed(2), (b.s1||0).toFixed(2), (b.s2||0).toFixed(2), b.tin||0, b.tout||0,
             ...brands.map(v=>((b.vendor&&b.vendor[v]&&b.vendor[v].ml)||0).toFixed(2))]; }));
   const csv=rows.map(r=>r.join(',')).join('\n');
@@ -1519,31 +1697,54 @@ $('unlockBtn').onclick=()=>{ const all=S.unlocked.length>=ROSTER.length;
   S.unlocked = all ? ['plant'] : [...ROSTER];
   if(all && !S.unlocked.includes(S.mascot)) S.mascot='plant';
   save(); renderSettings(); toast(all?'Locked back to what you’ve earned':'All characters unlocked'); };
-$('wipeBtn').onclick=()=>{ if(confirm('Delete all totals stored on this device?')){ store.S={...S,saved:0,days:{},sample:false,wiped:true,streak:0,facts:{},zoneAlert:{}}; S=store.S; save(); drainAnimated=false; ecoFresh=true; toast('Cleared'); show('today'); } };
+/* A true reset: totals, characters, names, streaks and the onboarding answer. It returns you to the
+   age screen, which is also the only way to see the first run again while testing. */
+$('wipeBtn').onclick=()=>{ if(!confirm('Delete everything stored on this device and start over?')) return;
+  store.S={ budget:S.budget, region:S.region, cooling:S.cooling, hydro:S.hydro, size:S.size,
+            mascot:'plant', unlocked:['plant'], names:{}, bestStreak:0, healDay:null,
+            mode:null, social:true, adult:null, saved:0, streak:0, days:{}, sample:false, wiped:true,
+            facts:{}, zoneAlert:{}, sessionCheckins:S.sessionCheckins, installedAt:Date.now(),
+            /* the device keeps its identity so a re-pair doesn't look like a second device,
+               but the code, the paired devices and their totals all go. */
+            devId:S.devId, peers:{}, sync:null, devLabel:S.devLabel, syncAsked:false };
+  S=store.S; save(); drainAnimated=false; ecoFresh=true; recentUnlocks=[];
+  applyMode(); show('splash'); toast('Cleared — starting over'); };
 $('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; S.unlocked=[...ROSTER]; save(); drainAnimated=false; ecoFresh=true; toast('Sample week loaded'); show('today'); };
 
 /* ===================================================================================== [Launch]
-   Four seconds, built in code. Plays once on the first launch only; `?splash=1` forces it for demos.
-   Tapping anywhere skips it, and under reduced motion it never runs. Nothing waits on it — the app is
-   already live behind it. */
+   Placeholder only. Set LAUNCH_VIDEO to a file in assets/ and it plays once on the first launch —
+   skippable, never under reduced motion, and `?splash=1` forces it for a demo. Left null, nothing
+   happens at all and the app opens on the age screen exactly as before. */
+let LAUNCH_VIDEO = null;            // e.g. 'assets/launch.mp4'
 function playSplash(){
   const force=/[?&]splash=1/.test(location.search);
-  if(REDUCED || (!force && S.splashSeen)) return;
+  if(!LAUNCH_VIDEO || REDUCED || (!force && S.splashSeen)) return;
   S.splashSeen=true; save();
-  const el=$('splash'); el.hidden=false;
-  $('spGrid').innerHTML='<div class="u"></div>'.repeat(25);
-  $('spGrid').querySelectorAll('.u').forEach((u,i)=>u.style.animationDelay=(i%7)*0.18+'s');
-  const done=()=>{ if(el.isConnected){ el.hidden=true; el.remove(); } };
-  el.addEventListener('click',done); $('spSkip').onclick=e=>{ e.stopPropagation(); done(); };
-  setTimeout(done,4500);
+  const el=$('launch'), v=$('launchVideo');
+  v.src=LAUNCH_VIDEO; el.hidden=false;
+  const done=()=>{ if(el.isConnected){ try{ v.pause(); }catch(e){} el.hidden=true; el.remove(); } };
+  el.addEventListener('click',done); $('lxSkip').onclick=e=>{ e.stopPropagation(); done(); };
+  v.addEventListener('ended',done); v.addEventListener('error',done);
+  const p=v.play&&v.play(); if(p&&p.catch) p.catch(done);      // autoplay refused → straight into the app
+  setTimeout(done,9000);                                        // never trap anyone behind it
 }
 
 /* ===================================================================================== [App] boot */
-$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(UI.factCadence.onOpen) setTimeout(showFact,1200); checkUnlocks(); maybeHeal(); };
+$('ageGo').onclick=()=>{ const a=+$('ageIn').value; if(!a||a<5||a>120){ $('ageIn').focus(); toast('Enter your age'); return; } applyAge(a); $('ageIn').value=''; show('today'); toast('Welcome to Sipcount'); if(UI.factCadence.onOpen) setTimeout(showFact,1200); checkUnlocks(); maybeHeal(); if(pendingKey){ startSync(pendingKey); pendingKey=null; toast('Device connected'); } };
 $('ageIn').onkeydown=e=>{ if(e.key==='Enter') $('ageGo').click(); };
+$('pairClose').onclick=closePair;
+$('pairSheet').onclick=e=>{ if(e.target===$('pairSheet')) closePair(); };
+/* From the age screen the code is held until the age answer lands — an under-18 answer drops it. */
+let pendingKey=null;
+$('splashRestore').onclick=()=>{
+  const v=prompt('Enter the code from your other device');
+  if(v==null) return; const k=parseKey(v);
+  if(!k){ toast('That code isn’t right'); return; }
+  pendingKey=k; toast('Code saved — answer the age question to finish');
+};
 fillModels(); renderEst(); applyMode(); playSplash();
 if(!S.mode){ show('splash'); }
-else { show('today'); if(UI.factCadence.onOpen) setTimeout(showFact,1500); maybeWeeklyReport(); checkUnlocks(); maybeHeal(); }
+else { show('today'); if(UI.factCadence.onOpen) setTimeout(showFact,1500); maybeWeeklyReport(); checkUnlocks(); maybeHeal(); setTimeout(maybeSyncNudge,3000); if(syncOn()) syncNow(true); }
 startIdle();
 </script>
 </body>

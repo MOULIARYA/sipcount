@@ -92,6 +92,47 @@ function opportunityCost(ml, period='today'){
 
 /* ---------- storage (DayTotals canonical document, ARCHITECTURE §9) ---------- */
 const dayKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+/* ---------- multi-device merge (sync foundation, ARCHITECTURE §9.1) -------------------------
+   A device only ever writes its OWN day totals, into S.days. Totals pulled from a paired device
+   are parked, untouched, in S.peers[devId].days. Everything the UI reads goes through days(),
+   which sums the sources for each date.
+
+   Why this shape: two devices that both edited one shared days[date] would fight over it, and a
+   later write would silently erase the other's number. Here the writers never overlap, so there
+   is nothing to resolve — the worst case is a peer that is simply out of date, which shows up as
+   a total that is too low for a moment, never as data that is lost. It also happens to be true:
+   the extension on a laptop and the app on a phone really did see different prompts.            */
+const EMPTY_DAY=()=>({n:0,img:0,s1:0,s2:0,tin:0,tout:0,tier:{},task:{},vendor:{}});
+function mergeDay(){
+  const o=EMPTY_DAY();
+  for(const src of arguments){
+    if(!src) continue;
+    o.n+=src.n||0; o.img+=src.img||0; o.s1+=src.s1||0; o.s2+=src.s2||0; o.tin+=src.tin||0; o.tout+=src.tout||0;
+    for(const t in (src.tier||{})) o.tier[t]=(o.tier[t]||0)+src.tier[t];
+    for(const t in (src.task||{})) o.task[t]=(o.task[t]||0)+src.task[t];
+    for(const v in (src.vendor||{})){ const s=src.vendor[v]||{}, d=(o.vendor[v] ||= {n:0,ml:0,tiers:{}});
+      d.n+=s.n||0; d.ml+=s.ml||0;
+      for(const t in (s.tiers||{})){ const x=(d.tiers[t] ||= {n:0,ml:0}); x.n+=s.tiers[t].n||0; x.ml+=s.tiers[t].ml||0; } }
+  }
+  return o;
+}
+/* Sum this device's days with every paired device's. With no peers the own map is returned
+   untouched, so an unsynced install behaves exactly as it always did. */
+function mergeAll(own, peers){
+  const ids=Object.keys(peers||{});
+  if(!ids.length) return own;
+  const out={};
+  for(const k in own) out[k]=mergeDay(own[k]);
+  for(const id of ids){ const d=(peers[id]&&peers[id].days)||{}; for(const k in d) out[k]=mergeDay(out[k], d[k]); }
+  return out;
+}
+const newDevId=()=>{
+  try{ const a=new Uint8Array(8); (globalThis.crypto||window.crypto).getRandomValues(a);
+       return [...a].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+  catch(e){ return Math.random().toString(16).slice(2,10)+Math.random().toString(16).slice(2,10); }
+};
+
 function makeStore(KEY, defaults){
   let S;
   function load(){
@@ -101,8 +142,18 @@ function makeStore(KEY, defaults){
     return Object.assign({}, defaults, { budget, region, days, installedAt: (()=>{ const ks=Object.keys(days).sort(); return ks.length? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); })() });
   }
   S=load();
+  S.peers ||= {}; S.devId ||= newDevId();
+  /* days() is read on every render, so the merge is cached and only recomputed when this device
+     records a prompt or a peer's totals are replaced. */
+  let rev=0, cacheRev=-1, cache=null;
+  const days=()=>{ if(cacheRev!==rev){ cache=mergeAll(S.days, S.peers); cacheRev=rev; } return cache; };
+  const dirty=()=>{ rev++; };
   const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
-  const bucket=k=>{ const b=(S.days[k] ||= {n:0,img:0,s1:0,s2:0,tin:0,tout:0,tier:{},task:{},vendor:{}}); b.tier||={}; b.task||={}; b.vendor||={}; b.img||=0; b.tin||=0; b.tout||=0; return b; };
+  /* A pull replaces a peer's map wholesale — only that peer ever writes it, so there is no merge. */
+  const setPeer=(id,d,meta)=>{ if(!id||id===S.devId) return; S.peers[id]=Object.assign({}, S.peers[id], meta||{}, {days:d||{}, seen:Date.now()}); dirty(); };
+  const dropPeer=id=>{ delete S.peers[id]; dirty(); };
+  const dropAllPeers=()=>{ S.peers={}; dirty(); };
+  const bucket=k=>{ dirty(); const b=(S.days[k] ||= {n:0,img:0,s1:0,s2:0,tin:0,tout:0,tier:{},task:{},vendor:{}}); b.tier||={}; b.task||={}; b.vendor||={}; b.img||=0; b.tin||=0; b.tout||=0; return b; };
   const record=(e,tier,task,vendor,dt)=>{
     const b=bucket(dayKey(dt||new Date())); b.n++; if(task==='image') b.img++; b.s1+=e.s1; b.s2+=e.s2; b.tin+=e.inputTokens||0; b.tout+=e.outputTokens||0;
     b.task[task]=(b.task[task]||0)+e.total;
@@ -113,9 +164,9 @@ function makeStore(KEY, defaults){
   };
   const params=()=>regionParams(S.region,S.cooling,S.hydro);
   const last7=()=>[...Array(7)].map((_,i)=>{const d=new Date(); d.setDate(d.getDate()-(6-i)); return dayKey(d);});
-  const todayStats=()=>{ const t=S.days[dayKey(new Date())]||{n:0,img:0,s1:0,s2:0,tin:0,tout:0,vendor:{},tier:{}}; return {...t, total:t.s1+t.s2, pct:(t.s1+t.s2)/S.budget}; };
+  const todayStats=()=>{ const t=days()[dayKey(new Date())]||EMPTY_DAY(); return {...t, total:t.s1+t.s2, pct:(t.s1+t.s2)/S.budget}; };
   const loadSample=()=>{
-    S.days={}; S.sample=true; S.streak=12; const P=params(); const vendors=['openai','anthropic','google'];
+    S.days={}; dirty(); S.sample=true; S.streak=12; const P=params(); const vendors=['openai','anthropic','google'];
     const plan=[[6,0],[9,1],[7,0],[14,2],[5,0],[11,1],[4,1]];
     plan.forEach(([n,img],i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i));
       for(let p=0;p<n;p++){ const tier=p%5===0?'reasoning':(p%3===0?'lightweight':'standard'); const task=p%4===0?'code':'text'; const vendor=vendors[(p+i)%3];
@@ -125,14 +176,15 @@ function makeStore(KEY, defaults){
     save();
   };
   if(!Object.keys(S.days).length && !S.wiped) loadSample();
-  return { get S(){return S;}, set S(v){S=v;}, save, bucket, record, params, last7, todayStats, loadSample };
+  return { get S(){return S;}, set S(v){S=v; dirty();}, save, bucket, record, params, last7, todayStats, loadSample,
+           days, dirty, setPeer, dropPeer, dropAllPeers, get ownDays(){return S.days;} };
 }
 
 /* ---------- weekly analysis (shared by both branches) ---------- */
 function weeklyAnalysis(store){
-  const S=store.S, keys=store.last7(); let total=0,n=0,tin=0,tout=0, byBrand={}, reasoning={}, tiers={};
-  keys.forEach(k=>{ const b=S.days[k]; if(!b) return; n+=b.n; total+=b.s1+b.s2; tin+=b.tin||0; tout+=b.tout||0; for(const v in (b.vendor||{})){ byBrand[v]=(byBrand[v]||0)+b.vendor[v].ml; const r=b.vendor[v].tiers?.reasoning; if(r) reasoning[v]=(reasoning[v]||0)+r.ml; } for(const t in (b.tier||{})) tiers[t]=(tiers[t]||0)+b.tier[t]; });
-  const vals=keys.map(k=>{const b=S.days[k]; return b?b.s1+b.s2:0;});
+  const S=store.S, D=store.days(), keys=store.last7(); let total=0,n=0,tin=0,tout=0, byBrand={}, reasoning={}, tiers={};
+  keys.forEach(k=>{ const b=D[k]; if(!b) return; n+=b.n; total+=b.s1+b.s2; tin+=b.tin||0; tout+=b.tout||0; for(const v in (b.vendor||{})){ byBrand[v]=(byBrand[v]||0)+b.vendor[v].ml; const r=b.vendor[v].tiers?.reasoning; if(r) reasoning[v]=(reasoning[v]||0)+r.ml; } for(const t in (b.tier||{})) tiers[t]=(tiers[t]||0)+b.tier[t]; });
+  const vals=keys.map(k=>{const b=D[k]; return b?b.s1+b.s2:0;});
   const top=Object.entries(byBrand).sort((a,b)=>b[1]-a[1])[0], topTier=Object.entries(tiers).sort((a,b)=>b[1]-a[1])[0];
   const rTot=Object.values(reasoning).reduce((a,b)=>a+b,0), saving=rTot*(1-C.tiers.standard.wh1k/C.tiers.reasoning.wh1k), rBrand=Object.entries(reasoning).sort((a,b)=>b[1]-a[1])[0];
   const outShare = (tin*C.tokenWeights.input + tout*C.tokenWeights.output) ? (tout*C.tokenWeights.output)/(tin*C.tokenWeights.input + tout*C.tokenWeights.output) : 0;
@@ -140,6 +192,6 @@ function weeklyAnalysis(store){
   if(saving>0 && rBrand) tips.push(`Switching your ${C.brands[rBrand[0]]||rBrand[0]} reasoning-model prompts to standard models could save you roughly ${fmt(saving)} mL next week.`);
   if(outShare>0.8) tips.push(`About ${Math.round(outShare*100)}% of your water went into the answers, not your questions — asking for shorter replies is the quickest saving.`);
   if((tiers.standard||0)>0) tips.push(`Quick questions on a light model use about a fifth of the water of a standard one.`);
-  if(!tips.length) tips.push('Keep it up — nothing heavier than a standard model this week.');
+  if(!tips.length) tips.push('Keep it up — nothing heavier than a standard model in the last 7 days.');
   return { keys, vals, total, n, tin, tout, outShare, top, topTier, saving, rBrand, tips };
 }

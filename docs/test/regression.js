@@ -15,13 +15,16 @@ let pass=0, fail=0; const errors=[];
 const ok=(name,cond,extra='')=>{ if(cond){pass++; console.log('  ✓',name);} else {fail++; console.log('  ✗',name, extra);} };
 
 const dom=new JSDOM(html,{runScripts:'dangerously',resources:'usable',url:'file://'+path.join(tmp,'sipcount.html'),pretendToBeVisual:true,
-  beforeParse(w){ w.onerror=(m,s,l,c,e)=>errors.push(String(e&&e.stack||m)); }});
+  beforeParse(w){ w.onerror=(m,s,l,c,e)=>errors.push(String(e&&e.stack||m));
+    /* jsdom ships crypto.getRandomValues but not crypto.subtle; the sync code needs both. */
+    try{ const wc=require('crypto').webcrypto; if(wc && !(w.crypto&&w.crypto.subtle)) Object.defineProperty(w,'crypto',{value:wc,configurable:true,writable:true}); }catch(e){}
+  }});
 const w=dom.window;
 w.addEventListener('load',()=>setTimeout(run,300));
 const $=id=>w.document.getElementById(id);
 const click=el=>el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
 
-function run(){
+async function run(){
  const d=w.document;
  try{
   console.log('\nBOOT');
@@ -30,14 +33,20 @@ function run(){
   ok('nav is today/simulate/about/settings', [...d.querySelectorAll('nav button')].map(b=>b.dataset.s).join(',')==='today,log,about,settings');
   ok('grove parked', !$('s-grove'));
 
-  console.log('\nLAUNCH SEQUENCE');
-  ok('plays on first launch', !!$('splash'));
-  ok('all parts drawn', ['sp-rack','sp-glass','sp-robot','sp-human'].every(c=>d.querySelectorAll('.'+c).length===1));
-  ok('grid of servers', d.querySelectorAll('.sp-grid .u').length===25);
-  ok('end line present', /EVERY PROMPT/.test($('spEnd').textContent));
-  $('spSkip').click();
-  ok('skip removes it', !$('splash'));
-  ok('seen flag saved', w.eval('S.splashSeen')===true);
+  console.log('\nLAUNCH PLACEHOLDER');
+  ok('no launch overlay when no video is configured', !$('launch') || $('launch').hidden);
+  ok('video slot is empty and waiting', w.eval('LAUNCH_VIDEO')===null && !!$('launchVideo'));
+  /* the age screen is class="splash"; the launch overlay must never share a class with it, or the
+     age screen inherits overlay styling and the app renders blank (this happened in the wild) */
+  ok('no class collision with the age screen', d.querySelectorAll('.splash').length===1 && d.querySelector('.splash').id==='s-splash');
+  ok('age screen reachable', (()=>{ w.eval("show('splash')"); const a=$('s-splash').classList.contains('active'); w.eval("show('today')"); return a; })());
+  ok('a configured video would play and skip cleanly', (()=>{
+     w.eval("LAUNCH_VIDEO='assets/none.mp4'; S.splashSeen=false; playSplash();");
+     const shown=$('launch') && !$('launch').hidden;
+     if(shown) $('lxSkip').click();
+     w.eval("LAUNCH_VIDEO=null;");
+     return shown && !$('launch');
+  })());
 
   console.log('\nHERO + CHARACTER');
   ok('drop painted', !!$('heroVessel').querySelector('svg'));
@@ -109,11 +118,69 @@ function run(){
   $('csvBtn').onclick();
   ok('CSV exports', /^sipcount-\d{4}-\d{2}-\d{2}\.csv$/.test(dl||''), dl);
 
+  console.log('\nSYNC — pair code, merge and the 18+ gate');
+  /* the code itself */
+  const k1=w.eval('newSyncKey()');
+  ok('code is 25 Crockford characters', /^[0-9A-HJKMNP-TV-Z]{25}$/.test(k1), k1);
+  ok('shown as five blocks of five', w.eval(`fmtKey('${k1}')`).split('-').every(g=>g.length===5));
+  ok('typed back in any shape', w.eval(`parseKey(' ${k1.slice(0,5).toLowerCase()}-${k1.slice(5)} ')`)===k1);
+  ok('a short code is refused', w.eval("parseKey('ABC')")===null);
+  /* two devices add up; neither overwrites the other */
+  const mine=w.eval('Math.round(lifetimeMl())');
+  w.eval(`(function(){ const d={}; const k=dayKey(new Date()); d[k]={n:4,img:0,s1:10,s2:15,tin:100,tout:400,tier:{standard:25},task:{text:25},vendor:{openai:{n:4,ml:25,tiers:{standard:{n:4,ml:25}}}}};
+                        store.setPeer('laptop01', d, {label:'Computer'}); save(); })()`);
+  ok('a paired device adds to the total', Math.round(w.eval('lifetimeMl()'))===mine+25, `${mine} → ${Math.round(w.eval('lifetimeMl()'))}`);
+  ok("this device's own numbers are untouched", Math.round(w.eval('Object.values(store.ownDays).reduce((a,b)=>a+b.s1+b.s2,0)'))===mine);
+  ok('the merged day keeps both breakdowns', w.eval("Object.keys(DAYS()[dayKey(new Date())].vendor).length")>=1);
+  /* the settings card */
+  w.eval("S.adult=true; save(); show('settings')");
+  ok('adults are offered sync', /Set up sync/.test($('syncBody').textContent));
+  w.eval(`startSync('${k1}')`);
+  w.eval("show('settings')");
+  ok('paired: both devices listed', d.querySelectorAll('#syncBody .dev').length===2, $('syncBody').textContent.trim().slice(0,90));
+  ok('honest about there being no server yet', /isn’t live yet|isn't live yet/.test($('syncBody').textContent));
+  /* what would go on the wire */
+  const p=w.eval('JSON.stringify(Object.keys(syncPayload()))');
+  ok('payload carries only totals and settings', p==='["v","dev","label","days","budget","region","at"]', p);
+  ok('no timestamp finer than a date', w.eval("Object.keys(syncPayload().days).every(k=>/^\\d{4}-\\d{2}-\\d{2}$/.test(k))"));
+  /* nothing but counts: every field of every day is one of the known aggregates, and every leaf
+     is a number — so there is no slot a prompt could ever travel in. */
+  ok('every day is counts only, no free text', w.eval(`(function(){
+       const allow=['n','img','s1','s2','tin','tout','tier','task','vendor'];
+       const leaves=v=>typeof v==='number' ? true : (v&&typeof v==='object' ? Object.values(v).every(leaves) : false);
+       return Object.values(syncPayload().days).every(b=>Object.keys(b).every(k=>allow.includes(k)) && leaves(b));
+     })()`));
+  /* the server can never read it */
+  if(w.crypto && w.crypto.subtle){
+    const blob=await w.eval(`seal('${k1}', {hello:'world'})`);
+    ok('blob is unreadable as it stands', !/hello|world/.test(blob));
+    const back=await w.eval(`unseal('${k1}', ${JSON.stringify(blob)})`);
+    ok('and opens again with the code', back.hello==='world');
+    const room=await w.eval(`roomOf('${k1}')`);
+    ok('room id is a hash, not the code', /^[0-9a-f]{32}$/.test(room) && !room.includes(k1.slice(0,5).toLowerCase()));
+  } else { ok('WebCrypto available to test sealing', false, 'crypto.subtle missing'); }
+  /* switching off */
+  w.eval('stopSync()');
+  ok('stopping removes the other device', Object.keys(w.eval('S.peers')).length===0 && Math.round(w.eval('lifetimeMl()'))===mine);
+  /* the age gate */
+  w.eval("applyAge(15); show('settings')");
+  ok('under 18 is local only', /available from 18/.test($('syncBody').textContent) && !/Set up sync/.test($('syncBody').textContent));
+  ok('an under-18 answer disconnects any sync', w.eval('S.sync')===null && Object.keys(w.eval('S.peers')).length===0);
+  w.eval("applyAge(30)");
+
+  console.log('\nFIRST RUN');
+  ok('age screen exists with its logo and question', /Sipcount/.test($('s-splash').textContent) && !!$('ageIn') && !!$('ageGo'));
+  w.eval("window.confirm=()=>true; show('settings'); $('wipeBtn').onclick();");
+  ok('clearing data returns you to the age screen', $('s-splash').classList.contains('active') && w.eval('S.mode')===null);
+  ok('nav hidden while onboarding', $('nav').hidden===true);
+  w.eval("$('ageIn').value='30'; $('ageGo').onclick();");
+  ok('onboarding completes back into the app', $('s-today').classList.contains('active'));
+
   console.log('\nWEEKLY REVIEW');
   w.eval("show('today')"); $('weeklyBtn').onclick();
   const rep=$('reportSheet').textContent.replace(/\s+/g,' ');
   ok('heading appears once', (rep.match(/Weekly review/g)||[]).length===1);
-  ok('reads "last 7 days"', /last 7 days/.test(rep) && !/this week/.test(rep));
+  ok('reads "last 7 days"', /last 7 days/.test(rep) && !/this week/.test(rep), JSON.stringify(rep.slice(0,120)));
   ok('no token counts', !/token/i.test(rep));
   $('reportClose').onclick();
 
