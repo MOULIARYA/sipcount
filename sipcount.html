@@ -344,7 +344,23 @@ nav button[aria-current=page]{color:var(--green)}
 /* ---- launch sequence (placeholder): full-bleed video on black, skippable ---- */
 .launch{position:fixed;inset:0;z-index:40;background:#000;display:grid;place-items:center}
 .launch video{width:100%;height:100%;object-fit:contain;background:#000}
-.lx-skip{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));background:transparent;border:1px solid #2A2A2A;color:#7A7A7A;font:inherit;font-size:.72em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:99px;cursor:pointer}
+.lx-skip{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));background:transparent;border:1px solid #2A2A2A;color:#7A7A7A;font:inherit;font-size:.72em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:99px;cursor:pointer;z-index:2}
+/* the intro cards: one figure, one sentence, one source — sized off the viewport so the number
+   fills a phone without wrapping and still behaves on a tablet */
+.lx-stage{width:100%;max-width:560px;padding:0 clamp(24px,8vw,56px)}
+.lx-n{font-family:var(--display);font-weight:800;color:var(--green);letter-spacing:-.045em;line-height:.95;font-size:clamp(50px,15.5vw,118px);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lx-l{margin:clamp(14px,3vh,22px) 0 0;color:var(--text);font-weight:600;letter-spacing:-.015em;line-height:1.25;font-size:clamp(19px,5.2vw,28px);max-width:22ch}
+.lx-s{margin:clamp(12px,2.4vh,18px) 0 0;color:var(--muted);font-weight:500;font-size:clamp(12px,3.2vw,14px)}
+.lx-brand{display:flex;align-items:center;gap:.1em;font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:1;font-size:clamp(46px,13.5vw,100px)}
+.lx-brand svg{height:.74em;width:auto;flex:none}
+.lx-dots{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(28px + env(safe-area-inset-bottom));display:flex;gap:6px;width:min(56vw,240px)}
+.lx-dots i{flex:1;height:3px;border-radius:99px;background:#2A2A2A;overflow:hidden}
+.lx-dots i b{display:block;height:100%;background:var(--green);transform:scaleX(0);transform-origin:left}
+.lx-in{animation:lxIn .45s cubic-bezier(.22,1,.36,1) both}
+@keyframes lxIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.lx-fade{animation:lxFade .4s ease both}
+@keyframes lxFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.lx-in,.lx-fade{animation:none}.lx-dots i b{transition:none!important}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -360,7 +376,9 @@ nav button[aria-current=page]{color:var(--green)}
       <span class="eyebrow" style="color:var(--green)">Sipcount</span>
       <p style="margin:0 0 14px;font-family:var(--display);font-weight:600;color:var(--muted)">See what your AI drinks.</p>
       <h1>How old are you?</h1>
-      <p class="sub" style="margin:0;max-width:300px">One question, then straight in. We keep only the mode it picks — never the number — and nothing leaves this device.</p>
+      <!-- precise on purpose: with syncing available to 18+, "nothing leaves this device" is no
+           longer true unconditionally. What is always true is that nothing you type is ever kept. -->
+      <p class="sub" style="margin:0;max-width:300px">One question, then straight in. We keep only the mode it picks — never the number. Nothing you type is ever stored, here or anywhere.</p>
     </div>
     <input type="number" id="ageIn" inputmode="numeric" min="5" max="120" placeholder="18" aria-label="Your age">
     <button class="btn" id="ageGo" style="max-width:260px">Continue</button>
@@ -561,7 +579,10 @@ nav button[aria-current=page]{color:var(--green)}
       <p>Range shown spans vendor-reported lows (≈0.2×) to 2023 academic highs (≈3.9×). Constants <code id="cVersion"></code>. Sources in <code>ARCHITECTURE.md</code>.</p>
     </details>
     <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
-    <details><summary>Privacy</summary><p>Nothing you type ever leaves this device. We keep daily totals and your preferences here, and nothing else.</p></details>
+    <details><summary>Privacy</summary>
+      <p>Nothing you type is ever captured, so there is nothing to leave this device. What we keep here is a daily total, your settings, and the counts behind them — nothing else.</p>
+      <p>If you turn on syncing, those daily totals go to your other devices encrypted with a code only you hold: we can’t read them, and the date is the finest time we ever record. Your age, your prompts and your email are never part of it. Syncing is available from 18, and off until you switch it on.</p>
+    </details>
     <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="csvBtn">Export CSV</button><button class="btn ghost small" id="sampleBtn">Load sample week</button><button class="btn ghost small" id="unlockBtn">Unlock all</button></div>
     <button class="btn danger small" id="wipeBtn" style="align-self:flex-start">Clear my data</button>
   </section>
@@ -573,13 +594,17 @@ nav button[aria-current=page]{color:var(--green)}
     <button data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
   </nav>
 </div>
-<!-- ============ LAUNCH SEQUENCE — placeholder ==============================================
-     No launch animation ships today. When a video is ready, drop it in assets/ and name it in
-     LAUNCH_VIDEO below; this overlay then plays it once on first launch with a skip control.
-     With no video configured the app goes straight to the age screen, as it always did.      -->
-<div class="launch" id="launch" hidden>
-  <video id="launchVideo" playsinline muted preload="auto"></video>
+<!-- ============ INTRO SEQUENCE =============================================================
+     Two verified figures, then the brand — built in the page, so there is no video file, no
+     watermark and it stays crisp on any screen. Plays once on first launch, skippable, tap to
+     advance, and `?splash=1` replays it. The LAUNCH_VIDEO slot below still works: set it and a
+     video plays instead of these cards.                                                       -->
+<div class="launch" id="launch" hidden role="dialog"
+     aria-label="Sipcount intro. 700,000 litres of fresh water evaporated to train one AI model. 66 billion litres of water consumed on-site by US data centres in 2023. Sipcount — now see your share.">
   <button class="lx-skip" id="lxSkip">Skip</button>
+  <div class="lx-stage" id="lxStage" aria-hidden="true"></div>
+  <div class="lx-dots" id="lxDots" aria-hidden="true"></div>
+  <video id="launchVideo" playsinline muted preload="auto" hidden></video>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -659,7 +684,7 @@ const $=id=>document.getElementById(id);
 const store=makeStore('sipcount.v10',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
   mascot:'plant', unlocked:['plant'], names:{}, bestStreak:0, healDay:null,
   mode:null, social:true, adult:null, saved:0, streak:0, facts:{}, zoneAlert:{}, sessionCheckins:true, installedAt:null,
-  sync:null, devLabel:null, syncAsked:false, peers:{} });
+  sync:null, devLabel:null, syncAsked:false, peers:{}, introSeen:false });
 let S=store.S; const save=store.save;
 /* Every screen reads day totals through DAYS(): this device's own days summed with any paired
    device's (engine.js §multi-device merge). With nothing paired it is the same object as S.days. */
@@ -705,6 +730,9 @@ function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show
    budget and DRAINS as prompts are logged (round 13). On every open it starts full and catches up
    to today's level in front of the user, so the day's use is something you watch happen. */
 const DROP=(l,c)=>{ const y=130*(1-l); return `<svg viewBox="0 0 100 130"><defs><clipPath id="vc"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z"/></clipPath></defs><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#1E1E1E"/><g clip-path="url(#vc)"><rect class="fill" x="0" y="0" width="100" height="130" fill="${c}" style="transform:translateY(${y}px)"/></g><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none" stroke="#262626" stroke-width="1.5"/></svg>`; };
+/* the same silhouette, solid — used as the wordmark's drop in the intro so what closes the
+   sequence is literally the vessel that meets them on the dashboard */
+const DROPMARK=`<svg viewBox="0 0 100 130" aria-hidden="true"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="var(--green)"/></svg>`;
 let drainAnimated=false, dropSeq=0, ecoFresh=true, ecoSeq=0;
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* The catch-up drain runs every time the dashboard mounts (round 17): the drop is painted full, waits a
@@ -1711,22 +1739,72 @@ $('wipeBtn').onclick=()=>{ if(!confirm('Delete everything stored on this device 
   applyMode(); show('splash'); toast('Cleared — starting over'); };
 $('sampleBtn').onclick=()=>{ S.wiped=false; store.loadSample(); S=store.S; S.unlocked=[...ROSTER]; save(); drainAnimated=false; ecoFresh=true; toast('Sample week loaded'); show('today'); };
 
-/* ===================================================================================== [Launch]
-   Placeholder only. Set LAUNCH_VIDEO to a file in assets/ and it plays once on the first launch —
-   skippable, never under reduced motion, and `?splash=1` forces it for a demo. Left null, nothing
-   happens at all and the app opens on the age screen exactly as before. */
-let LAUNCH_VIDEO = null;            // e.g. 'assets/launch.mp4'
-function playSplash(){
+/* ===================================================================================== [Intro]
+   The first eight seconds. Two figures the user can check, then the name and the promise the app
+   is about to keep. It is built in the page rather than shot as a video: no file to ship, no
+   watermark, sharp on every screen, and the same drop that ends the sequence is the one that
+   meets them on the dashboard.
+
+   Both numbers are verified against the source named on screen (2026-09-23) and both ship in the
+   build — they are never fetched at launch, because an outbound request as the app's first act
+   would hand over an IP and a launch time for every user, every open (I-20). Google's 2025 figure
+   was cut for length and lives in the fact library instead, where it lands once someone cares. */
+const INTRO=[
+  { n:700000, suf:'',        label:'litres of fresh water evaporated to train one AI model.', src:'GPT-3 · Li et al., 2023' },
+  { n:66,     suf:' billion', label:'litres of water consumed on-site by US data centres in 2023.', src:'Lawrence Berkeley National Laboratory, 2024' }
+];
+const INTRO_MS=[3000,3000,2200];    // two stats, then the brand ≈ 8.2 s
+let LAUNCH_VIDEO = null;            // set to a file in assets/ and a video plays instead of the cards
+let introIdx=0, introTimer=null;
+function introCard(i){
+  const st=$('lxStage');
+  if(i<INTRO.length){ const s=INTRO[i];
+    st.innerHTML=`<div class="lx-n lx-in"><span id="lxN">0</span>${s.suf}</div>
+      <p class="lx-l lx-in" style="animation-delay:.28s">${s.label}</p>
+      <p class="lx-s lx-fade" style="animation-delay:.5s">${s.src}</p>`;
+    if(REDUCED) $('lxN').textContent=fmt(s.n,0); else countTo($('lxN'), s.n, 0, 1200);
+  } else {
+    st.innerHTML=`<div class="lx-brand lx-in"><span>Sipcount</span>${DROPMARK}</div>
+      <p class="lx-l lx-fade" style="animation-delay:.28s;color:var(--muted)">Now see your share.</p>`;
+  }
+  /* progress: past bars full, the current one filling over its own duration */
+  $('lxDots').innerHTML=INTRO_MS.map((ms,k)=>`<i><b${k<i?' style="transform:scaleX(1)"':k===i?` style="transition:transform ${ms}ms linear"`:''}></b></i>`).join('');
+  const bar=$('lxDots').children[i]&&$('lxDots').children[i].firstElementChild;
+  if(bar){ if(REDUCED) bar.style.transform='scaleX(1)';
+           else requestAnimationFrame(()=>requestAnimationFrame(()=>{ bar.style.transform='scaleX(1)'; })); }
+}
+function introStep(){
+  introCard(introIdx);
+  introTimer=setTimeout(()=>{ if(introIdx>=INTRO_MS.length-1) endIntro(); else { introIdx++; introStep(); } }, INTRO_MS[introIdx]);
+}
+function endIntro(){
+  clearTimeout(introTimer); const el=$('launch'); if(!el||!el.isConnected) return;
+  const v=$('launchVideo'); if(v && !v.hidden){ try{ v.pause(); }catch(e){} }
+  if(REDUCED){ el.remove(); return; }
+  el.style.transition='opacity .4s ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),420);
+}
+/* Reduced motion still gets the cards — they are the content, not decoration. It only loses the
+   counting and the fades. `?splash=1` replays it; so does Clear my data, since the flag is stored. */
+function playIntro(){
   const force=/[?&]splash=1/.test(location.search);
-  if(!LAUNCH_VIDEO || REDUCED || (!force && S.splashSeen)) return;
-  S.splashSeen=true; save();
-  const el=$('launch'), v=$('launchVideo');
-  v.src=LAUNCH_VIDEO; el.hidden=false;
-  const done=()=>{ if(el.isConnected){ try{ v.pause(); }catch(e){} el.hidden=true; el.remove(); } };
-  el.addEventListener('click',done); $('lxSkip').onclick=e=>{ e.stopPropagation(); done(); };
-  v.addEventListener('ended',done); v.addEventListener('error',done);
-  const p=v.play&&v.play(); if(p&&p.catch) p.catch(done);      // autoplay refused → straight into the app
-  setTimeout(done,9000);                                        // never trap anyone behind it
+  if(!force && S.introSeen) return;
+  S.introSeen=true; save();
+  const el=$('launch'); el.hidden=false;
+  $('lxSkip').onclick=e=>{ e.stopPropagation(); endIntro(); };
+  if(LAUNCH_VIDEO){                                   // a video, if one is ever supplied
+    const v=$('launchVideo'); v.hidden=false; $('lxStage').hidden=true; $('lxDots').hidden=true;
+    v.src=LAUNCH_VIDEO;
+    v.addEventListener('ended',endIntro); v.addEventListener('error',endIntro);
+    el.onclick=endIntro;
+    const p=v.play&&v.play(); if(p&&p.catch) p.catch(endIntro);   // autoplay refused → straight in
+    setTimeout(endIntro,9000);
+    return;
+  }
+  introIdx=0; introStep();
+  /* onclick, not addEventListener: replaying the intro must not stack a second advance handler,
+     which would skip a card per tap. */
+  el.onclick=()=>{ clearTimeout(introTimer);                       // tap anywhere to move on
+    if(introIdx>=INTRO_MS.length-1) endIntro(); else { introIdx++; introStep(); } };
 }
 
 /* ===================================================================================== [App] boot */
@@ -1742,7 +1820,7 @@ $('splashRestore').onclick=()=>{
   if(!k){ toast('That code isn’t right'); return; }
   pendingKey=k; toast('Code saved — answer the age question to finish');
 };
-fillModels(); renderEst(); applyMode(); playSplash();
+fillModels(); renderEst(); applyMode(); playIntro();
 if(!S.mode){ show('splash'); }
 else { show('today'); if(UI.factCadence.onOpen) setTimeout(showFact,1500); maybeWeeklyReport(); checkUnlocks(); maybeHeal(); setTimeout(maybeSyncNudge,3000); if(syncOn()) syncNow(true); }
 startIdle();

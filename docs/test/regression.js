@@ -33,20 +33,29 @@ async function run(){
   ok('nav is today/simulate/about/settings', [...d.querySelectorAll('nav button')].map(b=>b.dataset.s).join(',')==='today,log,about,settings');
   ok('grove parked', !$('s-grove'));
 
-  console.log('\nLAUNCH PLACEHOLDER');
-  ok('no launch overlay when no video is configured', !$('launch') || $('launch').hidden);
-  ok('video slot is empty and waiting', w.eval('LAUNCH_VIDEO')===null && !!$('launchVideo'));
-  /* the age screen is class="splash"; the launch overlay must never share a class with it, or the
+  console.log('\nINTRO SEQUENCE');
+  /* the age screen is class="splash"; the intro overlay must never share a class with it, or the
      age screen inherits overlay styling and the app renders blank (this happened in the wild) */
   ok('no class collision with the age screen', d.querySelectorAll('.splash').length===1 && d.querySelector('.splash').id==='s-splash');
   ok('age screen reachable', (()=>{ w.eval("show('splash')"); const a=$('s-splash').classList.contains('active'); w.eval("show('today')"); return a; })());
-  ok('a configured video would play and skip cleanly', (()=>{
-     w.eval("LAUNCH_VIDEO='assets/none.mp4'; S.splashSeen=false; playSplash();");
-     const shown=$('launch') && !$('launch').hidden;
-     if(shown) $('lxSkip').click();
-     w.eval("LAUNCH_VIDEO=null;");
-     return shown && !$('launch');
+  ok('two figures then the brand', w.eval('INTRO.length')===2 && w.eval('INTRO_MS.length')===3);
+  ok('runs about eight seconds, not thirteen', (()=>{ const t=w.eval('INTRO_MS.reduce((a,b)=>a+b,0)'); return t>=7000 && t<=9000; })(), w.eval('INTRO_MS.reduce((a,b)=>a+b,0)')+'ms');
+  ok('LBNL figure corrected to 66 billion', w.eval('INTRO[1].n')===66 && /billion/.test(w.eval('INTRO[1].suf')));
+  ok('no "just to cool" overclaim', !/just to cool/i.test(w.eval('JSON.stringify(INTRO)')));
+  ok('every figure names its source', w.eval('INTRO.every(s=>s.src&&s.src.length>6)'));
+  ok('the Google figure survived in the fact library', w.eval("C.facts.some(f=>/41 billion/.test(f.t))"));
+  ok('cards render with a counting number', (()=>{
+     w.eval("S.introSeen=false; introIdx=0; playIntro();");
+     const shown=$('launch') && !$('launch').hidden && !!$('lxN');
+     const card=$('lxStage').textContent;
+     return shown && /litres/.test(card) && /Li et al/.test(card);
   })());
+  ok('progress bar per card', $('lxDots').children.length===3);
+  ok('tapping advances', (()=>{ click($('launch')); return /data centres/.test($('lxStage').textContent); })());
+  ok('last card is the brand and the promise', (()=>{ click($('launch')); const t=$('lxStage').textContent;
+     return /Sipcount/.test(t) && /Now see your share/.test(t) && !!$('lxStage').querySelector('svg'); })());
+  ok('skip closes it and never traps you', (()=>{ $('lxSkip').click(); w.eval("$('launch')&&$('launch').remove()"); return !$('launch'); })());
+  ok('video slot still honoured if one is ever supplied', w.eval('LAUNCH_VIDEO')===null && /LAUNCH_VIDEO/.test(w.eval('playIntro.toString()')));
 
   console.log('\nHERO + CHARACTER');
   ok('drop painted', !!$('heroVessel').querySelector('svg'));
@@ -162,6 +171,14 @@ async function run(){
   /* switching off */
   w.eval('stopSync()');
   ok('stopping removes the other device', Object.keys(w.eval('S.peers')).length===0 && Math.round(w.eval('lifetimeMl()'))===mine);
+  /* the promise the app makes must survive the feature it just gained */
+  w.eval("show('settings')");
+  const priv=$('s-settings').textContent.replace(/\s+/g,' ');
+  ok('privacy copy no longer claims nothing ever leaves', !/nothing (you type )?ever leaves this device/i.test(priv));
+  ok('privacy copy names what syncing sends', /daily totals/i.test(priv) && /encrypted/i.test(priv) && /from 18/i.test(priv));
+  w.eval("show('splash')");
+  ok('age screen makes the narrow promise, not the broad one', !/nothing leaves this device/i.test($('s-splash').textContent) && /Nothing you type is ever stored/i.test($('s-splash').textContent));
+  w.eval("show('today')");
   /* the age gate */
   w.eval("applyAge(15); show('settings')");
   ok('under 18 is local only', /available from 18/.test($('syncBody').textContent) && !/Set up sync/.test($('syncBody').textContent));
