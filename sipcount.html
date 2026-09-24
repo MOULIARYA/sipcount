@@ -27,7 +27,8 @@
    ===================================================================================== */
 :root{
   --ink:#000000; --surface:#141414; --surface-2:#1E1E1E; --line:#262626; --track:#333333;
-  --text:#FFFFFF; --muted:#A6A6A6; --dim:#6E6E6E;
+  /* --dim was #6E6E6E: 3.9:1 on the ink, under the 4.5:1 AA minimum for the small labels it carries. */
+  --text:#FFFFFF; --muted:#A6A6A6; --dim:#8A8A8A;
   --green:#00F076; --green-deep:#00B85A; --green-soft:rgba(0,240,118,.12);
   --amber:#FFB800; --red:#FF3B30; --soil:#3A3A3A;
   --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,-apple-system,sans-serif;
@@ -35,7 +36,7 @@
   color-scheme:dark;
 }
 :root[data-size="dense"]{ --fs:14px; --tap:40px; --gap:12px; }
-:root[data-size="large"]{ --fs:19px; --tap:52px; --gap:20px; --muted:#C9C9C9; }
+:root[data-size="large"]{ --fs:19px; --tap:52px; --gap:20px; --muted:#C9C9C9; --dim:#B4B4B4; }
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -345,15 +346,21 @@ nav button[aria-current=page]{color:var(--green)}
 .launch{position:fixed;inset:0;z-index:40;background:#000;display:grid;place-items:center}
 .launch video{width:100%;height:100%;object-fit:contain;background:#000}
 .lx-skip{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));background:transparent;border:1px solid #2A2A2A;color:#7A7A7A;font:inherit;font-size:.72em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:99px;cursor:pointer;z-index:2}
+/* the living waterline sits behind everything in the overlay; the scrim keeps the type readable
+   if a tall surface ever reaches up towards it */
+#lxBg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.launch .lx-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,.28) 38%,rgba(0,0,0,0) 58%)}
 /* the intro cards: one figure, one sentence, one source — sized off the viewport so the number
-   fills a phone without wrapping and still behaves on a tablet */
-.lx-stage{width:100%;max-width:560px;padding:0 clamp(24px,8vw,56px)}
+   fills a phone without wrapping and still behaves on a tablet. The bottom margin lifts the block
+   into the upper third, clear of the water surface (round 28). */
+.lx-stage{position:relative;z-index:2;width:100%;max-width:560px;padding:0 clamp(24px,8vw,56px);margin-bottom:26vh}
 .lx-n{font-family:var(--display);font-weight:800;color:var(--green);letter-spacing:-.045em;line-height:.95;font-size:clamp(50px,15.5vw,118px);font-variant-numeric:tabular-nums;white-space:nowrap}
 .lx-l{margin:clamp(14px,3vh,22px) 0 0;color:var(--text);font-weight:600;letter-spacing:-.015em;line-height:1.25;font-size:clamp(19px,5.2vw,28px);max-width:22ch}
 .lx-s{margin:clamp(12px,2.4vh,18px) 0 0;color:var(--muted);font-weight:500;font-size:clamp(12px,3.2vw,14px)}
 .lx-brand{display:flex;align-items:center;gap:.1em;font-family:var(--display);font-weight:800;letter-spacing:-.04em;line-height:1;font-size:clamp(46px,13.5vw,100px)}
 .lx-brand svg{height:.74em;width:auto;flex:none}
-.lx-dots{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(28px + env(safe-area-inset-bottom));display:flex;gap:6px;width:min(56vw,240px)}
+.lx-dots{position:absolute;z-index:2;left:50%;transform:translateX(-50%);bottom:calc(28px + env(safe-area-inset-bottom));display:flex;gap:6px;width:min(56vw,240px)}
 .lx-dots i{flex:1;height:3px;border-radius:99px;background:#2A2A2A;overflow:hidden}
 .lx-dots i b{display:block;height:100%;background:var(--green);transform:scaleX(0);transform-origin:left}
 .lx-in{animation:lxIn .45s cubic-bezier(.22,1,.36,1) both}
@@ -424,6 +431,14 @@ nav button[aria-current=page]{color:var(--green)}
     </div>
     <div class="ecoline" id="oppCost"></div>
     <!-- ↑ everything above is the story: the number, the drop, the mascot, one plain line (round 16) -->
+
+    <!-- The first thing a new user needs to know, and the one thing nothing used to say: the app
+         counts prompts by itself. On Android this card is where the permission ask lives, with its
+         reason attached — a permission screen that arrives without a reason gets declined. -->
+    <div class="widgetrow" id="watchCard" hidden>
+      <span class="sub">Sipcount is watching for your prompts. Use ChatGPT, Claude or Gemini and come back.</span>
+      <div class="row" style="gap:6px"><button class="pillbtn" id="watchOk">Got it</button></div>
+    </div>
 
     <!-- widget discovery shows once, on the first run, then lives in Settings (round 22) -->
     <div class="widgetrow" id="widgetCard" hidden>
@@ -504,29 +519,31 @@ nav button[aria-current=page]{color:var(--green)}
       </div>
     </div>
     <div class="nudge" id="nudge"></div>
-    <button class="btn" id="logBtn">Log it</button>
+    <!-- Simulate is a what-if and nothing else (decision 3). The estimate updates as you move the
+         sliders, so there is nothing to press; logging into today's real total is demo-only. -->
+    <p class="demo" id="simNote">Nothing here touches today’s total — it’s a sandbox.</p>
+    <button class="btn" id="logBtn" hidden>Log it</button>
     <p class="demo" id="sessionInfo"></p>
-    <div class="row" style="justify-content:center;gap:8px"><button class="pillbtn" id="logTen">+10 prompts</button><button class="pillbtn" id="sessionDemo">30-min session</button></div>
+    <div class="row" id="simDemoRow" hidden style="justify-content:center;gap:8px"><button class="pillbtn" id="logTen">+10 prompts</button><button class="pillbtn" id="sessionDemo">30-min session</button></div>
   </section>
 
   <!-- ============ ABOUT (copy supplied by the product owner, round 16; only "exact" → "estimated") ==== -->
   <section class="screen" id="s-about">
     <div class="about">
       <h1 class="eyebrow">Sipcount · See what your AI drinks.</h1>
-      <h3>The Cloud is on the Ground</h3>
-      <p>AI feels like magic, but it lives on massive, hyper-heated physical servers. To keep from melting, these data centers evaporate millions of liters of fresh water every single day.</p>
-      <h3>Screen Time for Generative AI</h3>
-      <p>You check your phone’s screen time and battery life. Sipcount gives you that same visibility for your prompts. We translate abstract data center math into tangible, everyday metrics—down to the milliliter.</p>
-      <h3>The Goal: Digital Sobriety</h3>
-      <p>By seeing the estimated physical cost of your queries, you can:</p>
+      <h3>The cloud is on the ground</h3>
+      <p>AI feels like magic. It runs on servers that get very hot, and the cheapest way to cool them is to evaporate fresh water — millions of litres of it, every day, in real places.</p>
+      <h3>You already check your screen time</h3>
+      <p>This is the same idea for your prompts. We turn data-centre arithmetic into a number you can picture: a glass, a bottle, a shower.</p>
+      <h3>What it’s for</h3>
+      <p>Not guilt. Just knowing — and knowing changes small things:</p>
       <ul class="goals">
-        <li><b>Write smarter prompts</b> to get answers faster.</li>
-        <li><b>Use lighter AI models</b> for simple, everyday tasks.</li>
-        <li><b>Hold infrastructure accountable</b> by knowing your impact.</li>
+        <li><b>Shorter questions, shorter answers.</b> Most of the water goes into the reply.</li>
+        <li><b>A lighter model</b> handles everyday things for about a fifth of the water.</li>
+        <li><b>Enough people watching</b> is how the companies building the servers end up answering for them.</li>
       </ul>
-      <p class="close">Stop guessing. Start tracking your sips.</p>
-      <p class="demo" style="text-align:left;margin-top:18px">Figures in Sipcount are estimates built from published research (Li et al. 2023; WRI 2020; vendor disclosures 2025) — see Settings → How the number is worked out.</p>
-      <button class="btn" id="neutralBtn2">Neutralize My Footprint</button>
+      <p class="close">Every prompt has a price. Now you can see yours.</p>
+      <p class="demo" style="text-align:left;margin-top:18px">Every figure here is an estimate built from published research (Li et al. 2023; WRI 2020; LBNL 2024; vendor disclosures 2025) — see Settings → How the number is worked out.</p>
     </div>
   </section>
 
@@ -583,7 +600,7 @@ nav button[aria-current=page]{color:var(--green)}
       <p>Nothing you type is ever captured, so there is nothing to leave this device. What we keep here is a daily total, your settings, and the counts behind them — nothing else.</p>
       <p>If you turn on syncing, those daily totals go to your other devices encrypted with a code only you hold: we can’t read them, and the date is the finest time we ever record. Your age, your prompts and your email are never part of it. Syncing is available from 18, and off until you switch it on.</p>
     </details>
-    <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="csvBtn">Export CSV</button><button class="btn ghost small" id="sampleBtn">Load sample week</button><button class="btn ghost small" id="unlockBtn">Unlock all</button></div>
+    <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="csvBtn">Export CSV</button><button class="btn ghost small" id="sampleBtn" hidden>Load sample week</button><button class="btn ghost small" id="unlockBtn" hidden>Unlock all</button></div>
     <button class="btn danger small" id="wipeBtn" style="align-self:flex-start">Clear my data</button>
   </section>
 
@@ -601,6 +618,8 @@ nav button[aria-current=page]{color:var(--green)}
      video plays instead of these cards.                                                       -->
 <div class="launch" id="launch" hidden role="dialog"
      aria-label="Sipcount intro. 700,000 litres of fresh water evaporated to train one AI model. 66 billion litres of water consumed on-site by US data centres in 2023. Sipcount — now see your share.">
+  <canvas id="lxBg" aria-hidden="true"></canvas>
+  <div class="lx-scrim" aria-hidden="true"></div>
   <button class="lx-skip" id="lxSkip">Skip</button>
   <div class="lx-stage" id="lxStage" aria-hidden="true"></div>
   <div class="lx-dots" id="lxDots" aria-hidden="true"></div>
@@ -625,7 +644,7 @@ nav button[aria-current=page]{color:var(--green)}
 </div>
 
 <!-- ============ WEEKLY REPORT (full screen) ============ -->
-<div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Weekly digital sobriety report">
+<div class="report" id="reportSheet" role="dialog" aria-modal="true" aria-label="Your week in water">
   <div class="inner">
     <div class="row between"><span class="pill good">Weekly review</span><button class="btn ghost small" id="reportClose">Close</button></div>
     <div id="reportBody" class="stack" style="gap:14px"></div>
@@ -673,13 +692,25 @@ const UI = {
      bathtub ≈ 150 L typical fill; fire truck ≈ 2,500 L pumper tank; Olympic pool = 2,500,000 L. */
   macro: [ ['Olympic pools',2500000], ['Fire trucks',2500], ['Bathtubs',150], ['Standard water bottles',0.5] ].map(([label,l])=>({label, ml:l*1000})),
   storyCopy: [
-    d=>`My AI drank ${d.ml} mL of water today. Can your ${d.mascot} survive finals week?`,
+    d=>`My AI drank ${d.ml} mL of water today. How much did yours?`,
     d=>d.images?`Generated ${d.images} AI image${d.images>1?'s':''} — ${d.ml} mL of water evaporated.`:`${d.prompts} prompts, ${d.ml} mL of water. My ${d.mascot}: ${d.state.toLowerCase()}.`,
-    d=>`Digital sobriety check: ${d.ml} mL of water for ${d.prompts} AI prompts. My ${d.mascot} is ${d.state.toLowerCase()}.`
+    d=>`${d.ml} mL of water for ${d.prompts} AI prompts today. My ${d.mascot} is ${d.state.toLowerCase()}.`
   ]
 };
 
-/* ===================================================================================== [App] state */
+/* ===================================================================================== [v1 scope]
+   Signed off 2026-09-24 — docs/PRE-BUILD-REVIEW.md §8. Flags, not deletions: everything here comes
+   back by flipping one value, so nothing has to be rewritten when it does.
+
+   DEMO (`?demo=1`) is the single gate for every affordance that exists to show the app off rather
+   than to use it. Sample data is the important one: a new install must never open on a week of
+   prompts nobody sent, on the first screen of an app whose whole claim is honest numbers. */
+const DEMO = /[?&]demo=1/.test(location.search);
+const V1 = {
+  charity: false,   // cut: sends people to third parties for money on a claim we then have to qualify
+  sync:    false,   // built and passing, but it wants a hosted relay and a privacy policy first (1.1)
+  logging: DEMO     // Simulate estimates only — writing into today's real total is a demo affordance
+};
 const $=id=>document.getElementById(id);
 const store=makeStore('sipcount.v10',{ budget:100, region:'us_hyperscale', cooling:'reported', hydro:true, size:'standard',
   mascot:'plant', unlocked:['plant'], names:{}, bestStreak:0, healDay:null,
@@ -689,6 +720,7 @@ let S=store.S; const save=store.save;
 /* Every screen reads day totals through DAYS(): this device's own days summed with any paired
    device's (engine.js §multi-device merge). With nothing paired it is the same object as S.days. */
 const DAYS=()=>store.days();
+if(DEMO && !Object.keys(S.days).length && !S.wiped) store.loadSample();
 S.facts ||= {}; S.zoneAlert ||= {}; S.names ||= {}; S.unlocked ||= ['plant']; if(!S.unlocked.includes('plant')) S.unlocked.push('plant');
 if(!S.installedAt){ const ks=Object.keys(DAYS()).sort(); S.installedAt = ks.length ? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); }
 save();
@@ -696,7 +728,22 @@ const last7=()=>store.last7(), todayStats=()=>store.todayStats(), params=()=>sto
 const isEdu=()=>S.mode==='edu';
 const zoneVar=pct=>({green:'var(--green)',amber:'var(--amber)',red:'var(--red)'})[zone(pct)];
 const zonePill=pct=>({green:'good',amber:'warn',red:'bad'})[zone(pct)];
-function plantState(pct){ return pct>=UI.plant.drooping?'Wilting':pct>=UI.plant.thriving?'Drooping':'Thriving'; }
+/* Bridge to scale (decision 12). The personal number is small, and honestly so — a heavy day is a
+   few hundred millilitres, which on its own argues against caring. This does the multiplication that
+   makes it mean something, and it reuses the figure from the intro so it closes a loop rather than
+   opening another abstract one. A million people for a single DAY is only a swimming pool; it takes
+   a year to land, which is why the arithmetic below is annual. */
+const GPT3_LITRES=700000;
+function scaleLine(dayMl){
+  if(!(dayMl>0)) return null;
+  const litresPerYear = dayMl*1e6*365/1000;                  // a million people, one year
+  const runs = litresPerYear/GPT3_LITRES;
+  if(runs<1) return null;                                    // below a whole run it is not a story
+  const d = 365/runs;
+  const every = d<10 ? `${Math.max(1,Math.round(d))} days` : d<45 ? `${Math.round(d/7)} weeks` : `${Math.round(d/30)} months`;
+  return `A million people with your day would evaporate another GPT-3 training run — 700,000 litres — every ${every}.`;
+}
+let oppAlt=false;                                            // flipped on each arrival at Today
 /* Smooth number counting for a text node: tweens from its current value to `to`. */
 function countTo(el, to, decimals=2, ms=700){
   const from=parseFloat((el.textContent||'0').replace(/,/g,''))||0; if(Math.abs(to-from)<1e-9){ el.textContent=decimals?to.toFixed(decimals):fmt(to); return; }
@@ -719,7 +766,7 @@ function show(id){
   /* arriving on Today always replays the catch-up: the drop fills, then drains to where you are (round 17) */
   if(id!=='today' && preview!=null) exitPreview();
   document.querySelectorAll('.sticker,.ecoart,.mini').forEach(x=>x.classList.toggle('still', id!=='today'));
-  if(id==='today'){ drainAnimated=false; ecoFresh=true; renderToday(); }
+  if(id==='today'){ drainAnimated=false; ecoFresh=true; oppAlt=!oppAlt; renderToday(); }
   if(id==='settings') renderSettings();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
@@ -1080,7 +1127,10 @@ function exitPreview(){ preview=null; $('scrub').hidden=true; $('simBtn').setAtt
   document.querySelector('.eco').classList.remove('previewing'); renderToday(); }
 
 /* One stage number drives both the picture and the words, so they can never disagree (round 26). */
-const stageOf=pct=>Math.min(4,Math.max(0,Math.round(clamp01(pct)*4)));
+/* Under 13 the character never reaches its worst state (decision 4): the same five-stage system,
+   capped one short, so a nine-year-old sees a sad plant rather than a dying one. */
+const worstStage=()=>S.social===false?3:4;
+const stageOf=pct=>Math.min(worstStage(),Math.max(0,Math.round(clamp01(pct)*4)));
 const mascot=()=>ECO[S.mascot]||ECO.plant;
 const mascotId=()=>ROSTER.includes(S.mascot)&&ECO[S.mascot]?S.mascot:'plant';
 /* Renders the chosen mascot into a container. Returns the element that `applyEco` animates.
@@ -1206,7 +1256,7 @@ function insights(){
   let saved=0; for(const v of Object.values(agg.vendor)) for(const t of ['lightweight','standard']){ const x=v.tiers[t]; if(x && t!==heaviest) saved += x.ml*(C.tiers[heaviest].wh1k/C.tiers[t].wh1k) - x.ml; }
   const efficientBrand = brands.find(([v,a])=>(a.tiers.standard?.n||0)+(a.tiers.lightweight?.n||0)>0);
   const parts=[`You leaned on <b>${C.brands[topV]||topV}</b> ${scope} — mostly its <b>${C.tiers[topTier].label.toLowerCase()} model</b> (${fmt(top.ml)} mL, ${Math.round(top.ml/agg.ml*100)}% of your water).`];
-  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${plantState(T.pct)==='Thriving'?` Your ${mascot().label.toLowerCase()} holds steady.`:''}`); }
+  if(saved>0 && efficientBrand){ const [ev,ea]=efficientBrand; const en=(ea.tiers.standard?.n||0)+(ea.tiers.lightweight?.n||0); parts.push(`${C.brands[ev]}'s lighter models handled ${Math.round(en/agg.n*100)}% of your tasks — roughly <b>${fmt(saved)} mL saved</b> versus running everything on the ${C.tiers[heaviest].label.toLowerCase()} tier.${stageOf(T.pct)===0?` Your ${mascot().label.toLowerCase()} holds steady.`:''}`); }
   else if(agg.tiers.reasoning && lightN/agg.n<0.5) parts.push(`Most prompts hit a reasoning model (≈10× the water). Try a standard model first.`);
   const tin=T.tin||0, tout=T.tout||0, wt=tin*C.tokenWeights.input+tout*C.tokenWeights.output;
   if(wt>0 && T.n) parts.push(`<b>${Math.round((tout*C.tokenWeights.output)/wt*100)}% of your water went into the answers</b>, not the questions.`);
@@ -1246,7 +1296,7 @@ $('widgetDismiss').onclick=()=>{ S.widgetSeen=true; save(); $('widgetCard').hidd
 $('widgetClose').onclick=()=>$('widgetSheet').classList.remove('open');
 $('weeklyBtn').onclick=weeklyReport;
 $('reportClose').onclick=()=>$('reportSheet').classList.remove('open');
-$('reportNeutral').onclick=()=>{ $('reportSheet').classList.remove('open'); renderNeutral(); $('neutralSheet').classList.add('open'); };
+$('reportNeutral').onclick=()=>{ if(!V1.charity) return; $('reportSheet').classList.remove('open'); renderNeutral(); $('neutralSheet').classList.add('open'); };
 
 /* ===================================================================================== [Session]
    30-minute continuous-use check-in. A session = prompts separated by < GAP minutes. Kept in
@@ -1269,7 +1319,7 @@ function trackSession(promptMl, now=Date.now()){
 $('sessionDemo').onclick=()=>{ if(!SESSION.start){ SESSION.start=Date.now()-31*60000; SESSION.last=Date.now()-60000; } else { SESSION.start=Math.min(SESSION.start, Date.now()-31*60000); } logOne(); toast('Session fast-forwarded to 31 min'); };
 
 /* ===================================================================================== [Weekly report]
-   "Digital Sobriety" full-screen review: opens automatically on Sunday evening (≥18:00 local), once
+   "Your week in water" full-screen review: opens automatically on Sunday evening (≥18:00 local), once
    per week, and on demand from the ▤ pill. Now also reports the question/answer token split. */
 function weeklyReport(){
   const A=weeklyAnalysis(store), max=Math.max(1,...A.vals);
@@ -1305,20 +1355,21 @@ function renderToday(){
   renderLifetime();
   applyMode();
   const T=todayStats(), pv=preview!=null, pct=pv?preview:T.pct, total=pv?S.budget*preview:T.total;
-  const state=plantState(pct);
-  const z=zone(pct), col=zoneVar(pct), left=Math.max(0,S.budget-total);
+  const z=zone(pct), col=zoneVar(pct);
   countTo($('todayMl'), total, total<10?1:0);
   renderDrop(pct, col);
   $('budgetRing').className='z-'+z;
-  $('oppCost').textContent=opportunityCost(total);
+  /* One line, two jobs, alternating between visits: what the water would have done for you, and
+     what it would come to if a million people had your day. No second element, no extra height. */
+  $('oppCost').textContent = (oppAlt && scaleLine(total)) || opportunityCost(total);
   $('todayBudget').textContent=`${Math.round(pct*100)}% of ${S.budget} mL used`;
   $('ecoPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('ecoPill').className='pill '+zonePill(pct);
   const M=mascot();
   $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=`${petLabel()} · ${M.state(pct)}`; $('ecoState').style.color=col;
   const ad=aliveDays(); $('ecoAlive').textContent=`${ad} ${ad===1?'day':'days'} alive`;
-  /* the sentence only earns its place once things start going wrong (round 22) */
-  const rough = stageOf(pct)>=2;
-  $('ecoLine').hidden=!rough; if(rough) $('ecoLine').textContent=M.line(pct, petName());
+  /* The sentence now runs at every stage (decision 7). It used to appear only once things were
+     going wrong, which meant the careful user — the one we most want to reward — was told nothing. */
+  $('ecoLine').hidden=false; $('ecoLine').textContent=M.line(pct, petName());
   /* Connected catch-up animation: the mascot starts pristine and degrades in step with the drop's drain. */
   renderEco($('ecoArt'));
   $('ecoArt').querySelector('.previewtag')?.remove();
@@ -1335,9 +1386,14 @@ function renderToday(){
   $('tWeek').textContent=fmt(w);
   const p1=ws1+ws2>0?ws1/(ws1+ws2):0.15, a=Math.round(p1*100), b=100-a;
   $('sb1').style.width=(p1*100)+'%'; $('sb2').style.width=((1-p1)*100)+'%'; $('p1').textContent=a+'%'; $('p2').textContent=b+'%';
-  $('demoNote').textContent=S.sample?'Showing sample data for demo purposes — clear it in Settings.':'';
-  $('widgetCard').hidden = !!S.widgetSeen;   // first run only; afterwards it lives in Settings
+  $('demoNote').textContent=S.sample?'Demo mode — these are sample numbers, not yours. Clear them in Settings.':'';
+  /* one card at a time on the first run: how counting works, then the widget */
+  const needWatch = !S.watchSeen;
+  $('watchCard').hidden = !needWatch;
+  $('widgetCard').hidden = needWatch || !!S.widgetSeen;
+  $('shareBtn').hidden = !S.social;          // no sharing under 13 (decision 4)
 }
+$('watchOk').onclick=()=>{ S.watchSeen=true; save(); renderToday(); };
 $('simBtn').onclick=openPreview;
 $('scrubRange').oninput=e=>setPreview(+e.target.value/100);
 $('scrubPlay').onclick=playDay;
@@ -1401,7 +1457,8 @@ function renderNeutral(){
   $('neutralSummary').innerHTML=`<span class="eyebrow">Your last 7 days</span><div class="big" style="font-size:2.2em">${fmt(wk)}<small>mL</small></div><div class="sub">About ${fmt(L,2)} litres. At charity: water's published rate that's under <b>${cents}¢</b> — most people round up to $1, which funds ≈ 1,100 litres.</div>`;
   $('charityList').innerHTML=C.charities.map(c=>`<div class="charity"><a href="${c.url}" target="_blank" rel="noopener">${c.name} ↗</a><small>${c.line}</small></div>`).join('');
 }
-$('neutralBtn2').onclick=()=>{ renderNeutral(); $('neutralSheet').classList.add('open'); };   // About page only (round 16)
+/* Out of v1 (decision 1b). The code and the copy stay; only the way in is closed, so bringing it
+   back as "Support water projects" is one flag once someone owns the charity relationships. */
 $('neutralClose').onclick=()=>$('neutralSheet').classList.remove('open');
 
 /* ===================================================================================== [Grove] MOCK */
@@ -1467,7 +1524,10 @@ function renderEst(){
   if(alt){ const a=estimate({tier:alt,task,inputTokens:e.inputTokens,outputTokens:e.outputTokens,params:params()}); const sv=e.total-a.total; n.className='nudge'; n.innerHTML=`<span>🔁</span><span>A <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(sv,sv<10?2:1)} mL</b>. Half the answer saves <b>${fmt(halve,halve<10?2:1)} mL</b>.</span>`; }
   else { n.className='nudge quiet'; n.innerHTML=`<span>✅</span><span>Lightest model already. Half the answer still saves <b>${fmt(halve,halve<10?2:1)} mL</b>.</span>`; }
 }
-function logOne(){ const e=current(); store.record(e,$('modelSel').value,task,vendor); save();
+/* Demo only. Outside demo mode nothing on this screen can reach today's total — the one number the
+   app exists to keep honest is never editable by hand. */
+function logOne(){ if(!V1.logging) return current();
+  const e=current(); store.record(e,$('modelSel').value,task,vendor); save();
   checkAlerts(e.total); trackSession(e.total); reactEco('flinch'); return e; }
 $('logBtn').onclick=()=>{ const e=logOne(); toast(`Logged · ${fmt(e.total,2)} mL`); };
 $('logTen').onclick=()=>{ let t=0; for(let i=0;i<10;i++){ t+=logOne().total; } toast(`Logged 10 · ${fmt(t,1)} mL`); };
@@ -1663,7 +1723,7 @@ function maybeSyncNudge(){
 
 /* ===================================================================================== [Settings] */
 function renderSettings(){
-  renderSync();
+  if(V1.sync) renderSync();
   $('modeLabel').textContent = 'Age profile · '+(S.social?(isEdu()?'13–17':'18+'):'Under 13');
   checkUnlocks(true);
   $('mascotChips').innerHTML=ROSTER.map(id=>{ const m=ECO[id], lock=!unlocked(id);
@@ -1754,8 +1814,92 @@ const INTRO=[
   { n:66,     suf:' billion', label:'litres of water consumed on-site by US data centres in 2023.', src:'Lawrence Berkeley National Laboratory, 2024' }
 ];
 const INTRO_MS=[3000,3000,2200];    // two stats, then the brand ≈ 8.2 s
+/* Water level per card (1 = full). The two figures drain it and the brand card fills it back up.
+   The refill is not letting anyone off: a budget resets full every morning, so a full vessel is
+   exactly what the dashboard hands them next — and the first thing it does is drain to today.
+   Arc: scale → loss → reset → your turn. To end on cracked ground instead, make the last 1 a 0.18. */
+const INTRO_LEVEL=[0.62,0.18,1];
 let LAUNCH_VIDEO = null;            // set to a file in assets/ and a video plays instead of the cards
 let introIdx=0, introTimer=null;
+
+/* ---------- the living waterline (Mouli's concept, round 28) --------------------------------
+   Two drifting wave fronts, a surface highlight, droplets lifting off when a figure lands, and
+   cracked ground that opens as the water falls away. Intro only — it is a full-screen canvas on
+   every frame, which is fine for eight seconds and is not something to leave running behind an
+   app that promises to stay light. The loop is cancelled the moment the intro closes.
+   Water stays blue-green so it reads as water; the brand green is kept for the surface line and
+   the number, so the palette ties together without the water looking like a spill. */
+const WATER={ raf:0, lvl:1, target:1, cracks:[], drops:[], W:0, H:0, ctx:null, MAXH:0.46 };
+function waterStart(){
+  const cv=$('lxBg'); if(!cv) return;
+  const ctx=cv.getContext && cv.getContext('2d'); if(!ctx) return;   // no canvas (or jsdom) → plain black, intro still runs
+  WATER.ctx=ctx; WATER.lvl=1; WATER.target=1; WATER.drops=[];
+  const size=()=>{ const dpr=Math.min(2, window.devicePixelRatio||1);
+    WATER.W=window.innerWidth||360; WATER.H=window.innerHeight||640;
+    cv.width=WATER.W*dpr; cv.height=WATER.H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); waterCracks(); };
+  size(); WATER.onResize=size; window.addEventListener('resize',size);
+  if(REDUCED){ waterDraw(0); return; }                                // one still frame, no loop
+  const loop=t=>{ waterDraw(t); WATER.raf=requestAnimationFrame(loop); };
+  WATER.raf=requestAnimationFrame(loop);
+}
+function waterStop(){ if(WATER.raf) cancelAnimationFrame(WATER.raf); WATER.raf=0;
+  if(WATER.onResize) window.removeEventListener('resize',WATER.onResize); WATER.ctx=null; }
+/* a deterministic scatter, so the ground looks the same each run rather than flickering on resize */
+function waterCracks(){
+  let seed=11; const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; };
+  const H=WATER.H, W=WATER.W, top=H*(1-WATER.MAXH);
+  WATER.cracks=[];
+  const n=Math.max(8, Math.round(W*(H-top)/5200));
+  for(let i=0;i<n;i++){
+    let x=rnd()*W, y=top+rnd()*(H-top), a=rnd()*Math.PI*2, len=30+rnd()*110;
+    const pts=[[x,y]], steps=Math.max(3,(len/7)|0);
+    for(let s=0;s<steps;s++){ a+=(rnd()-.5)*0.9; x+=Math.cos(a)*7; y+=Math.sin(a)*7; pts.push([x,y]); }
+    WATER.cracks.push({pts, y0:pts[0][1], order:rnd()});
+  }
+}
+const waterSurface=(x,t,base,amp,ph)=>base + Math.sin(x*0.011+t*0.0009+ph)*amp + Math.sin(x*0.029-t*0.0014+ph)*amp*0.35;
+function waterLevel(v){ WATER.target=Math.max(0,Math.min(1,v)); }
+function waterBurst(n){ if(REDUCED||!WATER.ctx) return;
+  const base=WATER.H - WATER.lvl*WATER.H*WATER.MAXH;
+  for(let i=0;i<n;i++) WATER.drops.push({x:WATER.W*(0.12+Math.random()*0.76), y:base-4,
+    r:2+Math.random()*3, v:0.35+Math.random()*0.6, life:1, s:Math.random()*100});
+}
+function waterDraw(now){
+  const ctx=WATER.ctx; if(!ctx) return;
+  const W=WATER.W, H=WATER.H, t=REDUCED?0:now;
+  WATER.lvl += (WATER.target-WATER.lvl)*(REDUCED?1:0.035);
+  const dry=1-WATER.lvl;
+  ctx.clearRect(0,0,W,H);
+  /* ground opens up only once a real amount has gone, and closes again as the water returns */
+  const top=H*(1-WATER.MAXH), grow=Math.min(1,Math.max(0,dry*1.5-0.25));
+  if(grow>0){ ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=1.2;
+    for(const c of WATER.cracks){ if(c.order>grow) continue;
+      const fade=Math.min(1,(c.y0-top)/(H*0.2));
+      ctx.strokeStyle=`rgba(96,96,92,${(0.16+0.4*grow)*fade})`;
+      const k=Math.max(2, Math.ceil(c.pts.length*Math.min(1,grow*1.3)));
+      ctx.beginPath(); ctx.moveTo(c.pts[0][0],c.pts[0][1]);
+      for(let i=1;i<k;i++) ctx.lineTo(c.pts[i][0],c.pts[i][1]);
+      ctx.stroke(); } }
+  const base=H-WATER.lvl*H*WATER.MAXH, amp=2+6*WATER.lvl;
+  if(WATER.lvl>0.002){
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W+8;x+=8) ctx.lineTo(x, waterSurface(x,t*0.8,base-6,amp*0.8,2.1));
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fillStyle='rgba(28,52,64,0.38)'; ctx.fill();
+    const g=ctx.createLinearGradient(0,base,0,H);
+    g.addColorStop(0,'rgba(34,62,78,0.62)'); g.addColorStop(1,'rgba(8,18,24,0.96)');
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W+8;x+=8) ctx.lineTo(x, waterSurface(x,t,base,amp,0));
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath();
+    for(let x=0;x<=W+8;x+=8){ const y=waterSurface(x,t,base,amp,0); x?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.strokeStyle='rgba(0,240,118,0.22)'; ctx.lineWidth=1; ctx.stroke();   // the one brand touch
+  }
+  for(let i=WATER.drops.length-1;i>=0;i--){ const p=WATER.drops[i];
+    p.y-=p.v; p.x+=Math.sin((p.y+p.s)*0.05)*0.3; p.life-=0.009;
+    if(p.life<=0){ WATER.drops.splice(i,1); continue; }
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(0.6+0.4*p.life),0,Math.PI*2);
+    ctx.strokeStyle=`rgba(150,190,210,${p.life*0.55})`; ctx.lineWidth=1; ctx.stroke(); }
+}
 function introCard(i){
   const st=$('lxStage');
   if(i<INTRO.length){ const s=INTRO[i];
@@ -1775,10 +1919,13 @@ function introCard(i){
 }
 function introStep(){
   introCard(introIdx);
+  /* the figure lands, the water answers: it falls for each fact and comes back for the brand */
+  waterLevel(INTRO_LEVEL[introIdx]);
+  if(introIdx<INTRO.length) setTimeout(()=>waterBurst(7),420);
   introTimer=setTimeout(()=>{ if(introIdx>=INTRO_MS.length-1) endIntro(); else { introIdx++; introStep(); } }, INTRO_MS[introIdx]);
 }
 function endIntro(){
-  clearTimeout(introTimer); const el=$('launch'); if(!el||!el.isConnected) return;
+  clearTimeout(introTimer); waterStop(); const el=$('launch'); if(!el||!el.isConnected) return;
   const v=$('launchVideo'); if(v && !v.hidden){ try{ v.pause(); }catch(e){} }
   if(REDUCED){ el.remove(); return; }
   el.style.transition='opacity .4s ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),420);
@@ -1800,7 +1947,7 @@ function playIntro(){
     setTimeout(endIntro,9000);
     return;
   }
-  introIdx=0; introStep();
+  introIdx=0; waterStart(); introStep();
   /* onclick, not addEventListener: replaying the intro must not stack a second advance handler,
      which would skip a card per tap. */
   el.onclick=()=>{ clearTimeout(introTimer);                       // tap anywhere to move on
@@ -1820,6 +1967,13 @@ $('splashRestore').onclick=()=>{
   if(!k){ toast('That code isn’t right'); return; }
   pendingKey=k; toast('Code saved — answer the age question to finish');
 };
+/* v1 scope, applied in one place so the flags above are the only thing anyone has to change */
+$('reportNeutral').hidden = !V1.charity;
+$('syncBlock').hidden = !V1.sync; $('splashRestore').hidden = !V1.sync;
+for(const id of ['logBtn','simDemoRow','sampleBtn','unlockBtn']) $(id).hidden = !DEMO;
+$('simNote').hidden = DEMO;
+if(DEMO) document.title += ' · demo';
+
 fillModels(); renderEst(); applyMode(); playIntro();
 if(!S.mode){ show('splash'); }
 else { show('today'); if(UI.factCadence.onOpen) setTimeout(showFact,1500); maybeWeeklyReport(); checkUnlocks(); maybeHeal(); setTimeout(maybeSyncNudge,3000); if(syncOn()) syncNow(true); }

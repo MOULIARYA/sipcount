@@ -82,6 +82,36 @@ Send me all twenty files when they are done and name them `plant-0` to `plant-4`
 
 ---
 
+---
+
+## Snow leopard — reshoot (2026-09-24)
+
+**Why:** stages 1, 2 and 3 came back too similar to tell apart in the card. The fault is in the prompts above, not the generation: they describe the *snow* changing by small amounts and leave the leopard doing roughly the same thing each time. At the size this appears on screen, small changes to a white shape are invisible.
+
+**The fix — change three things every stage, not one:**
+
+1. **Snow coverage, as a stated fraction.** Give the model a number it can act on, not "thinner".
+2. **The pose, so the silhouette changes.** Curled → head up → sitting → standing → slumped. Shape reads at any size; shading does not.
+3. **One new element per stage** — a meltwater trickle, then a puddle. Something that wasn't there before, so the eye has an anchor.
+
+Run these on the **approved healthy leopard**, each stage editing the result of the one before it, with the same opening paragraph as every other prompt (same character, same style, same line weight, same size, same position, flat green `#00FF00` background edge to edge).
+
+**Stage 1 — first signs**
+> The rock is now about **three-quarters covered in snow**; a band of grey stone is clearly exposed along the front edge, wide enough to see at a glance. The leopard has **raised its head and opened its eyes**, still lying down. A single thin trickle of meltwater runs down the exposed rock. The face shows mild concern — eyebrows lifted, the smile smaller.
+
+**Stage 2 — the snow is going**
+> The rock is now only **half covered in snow**, and the bare grey stone is the largest single area in the picture. The leopard has **sat up on its front legs**, tail curled around beside it, changing its shape clearly from the previous image. A small pool of meltwater has collected at the base of the rock. It looks warm and uncomfortable, mouth closed, eyes worried.
+
+**Stage 3 — bare rock**
+> Only a **thin rim of snow** is left around the very edge; the rock is otherwise **bare, dull grey and dry**, with visible texture. The leopard is **standing on all four legs**, head lowered, **mouth open and panting**, tail hanging straight down. The meltwater pool has shrunk to a damp patch. Clearly too warm.
+
+**Stage 4 — nowhere cool**
+> There is **no snow at all**, only bare grey rock, and the damp patch has gone. The leopard is **lying flat on its side** on the stone with its legs stretched out, **ears flat back**, eyes large and sad, visibly overheated. Still the same cosy character — just miserable.
+
+**Check before sending:** put stages 1, 2 and 3 side by side at thumbnail size. If you cannot tell which is which in two seconds with the pictures shrunk to about 2 cm wide, the deltas are still too small and stage 2 needs pushing further.
+
+---
+
 ## When you send them
 
 I will key out the chroma, trim, normalise all four characters to the same footprint so they sit identically in the card, convert to WebP and wire five frames per character. Five stages map onto the day cleanly: roughly fine, first signs, halfway, struggling, at the limit.

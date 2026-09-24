@@ -183,7 +183,49 @@ My recommendation is the middle one. It costs a line of arithmetic and it's the 
 
 ---
 
-## 8. Changed today
+## 8. Decisions — signed off 2026-09-24
+
+Mouli answered every point in the review; Madhur took the three scope calls she hadn't covered. **This is the locked scope for the first release.**
+
+| # | Decision | By |
+|---|---|---|
+| 1 | "Neutralize My Footprint" → **"Support water projects"** | Mouli |
+| 1b | …but **cut from v1 entirely**. Highest legal exposure, lowest launch value, and nobody owns the charity relationships yet. The renamed version returns in 1.1. | Madhur |
+| 2 | Sample data **behind an explicit switch** (`?demo=1` + the Settings button), never automatic. The real empty state gets designed. | Mouli |
+| 3 | Simulate **never writes to today's totals**. It is a what-if only: *if I sent this prompt, this happens*. | Mouli |
+| 4 | Keep the age question and make it earn its place: **gate Share under 13**, and soften the character's distressed states for the youngest band. | Mouli |
+| 5 | **British spelling** throughout. | Mouli |
+| 6 | A **first-run card on the dashboard**: *"Sipcount is watching for your prompts. Use ChatGPT, Claude or Gemini and come back."* On the real build this is where the permission ask lives, with its reason attached. | Mouli |
+| 7 | **Stages 0 and 1 get a line too** — restraint should feel seen, not ignored. | Mouli |
+| 8 | All four demo controls behind **one demo-mode gate**, not four deletions. | Mouli |
+| 9 | **Widget ships** — on both the app and the extension. | Mouli |
+| 10 | About rewritten in the app's own voice; **"digital sobriety" retired** as user-facing language. | Mouli |
+| 11 | "Finals week" out of the share captions. Character status words unchanged — they're right. | Mouli |
+| 12 | **Bridge-to-scale line ships**, but must not clutter the dashboard. | Mouli |
+| 13 | **Sync deferred to 1.1**, code ships dark. Needs a relay, a privacy policy and a support story; serves the two-device minority. | Madhur |
+| 14 | **Keep the snow leopard** — regenerate its middle stages with a better prompt rather than dropping it. | Madhur |
+| 15 | Accessibility and dead-code fixes proceed without further sign-off (`--dim` contrast, `plantState()` removal). | Madhur |
+
+### A correction to §7, found while costing decision 12
+
+The illustrative figure in the original review ("4.2 million litres") does not survive checking. Run against the engine at the US default region:
+
+| | per day | per year |
+|---|---|---|
+| Typical user (25 prompts/day) | 32 mL | 11.8 L |
+| 1,000 people | 32 L | 11,800 L |
+| 1,000,000 people | **32,000 L** | **11.8 million L** |
+
+A million people for a single day is 32,000 litres — a swimming pool, and not alarming. **Population alone does not rescue the small number; population × time does.** The line must therefore multiply by a year.
+
+Two honest forms, the second preferred because it reuses a figure the user met eight seconds into the app and so closes a loop instead of opening one:
+
+- *"A million people prompting like you for a year: 11.8 million litres."*
+- **"A million people with your habits would evaporate another GPT-3 training run — 700,000 litres — every three weeks."** ← recommended (16.9 runs/year = one every 21.6 days)
+
+**Placement:** it shares the existing single line under the character (`#oppCost`), alternating with the opportunity-cost text. No new element, no added height — which is what "must not clutter the main page" requires.
+
+## 9. Changed today
 
 - Intro rebuilt in vanilla CSS/JS into the launch slot: two verified figures (700,000 L · 66 bn L), then the wordmark, the drop and *"Now see your share."* ≈ 8.2 s, skippable, tap to advance, progress bars, reduced-motion aware, ~3 KB, no dependencies. The Google 41 bn figure moved into the fact library rather than being lost.
 - The privacy copy on the age screen and in Settings corrected to match what sync actually does.

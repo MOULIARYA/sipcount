@@ -33,6 +33,17 @@ async function run(){
   ok('nav is today/simulate/about/settings', [...d.querySelectorAll('nav button')].map(b=>b.dataset.s).join(',')==='today,log,about,settings');
   ok('grove parked', !$('s-grove'));
 
+  console.log('\nFIRST RUN — the empty state, which nobody used to see');
+  ok('a new install has no invented data', w.eval('Object.keys(S.days).length')===0 && !w.eval('S.sample'));
+  ok('opens on a real zero', parseFloat($('todayMl').textContent.replace(/,/g,''))===0, JSON.stringify($('todayMl').textContent));
+  ok('character is unharmed at zero', w.eval('stageOf(0)')===0);
+  ok('and it explains how counting works', !$('watchCard').hidden && /watching for your prompts/i.test($('watchCard').textContent));
+  ok('the widget card waits its turn', $('widgetCard').hidden);
+  click($('watchOk'));
+  ok('dismissing it hands over to the widget card', $('watchCard').hidden && !$('widgetCard').hidden);
+  /* everything below needs a week of data; load it deliberately, the way demo mode does */
+  w.eval("store.loadSample(); drainAnimated=false; ecoFresh=true; show('today');");
+
   console.log('\nINTRO SEQUENCE');
   /* the age screen is class="splash"; the intro overlay must never share a class with it, or the
      age screen inherits overlay styling and the app renders blank (this happened in the wild) */
@@ -54,7 +65,13 @@ async function run(){
   ok('tapping advances', (()=>{ click($('launch')); return /data centres/.test($('lxStage').textContent); })());
   ok('last card is the brand and the promise', (()=>{ click($('launch')); const t=$('lxStage').textContent;
      return /Sipcount/.test(t) && /Now see your share/.test(t) && !!$('lxStage').querySelector('svg'); })());
-  ok('skip closes it and never traps you', (()=>{ $('lxSkip').click(); w.eval("$('launch')&&$('launch').remove()"); return !$('launch'); })());
+  ok('waterline canvas sits behind the cards', !!$('lxBg') && $('lxBg').parentElement.id==='launch');
+  ok('water drains for the facts and refills for the brand', (()=>{ const L=w.eval('JSON.stringify(INTRO_LEVEL)');
+     return L==='[0.62,0.18,1]'; })(), w.eval('JSON.stringify(INTRO_LEVEL)'));
+  ok('the app still runs where canvas is unavailable', w.eval('WATER.ctx')===null && !!$('lxStage').textContent.trim());
+  ok('skip closes it and never traps you', (()=>{ $('lxSkip').click(); const stopped=w.eval('WATER.raf')===0;
+     w.eval("$('launch')&&$('launch').remove()"); return stopped && !$('launch'); })());
+  ok('the animation never outlives the intro', w.eval('WATER.raf')===0 && w.eval('WATER.ctx')===null);
   ok('video slot still honoured if one is ever supplied', w.eval('LAUNCH_VIDEO')===null && /LAUNCH_VIDEO/.test(w.eval('playIntro.toString()')));
 
   console.log('\nHERO + CHARACTER');
@@ -109,15 +126,23 @@ async function run(){
   w.eval("show('log')");
   ok('sliders labelled in words', /words/.test($('lenLabel').textContent) && /words/.test($('outLabel').textContent));
   ok('no jargon', !/(Wh|PUE|WUE|token)/.test($('s-log').textContent));
-  const before=w.eval('todayStats().total'); $('logBtn').onclick();
-  ok('logging records water', w.eval('todayStats().total')>before);
+  /* decision 3: a what-if and nothing else — the real total must be untouchable by hand */
+  const before=w.eval('todayStats().total'); w.eval('logOne()');
+  ok('simulating never touches today’s total', w.eval('todayStats().total')===before);
+  ok('and it says so on the screen', /sandbox/i.test($('simNote').textContent) && $('logBtn').hidden);
+
+  console.log('\nV1 SCOPE — what ships and what does not');
+  ok('demo controls are off by default', ['logBtn','simDemoRow','sampleBtn','unlockBtn'].every(i=>$(i).hidden));
+  ok('charity cut from v1', !d.getElementById('neutralBtn2') && $('reportNeutral').hidden && w.eval('V1.charity')===false);
+  ok('sync built but dark', w.eval('V1.sync')===false && $('syncBlock').hidden && $('splashRestore').hidden && typeof w.eval('startSync')==='function');
+  ok('demo mode still reachable for reviews', w.eval('typeof DEMO')==='boolean');
 
   console.log('\nSETTINGS');
   w.eval("show('settings')");
   ok('character gallery', d.querySelectorAll('.pick').length===4);
   ok('gallery uses plain images (iOS-safe)', [...d.querySelectorAll('.pick .art')].every(a=>a.firstElementChild.tagName==='IMG'));
   ok('locked cards carry the requirement', [...d.querySelectorAll('.pick[data-locked]')].every(c=>/days under budget/.test(c.textContent)));
-  click($('unlockBtn'));
+  w.eval("$('unlockBtn').hidden=false"); click($('unlockBtn'));
   ok('unlock all works', w.eval('S.unlocked.length')===4 && d.querySelectorAll('.pick[data-locked]').length===0);
   click([...d.querySelectorAll('.pick')].find(c=>c.dataset.m==='glacier'));
   ok('can switch character', w.eval("S.mascot")==='glacier');
@@ -127,7 +152,34 @@ async function run(){
   $('csvBtn').onclick();
   ok('CSV exports', /^sipcount-\d{4}-\d{2}-\d{2}\.csv$/.test(dl||''), dl);
 
-  console.log('\nSYNC — pair code, merge and the 18+ gate');
+  console.log('\nDECISIONS 2026-09-24');
+  w.eval("show('today')");
+  ok('the character speaks at every stage, not just the bad ones', (()=>{
+     w.eval('setPreview(0.05)'); const a=$('ecoLine').textContent; const hid=$('ecoLine').hidden;
+     w.eval('exitPreview()'); return !hid && a.length>10; })(), $('ecoLine').textContent);
+  ok('the scale line does the multiplication', (()=>{ const s=w.eval('scaleLine(32)');
+     return /million people/.test(s) && /700,000 litres/.test(s) && /every 3 weeks/.test(s); })(), w.eval('scaleLine(32)'));
+  ok('and it stays quiet when there is nothing to multiply', w.eval('scaleLine(0)')===null && w.eval('scaleLine(0.5)')===null);
+  ok('it shares the one line, adding no height', (()=>{ const n=d.querySelectorAll('#s-today .ecoline').length;
+     return !!$('oppCost') && n<=2; })());
+  ok('share is hidden under 13', (()=>{ w.eval("applyAge(9); show('today')"); const h=$('shareBtn').hidden;
+     w.eval("applyAge(30); show('today')"); return h; })());
+  ok('the youngest never see the worst stage', (()=>{ w.eval('applyAge(9)'); const cap=w.eval('stageOf(1)');
+     w.eval('applyAge(30)'); return cap===3 && w.eval('stageOf(1)')===4; })());
+  ok('no "digital sobriety" anywhere a user can read it', !/sobriety/i.test(d.body.textContent));
+  ok('British spelling in About', (()=>{ w.eval("show('about')"); const t=$('s-about').textContent;
+     w.eval("show('today')"); return /litres/.test(t) && !/liters|centers/.test(t); })());
+  ok('About lost the marketing voice', (()=>{ w.eval("show('about')"); const t=$('s-about').textContent;
+     w.eval("show('today')"); return !/Stop guessing/.test(t) && /Every prompt has a price/.test(t); })());
+  ok('no "finals week" in the share captions', !/finals week/i.test(w.eval('UI.storyCopy.map(f=>f({ml:1,prompts:1,images:0,mascot:"plant",state:"Thriving"})).join(" ")')));
+  ok('the dim grey passes AA', (()=>{ const v=w.getComputedStyle(d.documentElement).getPropertyValue('--dim').trim();
+     const l=c=>{const x=parseInt(c,16)/255; return x<=0.04045?x/12.92:Math.pow((x+0.055)/1.055,2.4);};
+     const L1=l(v.slice(1,3)), L2=l('07'); return (L1+0.05)/(L2+0.05)>=4.5; })(),
+     w.getComputedStyle(d.documentElement).getPropertyValue('--dim'));
+  ok('plantState is gone', w.eval('typeof plantState')==='undefined');
+
+  console.log('\nSYNC — pair code, merge and the 18+ gate (built, shipped dark)');
+  w.eval("V1.sync=true; $('syncBlock').hidden=false;");
   /* the code itself */
   const k1=w.eval('newSyncKey()');
   ok('code is 25 Crockford characters', /^[0-9A-HJKMNP-TV-Z]{25}$/.test(k1), k1);

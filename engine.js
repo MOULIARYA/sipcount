@@ -176,7 +176,8 @@ function makeStore(KEY, defaults){
     });
     save();
   };
-  if(!Object.keys(S.days).length && !S.wiped) loadSample();
+  /* No automatic sample data (decision 2, 2026-09-24). The caller loads it deliberately, in demo
+     mode only, so a real first run opens on a real empty day. */
   return { get S(){return S;}, set S(v){S=v; dirty();}, save, bucket, record, params, last7, todayStats, loadSample,
            days, dirty, setPeer, dropPeer, dropAllPeers, get ownDays(){return S.days;} };
 }
