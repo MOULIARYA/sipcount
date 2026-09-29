@@ -1,0 +1,338 @@
+{
+  "schema_version": "2.0.0",
+  "constants_version": "2026-09-20",
+  "generated_by": "tools/build-shared.js from engine.js — do not hand-edit",
+  "notes": [
+    "Estimates from public sources; vendors do not publish per-query figures for most models.",
+    "Units: energy in Wh; WUE and EWIF in L/kWh (numerically identical to mL/Wh), so water_mL = energy_Wh * pue * (wue_site + ewif_grid).",
+    "Output tokens are weighted 5x input tokens and energy_wh_per_1k_tokens is re-normalised by 400/320 so the reference prompt (100 in + 300 out) is unchanged at 0.30 Wh on the standard tier. See docs/TOKEN-ECONOMICS.md."
+  ],
+  "token_estimation": {
+    "chars_per_token": 4
+  },
+  "token_weights": {
+    "input": 0.2,
+    "output": 1
+  },
+  "task_profiles": {
+    "text": {
+      "default_output_tokens": 300,
+      "energy_multiplier": 1,
+      "label": "Text"
+    },
+    "code": {
+      "default_output_tokens": 600,
+      "energy_multiplier": 1,
+      "label": "Code"
+    },
+    "long_context": {
+      "default_output_tokens": 500,
+      "energy_multiplier": 1,
+      "label": "Long doc"
+    },
+    "image": {
+      "fixed_energy_wh_per_item": 2.9,
+      "label": "Image"
+    }
+  },
+  "model_tiers": {
+    "lightweight": {
+      "energy_wh_per_1k_weighted_tokens": 0.1875,
+      "label": "Light",
+      "confidence": "medium"
+    },
+    "standard": {
+      "energy_wh_per_1k_weighted_tokens": 0.9375,
+      "label": "Standard",
+      "confidence": "medium"
+    },
+    "reasoning": {
+      "energy_wh_per_1k_weighted_tokens": 9.375,
+      "label": "Reasoning",
+      "confidence": "medium"
+    }
+  },
+  "cooling_overrides": {
+    "reported": {
+      "label": "As reported for this region"
+    },
+    "tower": {
+      "wue": 1.8,
+      "label": "Evaporative cooling towers",
+      "conf": "medium"
+    },
+    "adiabatic": {
+      "wue": 0.32,
+      "label": "Air-side economiser + adiabatic",
+      "conf": "high"
+    },
+    "dry": {
+      "wue": 0.03,
+      "label": "Closed-loop / dry / free-air",
+      "conf": "high"
+    }
+  },
+  "regions": {
+    "us_hyperscale": {
+      "label": "United States",
+      "short": "US",
+      "pue": 1.17,
+      "wue_site_l_per_kwh": 0.55,
+      "wue_grid_l_per_kwh": 3.142,
+      "wue_grid_l_per_kwh_excluding_hydro": 1.67,
+      "default_cooling": "reported",
+      "water_stress_class": 1,
+      "confidence": "high",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "high",
+        "ewifIncl": "high",
+        "ewifExcl": "low"
+      },
+      "note": "PUE 1.17 & WUE 0.55 = Microsoft US average (Li et al. Table 1). EWIF 3.142 = WRI US national incl. hydro; excl-hydro derived.",
+      "sources": [
+        "Li et al. 2023/25, Table 1",
+        "WRI 2020, Appendix 2/4/6"
+      ]
+    },
+    "us_ercot": {
+      "label": "United States · Texas",
+      "short": "Texas",
+      "pue": 1.28,
+      "wue_site_l_per_kwh": 0.25,
+      "wue_grid_l_per_kwh": 1.287,
+      "wue_grid_l_per_kwh_excluding_hydro": 1.22,
+      "default_cooling": "reported",
+      "water_stress_class": 3,
+      "confidence": "high",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "high",
+        "ewifIncl": "high",
+        "ewifExcl": "low"
+      },
+      "note": "Gas-heavy grid → low grid water. PUE/WUE = Microsoft San Antonio. EWIF = WRI eGRID ERCT.",
+      "sources": [
+        "Li et al. 2023/25",
+        "WRI 2020, Appendix 1"
+      ]
+    },
+    "eu_average": {
+      "label": "Europe · EU average",
+      "short": "EU",
+      "pue": 1.16,
+      "wue_site_l_per_kwh": 0.03,
+      "wue_grid_l_per_kwh": 3.95,
+      "wue_grid_l_per_kwh_excluding_hydro": 1.9,
+      "default_cooling": "reported",
+      "water_stress_class": 2,
+      "confidence": "low",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "high",
+        "ewifIncl": "low",
+        "ewifExcl": "low"
+      },
+      "note": "Microsoft EMEA FY25 (free-air). EWIF = generation-weighted mean of 26 WRI country factors (2016 mix).",
+      "sources": [
+        "Microsoft efficiency page FY25",
+        "WRI 2020 (derived)"
+      ]
+    },
+    "nordic": {
+      "label": "Nordics · Norway / Sweden / Finland",
+      "short": "Nordic",
+      "pue": 1.12,
+      "wue_site_l_per_kwh": 0.05,
+      "wue_grid_l_per_kwh": 6,
+      "wue_grid_l_per_kwh_excluding_hydro": 1.12,
+      "default_cooling": "reported",
+      "water_stress_class": 0,
+      "confidence": "low",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "high",
+        "ewifIncl": "low",
+        "ewifExcl": "low"
+      },
+      "note": "Hydro/nuclear/wind grid. With hydro ON the WRI method counts gross reservoir evaporation — contested for cold climates (Bakken 2017).",
+      "sources": [
+        "Li et al. Table 1",
+        "WRI 2020 (derived)",
+        "Bakken 2017"
+      ]
+    },
+    "india": {
+      "label": "India",
+      "short": "India",
+      "pue": 1.43,
+      "wue_site_l_per_kwh": 2,
+      "wue_grid_l_per_kwh": 3.44,
+      "wue_grid_l_per_kwh_excluding_hydro": 2.25,
+      "default_cooling": "reported",
+      "water_stress_class": 4,
+      "confidence": "low",
+      "confidence_detail": {
+        "pue": "medium",
+        "wueSite": "low",
+        "ewifIncl": "high",
+        "ewifExcl": "low"
+      },
+      "note": "Coal ≈75 %. EWIF 3.44 = WRI India. PUE = Microsoft India (projected). WUE 2.0 = typical tower-cooled DC (derived).",
+      "sources": [
+        "WRI 2020",
+        "CSE 2021 (CEA norms)",
+        "WRI Aqueduct: extremely high"
+      ]
+    },
+    "singapore": {
+      "label": "Singapore",
+      "short": "SG",
+      "pue": 1.28,
+      "wue_site_l_per_kwh": 2.2,
+      "wue_grid_l_per_kwh": 0.75,
+      "wue_grid_l_per_kwh_excluding_hydro": 0.4,
+      "default_cooling": "reported",
+      "water_stress_class": 4,
+      "confidence": "low",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "medium",
+        "ewifIncl": "low",
+        "ewifExcl": "low"
+      },
+      "note": "94 % gas, largely seawater-cooled → low freshwater EWIF (derived). WUE 2.2 = IMDA median 2021.",
+      "sources": [
+        "EMA 2024",
+        "Macknick 2011",
+        "IMDA 2024"
+      ]
+    },
+    "japan": {
+      "label": "Japan",
+      "short": "JP",
+      "pue": 1.1,
+      "wue_site_l_per_kwh": 0.32,
+      "wue_grid_l_per_kwh": 2.31,
+      "wue_grid_l_per_kwh_excluding_hydro": 1.5,
+      "default_cooling": "adiabatic",
+      "water_stress_class": -1,
+      "confidence": "low",
+      "confidence_detail": {
+        "pue": "high",
+        "wueSite": "low",
+        "ewifIncl": "high",
+        "ewifExcl": "low"
+      },
+      "note": "EWIF = WRI Japan. PUE = Google Inzai. No published site WUE → adiabatic default assumed.",
+      "sources": [
+        "WRI 2020",
+        "Google PUE page 2026",
+        "LBNL 2024"
+      ]
+    }
+  },
+  "vendor_model_map": {
+    "openai": {
+      "default_tier": "standard",
+      "patterns": {
+        "o1": "reasoning",
+        "o3": "reasoning",
+        "o4": "reasoning",
+        "thinking": "reasoning",
+        "pro": "reasoning",
+        "mini": "lightweight",
+        "nano": "lightweight"
+      }
+    },
+    "anthropic": {
+      "default_tier": "standard",
+      "patterns": {
+        "extended": "reasoning",
+        "haiku": "lightweight"
+      }
+    },
+    "google": {
+      "default_tier": "standard",
+      "patterns": {
+        "thinking": "reasoning",
+        "deep think": "reasoning",
+        "flash": "lightweight",
+        "flash-lite": "lightweight"
+      }
+    },
+    "unknown": {
+      "default_tier": "standard",
+      "patterns": {}
+    }
+  },
+  "equivalents_ml": {
+    "hydration": 2000,
+    "glass": 250,
+    "plant": 250,
+    "flush": 6000,
+    "showerMin": 9000
+  },
+  "range": {
+    "low": 0.2,
+    "high": 3.9
+  },
+  "golden": [
+    {
+      "region": "us_hyperscale",
+      "tier": "standard",
+      "task": "text",
+      "inputTokens": 100,
+      "outputTokens": 300,
+      "expect_energy_wh": 0.3,
+      "expect_scope1_ml": 0.19305,
+      "expect_scope2_ml": 1.102842,
+      "expect_total_ml": 1.295892
+    },
+    {
+      "region": "india",
+      "tier": "standard",
+      "task": "text",
+      "inputTokens": 100,
+      "outputTokens": 300,
+      "expect_energy_wh": 0.3,
+      "expect_scope1_ml": 0.858,
+      "expect_scope2_ml": 1.47576,
+      "expect_total_ml": 2.33376
+    },
+    {
+      "region": "us_hyperscale",
+      "tier": "reasoning",
+      "task": "code",
+      "inputTokens": 500,
+      "outputTokens": 600,
+      "expect_energy_wh": 6.5625,
+      "expect_scope1_ml": 4.222969,
+      "expect_scope2_ml": 24.124669,
+      "expect_total_ml": 28.347638
+    },
+    {
+      "region": "eu_average",
+      "tier": "lightweight",
+      "task": "text",
+      "inputTokens": 50,
+      "outputTokens": 120,
+      "expect_energy_wh": 0.024375,
+      "expect_scope1_ml": 0.000848,
+      "expect_scope2_ml": 0.111686,
+      "expect_total_ml": 0.112534
+    },
+    {
+      "region": "singapore",
+      "tier": "standard",
+      "task": "image",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "items": 2,
+      "expect_energy_wh": 5.8,
+      "expect_scope1_ml": 16.3328,
+      "expect_scope2_ml": 5.568,
+      "expect_total_ml": 21.9008
+    }
+  ]
+}

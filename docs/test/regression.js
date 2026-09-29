@@ -167,6 +167,11 @@ async function run(){
   ok('the youngest never see the worst stage', (()=>{ w.eval('applyAge(9)'); const cap=w.eval('stageOf(1)');
      w.eval('applyAge(30)'); return cap===3 && w.eval('stageOf(1)')===4; })());
   ok('no "digital sobriety" anywhere a user can read it', !/sobriety/i.test(d.body.textContent));
+  /* I-41: with sync off this is one device's total, not the person's — do not claim otherwise */
+  ok('the headline says whose total it is', /this device/i.test($('todayEyebrow').textContent));
+  ok('and drops the caveat once sync can make it theirs', (()=>{
+     w.eval("V1.sync=true; renderToday()"); const t=$('todayEyebrow').textContent;
+     w.eval("V1.sync=false; renderToday()"); return t==='Water today'; })());
   ok('British spelling in About', (()=>{ w.eval("show('about')"); const t=$('s-about').textContent;
      w.eval("show('today')"); return /litres/.test(t) && !/liters|centers/.test(t); })());
   ok('About lost the marketing voice', (()=>{ w.eval("show('about')"); const t=$('s-about').textContent;
@@ -228,6 +233,8 @@ async function run(){
   const priv=$('s-settings').textContent.replace(/\s+/g,' ');
   ok('privacy copy no longer claims nothing ever leaves', !/nothing (you type )?ever leaves this device/i.test(priv));
   ok('privacy copy names what syncing sends', /daily totals/i.test(priv) && /encrypted/i.test(priv) && /from 18/i.test(priv));
+  ok('the export is filed as proof, not as a feature', $('csvBtn').closest('details').textContent.includes('Privacy')
+     && /everything Sipcount holds about you/i.test($('csvBtn').closest('details').textContent));
   w.eval("show('splash')");
   ok('age screen makes the narrow promise, not the broad one', !/nothing leaves this device/i.test($('s-splash').textContent) && /Nothing you type is ever stored/i.test($('s-splash').textContent));
   w.eval("show('today')");

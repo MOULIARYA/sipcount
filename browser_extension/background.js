@@ -4,7 +4,9 @@ importScripts('engine.js');
 
 const KEY = 'sipcount.v1';
 const dayKey = d => new Date(d).toISOString().slice(0, 10);
-const defaults = () => ({ budget: 100, region: 'us_default', saved: 0, days: {}, last: null });
+/* region ids now come from the shared engine (7 regions, not 2). Anything unrecognised falls
+   back to SIP.DEFAULT_REGION inside the adapter, so an old stored 'us_default' still works. */
+const defaults = () => ({ budget: 100, region: 'us_hyperscale', saved: 0, days: {}, last: null });
 
 async function getState() { const r = await chrome.storage.local.get(KEY); return Object.assign(defaults(), r[KEY] || {}); }
 async function setState(s) { await chrome.storage.local.set({ [KEY]: s }); }

@@ -4,7 +4,9 @@ const dayKey = d => new Date(d).toISOString().slice(0, 10);
 const VENDOR = { openai: 'ChatGPT', anthropic: 'Claude', google: 'Gemini', unknown: 'Other' };
 const last7 = () => [...Array(7)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return dayKey(d); });
 
-async function load() { const r = await chrome.storage.local.get(KEY); return Object.assign({ budget: 100, region: 'us_default', days: {}, last: null }, r[KEY] || {}); }
+async function load() { const r = await chrome.storage.local.get(KEY); const s = Object.assign({ budget: 100, region: SIP.DEFAULT_REGION, days: {}, last: null }, r[KEY] || {});
+  if (!SIP.C.regions[s.region]) s.region = SIP.DEFAULT_REGION;   // migrate the old two-region ids
+  return s; }
 async function save(s) { await chrome.storage.local.set({ [KEY]: s }); chrome.runtime.sendMessage({ type: 'refresh_badge' }); }
 
 async function render() {
@@ -29,8 +31,16 @@ async function render() {
     n.className = 'nudge'; n.innerHTML = `Last prompt (${when}, ${VENDOR[L.vendor]}, ${SIP.C.tiers[L.tier].label.toLowerCase()}, ${SIP.C.tasks[L.task].label.toLowerCase()}): <b>${fmt(L.ml, 2)} mL</b>.${tip}`;
   }
   $('budget').value = s.budget;
+  $('region').innerHTML = Object.entries(SIP.C.regions).map(([id, r]) => `<option value="${id}">${r.label}</option>`).join('');
+  $('region').value = s.region;
+  const R = SIP.C.regions[s.region];
+  const one = SIP.estimate({ tier: 'standard', task: 'text', region: s.region, inputTokens: 100, outputTokens: 300 }).total;
+  $('regionNote').textContent = `${R.short}: a typical prompt ≈ ${fmt(one, 2)} mL`;
 }
 $('budget').onchange = async e => { const s = await load(); s.budget = Math.max(10, +e.target.value || 100); await save(s); render(); };
+/* Changing the region only affects prompts counted from here on — past days keep the numbers they
+   were recorded with, because re-stating history with today's setting would be a different lie. */
+$('region').onchange = async e => { const s = await load(); if (SIP.C.regions[e.target.value]) s.region = e.target.value; await save(s); render(); };
 $('clear').onclick = async () => { if (!confirm('Delete all totals stored in this browser?')) return; const s = await load(); s.days = {}; s.last = null; await save(s); render(); };
 $('export').onclick = async () => {
   const s = await load(); const rows = [['date', 'prompts', 'scope1_cooling_ml', 'scope2_grid_ml', 'total_ml', 'constants_version']];

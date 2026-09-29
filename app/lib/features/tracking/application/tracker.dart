@@ -18,14 +18,17 @@ import '../../prompt_listener/domain/prompt_event.dart';
 class Tracker extends ChangeNotifier {
   Tracker._(this._constants, this._store, this._channel)
       : _tokens = TokenEstimator(charsPerToken: _constants.charsPerToken),
-        equivalence = EquivalenceFormatter(_constants.equivalentsMl);
+        equivalence = EquivalenceFormatter(_constants.equivalentsMl),
+        // the token weights come from the constants file, not from code, so the app and engine.js
+        // can never drift apart on how much an output token costs
+        _calc = WaterCalculator(weights: _constants.tokenWeights);
 
   final ConstantsRepository _constants;
   final AggregateStore _store;
   final ListenerChannel _channel;
   final TokenEstimator _tokens;
   final EquivalenceFormatter equivalence;
-  static const _calc = WaterCalculator();
+  final WaterCalculator _calc;
 
   StreamSubscription<PromptEvent>? _sub;
   Map<String, DayTotals> _days = {};

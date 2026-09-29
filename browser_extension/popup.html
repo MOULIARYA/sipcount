@@ -74,6 +74,10 @@ a{color:var(--water)}
   </div>
 
   <label>Daily budget (mL) <input type="number" id="budget" min="10" step="10"></label>
+  <!-- The engine has had seven regions since 2026-09-27, but there was no way to pick one, so an
+       Indian user was shown the US figure — about half the real number. -->
+  <label>Where your AI runs <select id="region"></select></label>
+  <p class="foot" id="regionNote" style="margin:4px 0 0"></p>
 
   <div class="actions">
     <button id="export">Copy CSV</button>

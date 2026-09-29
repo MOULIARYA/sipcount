@@ -11,14 +11,36 @@
    (autoregressive decode) and are less compute-efficient than parallel input processing.
    We weight output 5× input and re-normalise so the calibrated reference prompt
    (100 in + 300 out ≈ 0.30 Wh standard tier) is unchanged: 400 plain tokens = 320 weighted
-   → wh1k_weighted = wh1k_plain × 400/320. Evidence and open items: docs/TOKEN-ECONOMICS.md.
+   → wh1k_weighted = wh1k_plain × WEIGHT_NORM, where WEIGHT_NORM is derived from the multiplier
+   below rather than hardcoded, so the calibration survives the multiplier being replaced
+   (1.25 at 5×, 1.20 at 3×, 1.32 at 10×). Evidence and open items: docs/TOKEN-ECONOMICS.md.
    ===================================================================================== */
+/* ---------- the one number we expect to be wrong ------------------------------------------------
+   OUTPUT_PER_INPUT is how much more an output token costs than an input token. 5 is the central
+   estimate of a 3–10× range in the literature — a placeholder, not a finding (D-22). It gets
+   replaced by a measured, per-platform coefficient from the I-30 calibration.
+
+   Everything below is DERIVED from it, so replacing it is a one-line change. The published per-1k
+   figures are calibrated against a reference prompt (100 in + 300 out ≈ 0.30 Wh on a standard
+   model), and weighting tokens changes what "1k tokens" means — so the per-1k figure has to be
+   re-normalised by the same ratio, or the calibrated prompt silently drifts. That normalisation
+   used to be the literal `400/320`, which would have quietly broken the moment anyone changed the
+   multiplier. It is now computed. docs/TOKEN-ECONOMICS.md has the evidence.                      */
+const OUTPUT_PER_INPUT = 5;
+const REFERENCE_PROMPT = { inputTokens: 100, outputTokens: 300 };   // the calibrated query, 0.30 Wh
+const TOKEN_WEIGHTS = { input: 1 / OUTPUT_PER_INPUT, output: 1 };
+const _refPlain    = REFERENCE_PROMPT.inputTokens + REFERENCE_PROMPT.outputTokens;
+const _refWeighted = REFERENCE_PROMPT.inputTokens * TOKEN_WEIGHTS.input + REFERENCE_PROMPT.outputTokens * TOKEN_WEIGHTS.output;
+const WEIGHT_NORM  = _refPlain / _refWeighted;                      // 1.25 at 5×, 1.20 at 3×, 1.32 at 10×
+
 const SIPCOUNT_CONFIG = {
   version: '2026-09-20',
   charsPerToken: 4,
-  /* output = 5× input (central of a 3–10× literature range; docs/TOKEN-ECONOMICS.md §1). Reference prompt 100 in + 300 out = 320 weighted tokens, kept at 0.30 Wh standard. */
-  tokenWeights: { input: 0.20, output: 1.0 },
-  tiers: { lightweight:{wh1k:0.15*400/320,label:'Light'}, standard:{wh1k:0.75*400/320,label:'Standard'}, reasoning:{wh1k:7.5*400/320,label:'Reasoning'} },
+  outputPerInput: OUTPUT_PER_INPUT,
+  referencePrompt: REFERENCE_PROMPT,
+  weightNormalisation: WEIGHT_NORM,
+  tokenWeights: TOKEN_WEIGHTS,
+  tiers: { lightweight:{wh1k:0.15*WEIGHT_NORM,label:'Light'}, standard:{wh1k:0.75*WEIGHT_NORM,label:'Standard'}, reasoning:{wh1k:7.5*WEIGHT_NORM,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
   range: { low:0.2, high:3.9 },
   brands: { openai:'ChatGPT', anthropic:'Claude', google:'Gemini', unknown:'Other' },
@@ -39,6 +61,15 @@ const SIPCOUNT_CONFIG = {
     google:[['Gemini Pro','standard'],['Gemini Flash','lightweight'],['Gemini Pro (Deep Think)','reasoning'],['Gemini Flash-Lite','lightweight']]
   },
   zones: { green:0.5, amber:0.7 },
+  /* Reading a tier out of the model name shown on screen. Shared, not per-product: the extension,
+     the phone apps and the desktop build must all classify "Gemini Flash-Lite" the same way or the
+     same prompt gets two different answers. Longest match wins, so 'flash-lite' beats 'flash'. */
+  vendorMap: {
+    openai:    { def:'standard', p:{ 'o1':'reasoning','o3':'reasoning','o4':'reasoning','thinking':'reasoning','pro':'reasoning','mini':'lightweight','nano':'lightweight' } },
+    anthropic: { def:'standard', p:{ 'extended':'reasoning','haiku':'lightweight' } },
+    google:    { def:'standard', p:{ 'thinking':'reasoning','deep think':'reasoning','flash':'lightweight','flash-lite':'lightweight' } },
+    unknown:   { def:'standard', p:{} }
+  },
   /* Real-world opportunity cost (I-27, volumes assumed): daily hydration 2,000 mL (common guidance, varies), glass 250 mL, house plant 250 mL, toilet flush 6 L, shower 9 L/min */
   opp: { hydration:2000, glass:250, plant:250, flush:6000, showerMin:9000 },
   /* Facts — each figure verified on its source page (2026-09-17) */

@@ -21,4 +21,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/calc/models.json
+    # GENERATED from engine.js by tools/build-shared.js — never hand-edit.
+    # The old models.json (constants v2026-09-14, 2 regions, no output-token weighting) is deleted:
+    # leaving a stale constants file on disk is exactly how the three products drifted apart.
+    - assets/calc/models.v2.json

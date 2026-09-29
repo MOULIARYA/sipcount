@@ -65,7 +65,7 @@ class SettingsPage extends StatelessWidget {
                 Text(
                   'water (mL) = energy per prompt (Wh) × data-centre overhead (PUE) × water per Wh (on-site cooling + power generation).\n\n'
                   'Energy per prompt is estimated from the length of your prompt and the model class you picked (lightweight / standard / reasoning). '
-                  'Every constant is cited in models.json and shown with a confidence level. These are estimates, not meter readings.',
+                  'Every constant is cited in the constants file and shown with a confidence level. These are estimates, not meter readings.',
                   style: TextStyle(color: SipColors.muted, height: 1.4, fontSize: 13),
                 ),
               ]),

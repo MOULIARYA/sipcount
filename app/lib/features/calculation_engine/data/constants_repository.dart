@@ -1,4 +1,5 @@
-/// Loads assets/calc/models.json into domain profiles. The only place in the
+/// Loads assets/calc/models.v2.json into domain profiles. That file is GENERATED from engine.js by
+/// tools/build-shared.js — never hand-edit it. The only place in the
 /// engine that touches Flutter (rootBundle). Everything downstream is pure Dart.
 library;
 
@@ -11,7 +12,7 @@ class ConstantsRepository {
   ConstantsRepository._(this._raw);
   final Map<String, dynamic> _raw;
 
-  static Future<ConstantsRepository> load({String asset = 'assets/calc/models.json'}) async {
+  static Future<ConstantsRepository> load({String asset = 'assets/calc/models.v2.json'}) async {
     final json = jsonDecode(await rootBundle.loadString(asset)) as Map<String, dynamic>;
     return ConstantsRepository._(json);
   }
@@ -20,9 +21,21 @@ class ConstantsRepository {
   double get charsPerToken => (_raw['token_estimation']['chars_per_token'] as num).toDouble();
   Map<String, num> get equivalentsMl => Map<String, num>.from(_raw['equivalents_ml'] as Map);
 
+  /// Output tokens cost more than input tokens. See [TokenWeights].
+  TokenWeights get tokenWeights {
+    final m = _raw['token_weights'] as Map<String, dynamic>;
+    return TokenWeights(input: (m['input'] as num).toDouble(), output: (m['output'] as num).toDouble());
+  }
+
   TierProfile tier(ModelTier t) {
     final m = _raw['model_tiers'][t.name] as Map<String, dynamic>;
-    return TierProfile(tier: t, energyWhPer1kTokens: (m['energy_wh_per_1k_tokens'] as num).toDouble(), confidence: m['confidence'] as String);
+    // Deliberately the weighted key: a build still reading the old `energy_wh_per_1k_tokens` should
+    // fail here rather than quietly produce a figure ~24% out on heavy prompts.
+    return TierProfile(
+      tier: t,
+      energyWhPer1kWeightedTokens: (m['energy_wh_per_1k_weighted_tokens'] as num).toDouble(),
+      confidence: m['confidence'] as String,
+    );
   }
 
   TaskProfile task(TaskType t) {
@@ -43,9 +56,13 @@ class ConstantsRepository {
       pue: (m['pue'] as num).toDouble(),
       wueSiteLPerKwh: (m['wue_site_l_per_kwh'] as num?)?.toDouble(),
       wueGridLPerKwh: (m['wue_grid_l_per_kwh'] as num?)?.toDouble(),
+      wueGridExcludingHydroLPerKwh: (m['wue_grid_l_per_kwh_excluding_hydro'] as num?)?.toDouble(),
       confidence: m['confidence'] as String,
     );
   }
+
+  /// Every region id the constants carry, so the UI never hard-codes the list.
+  List<String> get regionIds => (_raw['regions'] as Map<String, dynamic>).keys.toList();
 
   /// Vendor + model-name hint (e.g. 'openai', 'o3-mini') → tier via substring patterns.
   /// Longest matching pattern wins so 'flash-lite' beats 'flash'.

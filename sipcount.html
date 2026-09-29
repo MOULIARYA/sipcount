@@ -406,7 +406,7 @@ nav button[aria-current=page]{color:var(--green)}
       <div class="hero">
         <div class="drop" id="heroVessel" aria-hidden="true"></div>
         <div class="stack" style="flex:1">
-          <span class="eyebrow">Water today</span>
+          <span class="eyebrow" id="todayEyebrow">Water today</span>
           <div class="big"><span id="todayMl">0</span><small>mL</small></div>
           <div class="ring" style="margin-top:10px"><i id="budgetRing" class="z-green" style="width:0%"></i></div>
           <div class="row" style="margin-top:6px"><span class="sub" id="todayBudget" style="font-size:.8em">—</span></div>
@@ -598,9 +598,13 @@ nav button[aria-current=page]{color:var(--green)}
     <details><summary>Sources for this region</summary><ul id="regionSources"></ul></details>
     <details><summary>Privacy</summary>
       <p>Nothing you type is ever captured, so there is nothing to leave this device. What we keep here is a daily total, your settings, and the counts behind them — nothing else.</p>
-      <p>If you turn on syncing, those daily totals go to your other devices encrypted with a code only you hold: we can’t read them, and the date is the finest time we ever record. Your age, your prompts and your email are never part of it. Syncing is available from 18, and off until you switch it on.</p>
+      <p id="privSync" hidden>If you turn on syncing, those daily totals go to your other devices encrypted with a code only you hold: we can’t read them, and the date is the finest time we ever record. Your age, your prompts and your email are never part of it. Syncing is available from 18, and off until you switch it on.</p>
+      <!-- the export lives here rather than in the button row: it is not a feature, it is the proof.
+           One row per day, dates and counts, no prompt text — check it yourself in ten seconds. -->
+      <p style="margin:0 0 10px">Don’t take our word for it. This is everything Sipcount holds about you — one row per day.</p>
+      <button class="btn ghost small" id="csvBtn" style="align-self:flex-start">Export CSV</button>
     </details>
-    <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="csvBtn">Export CSV</button><button class="btn ghost small" id="sampleBtn" hidden>Load sample week</button><button class="btn ghost small" id="unlockBtn" hidden>Unlock all</button></div>
+    <div class="row wrap" style="gap:8px"><button class="btn ghost small" id="sampleBtn" hidden>Load sample week</button><button class="btn ghost small" id="unlockBtn" hidden>Unlock all</button></div>
     <button class="btn danger small" id="wipeBtn" style="align-self:flex-start">Clear my data</button>
   </section>
 
@@ -1363,6 +1367,10 @@ function renderToday(){
      what it would come to if a million people had your day. No second element, no extra height. */
   $('oppCost').textContent = (oppAlt && scaleLine(total)) || opportunityCost(total);
   $('todayBudget').textContent=`${Math.round(pct*100)}% of ${S.budget} mL used`;
+  /* With sync off, each surface counts only what it can see and they do not add up — someone
+     running the extension and the app would see two numbers and think one was broken. Say whose
+     total this is until sync can make it theirs. (I-41) */
+  $('todayEyebrow').textContent = V1.sync ? 'Water today' : 'Today · this device';
   $('ecoPill').textContent=`${ZONE_UI[z].ico} ${ZONE_UI[z].label}`; $('ecoPill').className='pill '+zonePill(pct);
   const M=mascot();
   $('ecoIco').textContent=ZONE_UI[z].ico; $('ecoStateTxt').textContent=`${petLabel()} · ${M.state(pct)}`; $('ecoState').style.color=col;
@@ -1969,7 +1977,8 @@ $('splashRestore').onclick=()=>{
 };
 /* v1 scope, applied in one place so the flags above are the only thing anyone has to change */
 $('reportNeutral').hidden = !V1.charity;
-$('syncBlock').hidden = !V1.sync; $('splashRestore').hidden = !V1.sync;
+/* the privacy copy must not describe a feature that is switched off */
+$('syncBlock').hidden = !V1.sync; $('splashRestore').hidden = !V1.sync; $('privSync').hidden = !V1.sync;
 for(const id of ['logBtn','simDemoRow','sampleBtn','unlockBtn']) $(id).hidden = !DEMO;
 $('simNote').hidden = DEMO;
 if(DEMO) document.title += ' · demo';

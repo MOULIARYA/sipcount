@@ -5,11 +5,25 @@ enum ModelTier { lightweight, standard, reasoning }
 
 enum TaskType { text, code, longContext, image }
 
-/// Per-tier energy cost. Units: Wh per 1,000 tokens (input + output).
+/// How much an input token counts against an output token.
+///
+/// Generating an answer is slower, hotter work than reading a question: the model emits output one
+/// token at a time, while input is processed in parallel. We weight output 5x input (central of a
+/// 3-10x research range) and re-normalise the per-1k figure by 400/320, so the calibrated reference
+/// prompt (100 in + 300 out) is unchanged at 0.30 Wh on the standard tier. See
+/// docs/TOKEN-ECONOMICS.md; the multiplier is a placeholder until the I-30 calibration measures it.
+class TokenWeights {
+  const TokenWeights({required this.input, required this.output});
+  final double input;
+  final double output;
+  double weigh(int inputTokens, int outputTokens) => inputTokens * input + outputTokens * output;
+}
+
+/// Per-tier energy cost. Units: Wh per 1,000 *weighted* tokens (see [TokenWeights]).
 class TierProfile {
-  const TierProfile({required this.tier, required this.energyWhPer1kTokens, required this.confidence});
+  const TierProfile({required this.tier, required this.energyWhPer1kWeightedTokens, required this.confidence});
   final ModelTier tier;
-  final double energyWhPer1kTokens;
+  final double energyWhPer1kWeightedTokens;
   final String confidence;
 }
 
@@ -35,13 +49,23 @@ class RegionProfile {
     required this.pue,
     required this.wueSiteLPerKwh,
     required this.wueGridLPerKwh,
+    this.wueGridExcludingHydroLPerKwh,
     required this.confidence,
   });
   final String id;
   final double pue;
   final double? wueSiteLPerKwh;
+
+  /// Water evaporated generating this region's electricity, counting hydropower reservoirs.
   final double? wueGridLPerKwh;
+
+  /// The same, with reservoir evaporation excluded — contested for cold climates (Bakken 2017),
+  /// so it is a user setting rather than a decision we make for them.
+  final double? wueGridExcludingHydroLPerKwh;
   final String confidence;
+
+  double? gridFor({required bool includeHydro}) =>
+      includeHydro ? wueGridLPerKwh : (wueGridExcludingHydroLPerKwh ?? wueGridLPerKwh);
 
   bool get isPlaceholder => wueSiteLPerKwh == null || wueGridLPerKwh == null || confidence == 'placeholder';
 }

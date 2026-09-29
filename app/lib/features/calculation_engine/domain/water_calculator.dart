@@ -6,8 +6,12 @@
 ///   Scope 2  = E_query × PUE × WUE_grid   (off-site electricity generation)
 ///
 /// E_query:
-///   token-scaled tasks : energyWhPer1kTokens × (inputTokens + outputTokens) / 1000 × taskMultiplier
+///   token-scaled tasks : energyWhPer1kWeightedTokens × weighted(in, out) / 1000 × taskMultiplier
 ///   fixed tasks (image): fixedEnergyWhPerItem × itemCount
+///
+/// weighted(in, out) = in × 0.20 + out × 1.00 — an output token costs about five times an input
+/// token, because the answer is generated one token at a time while the question is read in
+/// parallel. Mirrors engine.js exactly; docs/test/parity.js fails if the two ever disagree.
 library;
 
 import 'model_profile.dart';
@@ -21,8 +25,12 @@ class PlaceholderRegionException implements Exception {
 }
 
 class WaterCalculator {
-  const WaterCalculator({this.allowPlaceholders = false});
+  const WaterCalculator({required this.weights, this.allowPlaceholders = false, this.includeHydro = true});
+  final TokenWeights weights;
   final bool allowPlaceholders;
+
+  /// Counting hydropower reservoir evaporation is contested for cold climates, so it is a setting.
+  final bool includeHydro;
 
   WaterEstimate estimate({
     required CalculationContext ctx,
@@ -35,16 +43,19 @@ class WaterCalculator {
       throw PlaceholderRegionException(region.id);
     }
     final wueSite = region.wueSiteLPerKwh ?? 0;
-    final wueGrid = region.wueGridLPerKwh ?? 0;
+    final wueGrid = region.gridFor(includeHydro: includeHydro) ?? 0;
 
     double energyWh;
     int tokensUsed;
     if (ctx.task.isFixedEnergy) {
+      // An image spends no text tokens — report zero either side so day totals stay honest.
       energyWh = ctx.task.fixedEnergyWhPerItem! * itemCount;
       tokensUsed = 0;
     } else {
-      tokensUsed = inputTokens + (outputTokens ?? ctx.task.defaultOutputTokens);
-      energyWh = ctx.tier.energyWhPer1kTokens * tokensUsed / 1000 * ctx.task.energyMultiplier;
+      final outTokens = outputTokens ?? ctx.task.defaultOutputTokens;
+      tokensUsed = inputTokens + outTokens;
+      final weighted = weights.weigh(inputTokens, outTokens);
+      energyWh = ctx.tier.energyWhPer1kWeightedTokens * weighted / 1000 * ctx.task.energyMultiplier;
     }
 
     final facilityWh = energyWh * region.pue;
