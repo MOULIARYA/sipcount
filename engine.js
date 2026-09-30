@@ -34,13 +34,31 @@ const _refWeighted = REFERENCE_PROMPT.inputTokens * TOKEN_WEIGHTS.input + REFERE
 const WEIGHT_NORM  = _refPlain / _refWeighted;                      // 1.25 at 5×, 1.20 at 3×, 1.32 at 10×
 
 const SIPCOUNT_CONFIG = {
-  version: '2026-09-20',
+  version: '2026-09-30',
   charsPerToken: 4,
+  /* Characters per token is not language-neutral, and treating it as if it were under-counts the
+     people we most want to reach. English runs ≈4 chars/token on all three vendors' tokenizers;
+     Devanagari ≈3–3.5 on o200k and far worse on older ones; Hinglish worse again; code ≈3–3.5.
+     (TOKEN-ECONOMICS §2.) The sensor classifies the SCRIPT of what it counted — a label, never the
+     text — and we divide accordingly. An exact tokenizer is the proper fix (N8) and is a large
+     dependency; this captures most of the error for ten lines and no download. */
+  charsPerTokenByScript: { latin: 4, devanagari: 3.2, hinglish: 3.0, cjk: 1.6, code: 3.4, mixed: 3.6 },
+  /* Work you never see. A turn that takes five minutes before a word appears is not idle — the
+     model is generating the whole time: reasoning, calling tools, reading what they return,
+     writing a spreadsheet. Only the final prose reaches the screen, so measuring the visible
+     answer alone under-counted a real five-minute research turn by about 28× (2026-09-30).
+     TOKEN-ECONOMICS §4: T_hidden ≈ tokens/s × (TTFT − 1.5 s), output speeds 70–125 tokens/s.
+     **Confidence: LOW.** This is the second placeholder after the 5× multiplier, and the same
+     calibration (I-30) replaces it with a measured rate. */
+  thinking: { tokensPerSec: 90, floorSec: 1.5, maxSec: 900 },
   outputPerInput: OUTPUT_PER_INPUT,
   referencePrompt: REFERENCE_PROMPT,
   weightNormalisation: WEIGHT_NORM,
   tokenWeights: TOKEN_WEIGHTS,
-  tiers: { lightweight:{wh1k:0.15*WEIGHT_NORM,label:'Light'}, standard:{wh1k:0.75*WEIGHT_NORM,label:'Standard'}, reasoning:{wh1k:7.5*WEIGHT_NORM,label:'Reasoning'} },
+  /* `base` is the published per-1k figure for plain tokens; `wh1k` is it re-normalised for weighted
+     tokens. Keeping the base means the multiplier can be re-fitted later without losing the source
+     number — see recalibrate(). */
+  tiers: { lightweight:{base:0.15,wh1k:0.15*WEIGHT_NORM,label:'Light'}, standard:{base:0.75,wh1k:0.75*WEIGHT_NORM,label:'Standard'}, reasoning:{base:7.5,wh1k:7.5*WEIGHT_NORM,label:'Reasoning'} },
   tasks: { text:{out:300,label:'Text'}, code:{out:600,label:'Code'}, long_context:{out:500,label:'Long doc'}, image:{fixed:2.9,label:'Image'} },
   range: { low:0.2, high:3.9 },
   brands: { openai:'ChatGPT', anthropic:'Claude', google:'Gemini', unknown:'Other' },
@@ -60,6 +78,12 @@ const SIPCOUNT_CONFIG = {
     anthropic:[['Claude Sonnet','standard'],['Claude Opus','standard'],['Claude Opus (extended thinking)','reasoning'],['Claude Haiku','lightweight']],
     google:[['Gemini Pro','standard'],['Gemini Flash','lightweight'],['Gemini Pro (Deep Think)','reasoning'],['Gemini Flash-Lite','lightweight']]
   },
+  /* A day's water. Was 100 mL, set when a prompt cost 1.3 mL and nothing unseen was counted —
+     roughly 43 chat prompts. With the reply and the hidden work measured (I-18, N9) a normal
+     answer is ~12 mL and a regular day ~420 mL, so at 100 every character died before lunch and
+     the whole keep-it-alive mechanic stopped meaning anything. 500 ≈ a regular working day.
+     (I-45, Madhur 2026-09-30.) */
+  defaultBudgetMl: 500,
   zones: { green:0.5, amber:0.7 },
   /* Reading a tier out of the model name shown on screen. Shared, not per-product: the extension,
      the phone apps and the desktop build must all classify "Gemini Flash-Lite" the same way or the
@@ -95,19 +119,117 @@ const SIPCOUNT_CONFIG = {
 };
 const C = SIPCOUNT_CONFIG;
 
+/* ---------- replacing a guess with a measurement (I-20 / N12) -------------------------------
+   Two numbers in here are placeholders: the 5× output multiplier (D-22) and the 90 tokens/second
+   rate for work that never reaches the screen. Both get replaced by measured values from the
+   calibration, and they have to reach people who already installed the app — otherwise every
+   correction waits on a store release, and the phone, the extension and the desktop build drift
+   apart again.
+
+   So a small file of *numbers* can be published and picked up. It can never carry code, and it is
+   checked hard before anything is believed: wrong schema, unknown shape or any value outside a
+   sane physical band and the whole payload is rejected, leaving the values we shipped with. Fail
+   closed — a bad fetch must never be able to make the number say anything it likes. */
+function recalibrate(outputPerInput){
+  C.outputPerInput = outputPerInput;
+  C.tokenWeights = { input: 1/outputPerInput, output: 1 };
+  const refW = C.referencePrompt.inputTokens*C.tokenWeights.input + C.referencePrompt.outputTokens*C.tokenWeights.output;
+  C.weightNormalisation = (C.referencePrompt.inputTokens + C.referencePrompt.outputTokens)/refW;
+  for(const t of Object.values(C.tiers)) t.wh1k = t.base*C.weightNormalisation;
+}
+const BANDS = {
+  outputPerInput:[1,20], charsPerToken:[1,10], 'thinking.tokensPerSec':[10,500],
+  'tier.base':[0.001,200], 'region.pue':[1,3], 'region.wueSite':[0,20], 'region.ewif':[0,40]
+};
+const inBand=(k,v)=>typeof v==='number' && isFinite(v) && v>=BANDS[k][0] && v<=BANDS[k][1];
+function applyConstants(raw){
+  if(!raw || raw.schema!=='sipcount-constants/1') return {ok:false, reason:'wrong schema'};
+  if(typeof raw.version!=='string' || raw.version.length>32) return {ok:false, reason:'bad version'};
+  const applied=[];
+  /* validate everything BEFORE changing anything, so a payload that is half-wrong cannot leave
+     the constants half-updated */
+  if('outputPerInput' in raw && !inBand('outputPerInput',raw.outputPerInput)) return {ok:false, reason:'outputPerInput out of range'};
+  if(raw.thinking && !inBand('thinking.tokensPerSec',raw.thinking.tokensPerSec)) return {ok:false, reason:'thinking rate out of range'};
+  if('charsPerToken' in raw && !inBand('charsPerToken',raw.charsPerToken)) return {ok:false, reason:'charsPerToken out of range'};
+  for(const [id,t] of Object.entries(raw.tiers||{})){
+    if(!C.tiers[id]) return {ok:false, reason:'unknown tier '+id};
+    if(!inBand('tier.base',t.base)) return {ok:false, reason:'tier '+id+' out of range'};
+  }
+  for(const [id,r] of Object.entries(raw.regions||{})){
+    if(!C.regions[id]) return {ok:false, reason:'unknown region '+id};
+    if(!inBand('region.pue',r.pue) || !inBand('region.wueSite',r.wueSite)
+       || !inBand('region.ewif',r.ewif&&r.ewif.incl) || !inBand('region.ewif',r.ewif&&r.ewif.excl))
+      return {ok:false, reason:'region '+id+' out of range'};
+  }
+  // everything checked; now apply
+  if('charsPerToken' in raw){ C.charsPerToken=raw.charsPerToken; applied.push('charsPerToken'); }
+  if(raw.charsPerTokenByScript) for(const [k,v] of Object.entries(raw.charsPerTokenByScript))
+    if(k in C.charsPerTokenByScript && inBand('charsPerToken',v)){ C.charsPerTokenByScript[k]=v; applied.push('script:'+k); }
+  if(raw.thinking){ C.thinking.tokensPerSec=raw.thinking.tokensPerSec; applied.push('thinking'); }
+  for(const [id,t] of Object.entries(raw.tiers||{})){ C.tiers[id].base=t.base; applied.push('tier:'+id); }
+  for(const [id,r] of Object.entries(raw.regions||{})){
+    Object.assign(C.regions[id],{pue:r.pue,wueSite:r.wueSite,ewif:{incl:r.ewif.incl,excl:r.ewif.excl}}); applied.push('region:'+id); }
+  if('outputPerInput' in raw){ recalibrate(raw.outputPerInput); applied.push('outputPerInput'); }
+  else recalibrate(C.outputPerInput);                 // tier bases may have moved
+  C.version = raw.version;
+  return {ok:true, applied};
+}
+
 /* ---------- engine ---------- */
 function regionParams(regionId, coolingId, hydro){ const R=C.regions[regionId]; const site = coolingId==='reported' ? R.wueSite : C.cooling[coolingId].wue; return { pue:R.pue, site, grid: hydro ? R.ewif.incl : R.ewif.excl }; }
 /* inputTokens / outputTokens are tracked separately; `weightedTokens` is what energy scales with. */
-function estimate({tier,task,inputTokens=0,outputTokens=null,items=1,params}){
+/* Tokens the model generated that never reached the screen.
+   A model generates continuously while it is working, at a fairly steady rate. So the work a turn
+   could have produced is (rate × how long it was working), and whatever we did not see on screen
+   was spent elsewhere: reasoning, tool calls, reading what they returned, writing a file.
+
+       hidden ≈ rate × active_seconds − visible_output_tokens
+
+   Time-to-first-token is the wrong signal here, which is why this replaced it the same day: a
+   research turn streams "Searching…" almost immediately, so first-output looks fast while the
+   model goes on working for five more minutes. Duration does not fall for that.
+
+   An ordinary chat turn lands near zero — 10 s at 90 tok/s is 900 tokens, and a 900-token answer
+   accounts for all of it. Returns 0 for a reasoning tier, whose 10× multiplier already stands in
+   for hidden work; counting both would charge the same thinking twice. */
+function hiddenFrom({activeMs, outputTokens=0, tier}={}){
+  if(tier==='reasoning' || !(activeMs>0)) return 0;
+  const secs=Math.min(C.thinking.maxSec, Math.max(0, activeMs/1000 - C.thinking.floorSec));
+  return Math.max(0, Math.round(secs*C.thinking.tokensPerSec - outputTokens));
+}
+function estimate({tier,task,inputTokens=0,outputTokens=null,hiddenTokens=0,items=1,params}){
   const T=C.tiers[tier], K=C.tasks[task], P=params, W=C.tokenWeights; let energy, weighted=0;
   const outTok = outputTokens==null ? (K.out||0) : outputTokens;
-  if(K.fixed!=null){ energy=K.fixed*items; } else { weighted=inputTokens*W.input+outTok*W.output; energy=T.wh1k*weighted/1000; }
+  /* hidden tokens are generated one at a time exactly like visible ones, so they carry the
+     output weight, not the input weight */
+  if(K.fixed!=null){ energy=K.fixed*items; } else { weighted=inputTokens*W.input+(outTok+hiddenTokens)*W.output; energy=T.wh1k*weighted/1000; }
   const f=energy*P.pue;
   /* an image task spends no text tokens — report both sides as 0 so day totals stay honest */
-  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens:K.fixed!=null?0:inputTokens, outputTokens:K.fixed!=null?0:outTok, weightedTokens:weighted,
+  return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens:K.fixed!=null?0:inputTokens, outputTokens:K.fixed!=null?0:outTok, hiddenTokens:K.fixed!=null?0:hiddenTokens, weightedTokens:weighted,
            inputShare: weighted? (inputTokens*W.input)/weighted : 0 };
 }
-const tok=ch=>ch<=0?0:Math.ceil(ch/C.charsPerToken);
+/* `script` is a label produced by the sensor from text it never keeps: 'latin', 'devanagari',
+   'hinglish', 'cjk', 'code' or 'mixed'. Unknown or absent falls back to English. */
+const tok=(ch,script)=>ch<=0?0:Math.ceil(ch/(C.charsPerTokenByScript[script]||C.charsPerToken));
+/* Which script a counted string is in, by proportion of code points. Runs on a local string that
+   is discarded immediately — the same boundary as counting its length. */
+function scriptOf(text){
+  if(!text) return 'latin';
+  const n=text.length; let dev=0, cjk=0, latin=0;
+  for(let i=0;i<n;i++){ const c=text.charCodeAt(i);
+    if(c>=0x0900&&c<=0x097F) dev++;
+    else if((c>=0x4E00&&c<=0x9FFF)||(c>=0x3040&&c<=0x30FF)||(c>=0xAC00&&c<=0xD7AF)) cjk++;
+    else if((c>=0x41&&c<=0x5A)||(c>=0x61&&c<=0x7A)) latin++; }
+  if(cjk/n>0.2) return 'cjk';
+  if(dev/n>0.5) return 'devanagari';
+  /* Even a little Devanagari among Latin means Hinglish, and the code test must come after this
+     or "mujhe ek python function chahiye जो..." is classified as code. Fully Romanised Hinglish
+     ("mujhe ek function chahiye") is indistinguishable from English by code point and is counted
+     as English — a known under-count that only word-level detection or a real tokenizer fixes. */
+  if(dev/n>0.02) return 'hinglish';
+  if(/```|[{};]\s*$|\b(function|const|let|def |import |class )\b/m.test(text)) return 'code';
+  return latin/n>0.5 ? 'latin' : 'mixed';
+}
 const fmt=(n,d)=>n.toLocaleString(undefined,{maximumFractionDigits:d??(n<10?1:0),minimumFractionDigits:0});
 const zone=pct=>pct<C.zones.green?'green':pct<C.zones.amber?'amber':'red';
 const ZONE_UI={ green:{ico:'✓',label:'Optimal'}, amber:{ico:'⚠️',label:'Elevated'}, red:{ico:'🛑',label:'Limit Exceeded'} };

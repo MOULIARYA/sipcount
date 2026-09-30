@@ -35,9 +35,14 @@ anyone remembering:
 Open a session per active track. Add C and D when their blockers clear, not before.
 
 ### A · Browser extension
-Closest to shipping: counting already works in code. Next, in order — test on the live ChatGPT,
-Claude and Gemini sites (I-8, never done); port the prototype's interface into the popup; icons
-(I-9); privacy policy at a public URL; store listing.
+**Counting is proven.** 2026-09-29: two real prompts on Claude and Gemini counted 1.5 mL against an
+independent calculation of 1.47 mL, with the model tier read correctly on both (I-8). That is the
+first evidence the product works at all, on any surface.
+
+Next, in order — port the prototype's design into the popup (I-44: it is still the September blue
+design with no character and an "≈ 0.1 of a sip" line); icons (I-9); privacy policy at a public URL;
+store listing and the $5 account. Still unproven: ChatGPT logged in, click-to-send on Gemini,
+double-counting under fast repeated sends.
 
 ### B · Desktop
 Counter, not viewer (D-30). Per-process network byte counters as the primary signal, frontmost app

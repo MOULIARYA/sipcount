@@ -1,0 +1,88 @@
+{
+  "schema": "sipcount-constants/1",
+  "version": "2026-09-30",
+  "published_at": "2026-09-30",
+  "note": "GENERATED from engine.js. Numbers only — never code. Every value is re-checked against a physical band by applyConstants() before it is used; anything out of range rejects the whole file and the app keeps what it shipped with.",
+  "outputPerInput": 5,
+  "charsPerToken": 4,
+  "charsPerTokenByScript": {
+    "latin": 4,
+    "devanagari": 3.2,
+    "hinglish": 3,
+    "cjk": 1.6,
+    "code": 3.4,
+    "mixed": 3.6
+  },
+  "thinking": {
+    "tokensPerSec": 90
+  },
+  "tiers": {
+    "lightweight": {
+      "base": 0.15
+    },
+    "standard": {
+      "base": 0.75
+    },
+    "reasoning": {
+      "base": 7.5
+    }
+  },
+  "regions": {
+    "us_hyperscale": {
+      "pue": 1.17,
+      "wueSite": 0.55,
+      "ewif": {
+        "incl": 3.142,
+        "excl": 1.67
+      }
+    },
+    "us_ercot": {
+      "pue": 1.28,
+      "wueSite": 0.25,
+      "ewif": {
+        "incl": 1.287,
+        "excl": 1.22
+      }
+    },
+    "eu_average": {
+      "pue": 1.16,
+      "wueSite": 0.03,
+      "ewif": {
+        "incl": 3.95,
+        "excl": 1.9
+      }
+    },
+    "nordic": {
+      "pue": 1.12,
+      "wueSite": 0.05,
+      "ewif": {
+        "incl": 6,
+        "excl": 1.12
+      }
+    },
+    "india": {
+      "pue": 1.43,
+      "wueSite": 2,
+      "ewif": {
+        "incl": 3.44,
+        "excl": 2.25
+      }
+    },
+    "singapore": {
+      "pue": 1.28,
+      "wueSite": 2.2,
+      "ewif": {
+        "incl": 0.75,
+        "excl": 0.4
+      }
+    },
+    "japan": {
+      "pue": 1.1,
+      "wueSite": 0.32,
+      "ewif": {
+        "incl": 2.31,
+        "excl": 1.5
+      }
+    }
+  }
+}

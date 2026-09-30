@@ -21,8 +21,46 @@ ok('browser_extension/engine.js is in step with engine.js', before.ext === load(
 ok('app/assets/calc/models.v2.json is in step with engine.js', before.json === load('app/assets/calc/models.v2.json'),
    'run: node tools/build-shared.js');
 
+/* The extension must actually START. background.js is loaded with importScripts(), which shares
+   ONE global scope with engine.js — so a name declared in both is a syntax error and Chrome
+   refuses to register the service worker ("Status code: 15"). That is exactly what shipped on
+   2026-09-29, because the generated engine leaked twenty-odd top-level names including `dayKey`,
+   which background.js also declares. This loads them into one shared context, as Chrome does. */
+console.log('\nTHE EXTENSION LOADS THE WAY CHROME LOADS IT');
+{
+  const vm = require('vm');
+  const stub = () => {};
+  const listener = { addListener: stub };
+  const sandbox = {
+    console: { log: stub, warn: stub, error: stub }, setTimeout, clearTimeout, TextEncoder, TextDecoder,
+    importScripts: stub, location: { hostname: 'chatgpt.com' },
+    chrome: { storage: { local: { get: async () => ({}), set: async () => {} } },
+              runtime: { onMessage: listener, onInstalled: listener, onStartup: listener },
+              action: { setBadgeText: stub, setBadgeBackgroundColor: stub, setBadgeTextColor: stub, setIcon: stub } },
+    OffscreenCanvas: function () { return { getContext: () => null }; }
+  };
+  sandbox.globalThis = sandbox; sandbox.self = sandbox;
+  const ctx = vm.createContext(sandbox);
+
+  let started = null;
+  try {
+    vm.runInContext(load('browser_extension/engine.js'), ctx, { filename: 'engine.js' });
+    vm.runInContext(load('browser_extension/background.js').replace(/^\s*importScripts\(.*$/m, ''), ctx, { filename: 'background.js' });
+  } catch (e) { started = `${e.name}: ${e.message}`; }
+  ok('service worker registers (engine + background share one scope)', started === null, started || '');
+  ok('and SIP is usable from it', started === null && vm.runInContext('typeof SIP === "object" && typeof SIP.estimate === "function"', ctx));
+
+  /* the collision that caused it: `const` at the top of a script occupies the shared global
+     lexical scope, so re-declaring an engine internal must NOT throw — meaning it never leaked */
+  let clash = null;
+  /* engine internals only — background.js legitimately declares dayKey, KEY and defaults itself */
+  try { vm.runInContext('const fmt=0, tok=0, C=0, zone=0, estimate=0, makeStore=0, regionParams=0, SIPCOUNT_CONFIG=0, ZONE_UI=0;', ctx); }
+  catch (e) { clash = e.message; }
+  ok('no engine internals leak into that scope', clash === null, clash || '');
+}
+
 /* load both engines the way their own product does */
-const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok};'))();
+const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom};'))();
 const ext = (new Function('module', load('browser_extension/engine.js') + '\nreturn SIP;'))({ });
 
 console.log('\nTHE SAME PROMPT GIVES THE SAME ANSWER');
@@ -60,6 +98,45 @@ ok('extension applies the 5x output weighting', (() => {
   return Math.abs(b / a - 5) < 1e-6;
 })());
 ok('the reference prompt is still 1.2959 mL', Math.abs(ml('us_hyperscale') - 1.2959) < 0.0005, ml('us_hyperscale').toFixed(4));
+
+console.log('\nCHARACTERS PER TOKEN IS NOT LANGUAGE-NEUTRAL');
+/* Treating every script as English under-counts the audience we most want to reach: the same
+   4,000-character answer is 1,000 tokens in English and 1,250 in Hindi. */
+{
+  const cases = [['How does photosynthesis work?', 'latin'], ['प्रकाश संश्लेषण कैसे काम करता है', 'devanagari'],
+                 ['mujhe ek python function chahiye जो string reverse kare', 'hinglish'],
+                 ['const x = 5; function go(){ return x; }', 'code'], ['光合作用是如何工作的', 'cjk']];
+  for (const [text, want] of cases) ok(`"${text.slice(0, 22)}…" reads as ${want}`, app.scriptOf ? app.scriptOf(text) === want : ext.scriptOf(text) === want, ext.scriptOf(text));
+  ok('the extension classifies identically', cases.every(([t, w]) => ext.scriptOf(t) === w));
+  const latin = ext.tok(4000, 'latin'), dev = ext.tok(4000, 'devanagari');
+  ok('a Hindi answer costs more tokens than an English one', dev > latin * 1.2, `${latin} vs ${dev}`);
+  ok('an unknown script falls back to English, not to zero', ext.tok(4000, 'klingon') === latin);
+}
+
+console.log('\nWORK THAT NEVER REACHES THE SCREEN');
+/* A five-minute research turn shows a few paragraphs and was charged as a short chat turn —
+   under-counted ~28×. Hidden tokens = rate × active time − what we saw. */
+{
+  const h = (activeMs, outputTokens, tier = 'standard') => ext.C && app.hiddenFrom({ activeMs, outputTokens, tier });
+  ok('an ordinary chat turn gains nothing', h(12000, 900) < 100, String(h(12000, 900)));
+  ok('a quick answer gains nothing at all', h(4000, 300) === 0);
+  ok('five minutes of work is counted', h(270000, 875) > 20000, h(270000, 875).toLocaleString());
+  ok('a reasoning tier is not charged twice', h(270000, 875, 'reasoning') === 0);
+  ok('missing timing costs nothing rather than guessing', h(undefined, 900) === 0 && h(0, 900) === 0);
+  ok('and it cannot run away', h(99999999, 0) <= app.C.thinking.tokensPerSec * app.C.thinking.maxSec);
+  const P = app.regionParams('india', 'reported', true);
+  const seen = app.estimate({ tier: 'standard', task: 'text', inputTokens: 50, outputTokens: 875, params: P }).total;
+  const all = app.estimate({ tier: 'standard', task: 'text', inputTokens: 50, outputTokens: 875, hiddenTokens: h(270000, 875), params: P }).total;
+  ok('the research turn is worth ~25x what we showed', all / seen > 20, `${seen.toFixed(1)} → ${all.toFixed(1)} mL`);
+  ok('the extension agrees with the engine on it', Math.abs(
+      ext.estimate({ tier: 'standard', task: 'text', region: 'india', inputTokens: 50, outputTokens: 875, hiddenTokens: h(270000, 875) }).total - all) < 1e-9);
+  const sv = ext.savingsIfLighter('standard', 'text', 'india', 50, 875, h(270000, 875));
+  ok('"a lighter model would have saved X" never exceeds the turn', sv.ml < all, `${sv.ml.toFixed(1)} vs ${all.toFixed(1)}`);
+  /* Live on 2026-09-30 the popup called a five-minute research job a "Simple task?" and offered a
+     lighter model that could not have done it. Offer nothing rather than bad advice. */
+  ok('no lighter-model advice on a turn that was mostly unseen work', sv.alt === null && sv.ml === 0);
+  ok('but ordinary turns still get the advice', ext.savingsIfLighter('standard', 'text', 'india', 30, 900, 40).alt === 'lightweight');
+}
 
 console.log('\nTHE 5x MULTIPLIER CAN BE REPLACED SAFELY');
 /* D-22: 5x is a placeholder until I-30 measures it. Swapping it must not move the calibrated

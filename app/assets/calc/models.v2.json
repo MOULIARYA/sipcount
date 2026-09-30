@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0.0",
-  "constants_version": "2026-09-20",
+  "constants_version": "2026-09-30",
   "generated_by": "tools/build-shared.js from engine.js — do not hand-edit",
   "notes": [
     "Estimates from public sources; vendors do not publish per-query figures for most models.",

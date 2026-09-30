@@ -36,7 +36,7 @@ class SettingsPage extends StatelessWidget {
                   ),
                   SizedBox(width: 72, child: Text('${tracker.budgetMl} mL', textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700))),
                 ]),
-                const Text('100 mL ≈ 80 standard prompts a day. Lower it to challenge yourself.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                const Text('500 mL ≈ a regular working day once the answers and the unseen work are counted. Lower it to challenge yourself.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
               ]),
               const SizedBox(height: 12),
               _Section(title: 'Data-centre assumptions', children: [

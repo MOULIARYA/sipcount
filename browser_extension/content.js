@@ -70,6 +70,74 @@
     return 'text';
   }
 
+  /* ---- measuring the reply (I-18 / TOKEN-ECONOMICS §4) -------------------------------------
+     The answer is where nearly all the water goes: an output token costs about five times an
+     input one, so for a normal question ~99% of the number comes from the reply. Until now the
+     reply was a fixed assumption (300 tokens for text), which made the measurement close to
+     meaningless — a one-line question producing a three-page essay was priced the same as "hi".
+
+     We measure it the same way we measure the prompt: LENGTH ONLY, never content, nothing kept.
+     Rather than chase per-site selectors for the answer bubble — three sites that rewrite their
+     markup constantly — we watch how much text the conversation gained. That works identically
+     on all three and survives their redesigns, including Gemini, whose stream re-sends the whole
+     answer each chunk and would double-count a naive byte measure. */
+  /* The shared engine is loaded alongside this file by the manifest. Guard anyway: a content
+     script that throws counts NOTHING, and does it silently on a page that looks perfectly
+     normal — which is exactly what happened on 2026-09-30. Falling back to the English ratio is
+     wrong by a few per cent; throwing is wrong by everything. */
+  const scriptClass = t => { try { return SIP.scriptOf(t); } catch (_) { return 'latin'; } };
+  const convoEl = () => document.querySelector('main') || document.body;
+  const convoChars = () => (convoEl().innerText || '').length;
+
+  /* "Still writing?" — a stop control is on screen for exactly as long as the model is generating,
+     which is a far better signal than silence. Models pause mid-answer (thinking, tool use, rate
+     limits), and an early first attempt at this finalised after a 1.8s gap and measured 190
+     characters of a 4,000-character answer. */
+  const STOP_BTN = 'button[aria-label*="Stop" i], [data-testid="stop-button"], button[aria-label*="Cancel" i]';
+  const generating = () => !!document.querySelector(STOP_BTN);
+
+  let turnSeq = 0;
+  function watchReply(turnId, promptChars, tSend) {
+    const base = convoChars();
+    let firstGrowth = 0, lastActive = tSend, settle = 0, idle = 0, cap = 0, reported = -1, done = false;
+
+    /* Reports are cumulative and repeatable: the background applies the difference from whatever
+       it last recorded. So a premature report is not a lost measurement — the next one corrects
+       it. Getting this wrong in the other direction (report once, hope it was the end) is what
+       produced a number five times too low. */
+    const report = () => {
+      const grew = Math.max(0, convoChars() - base - promptChars);   // the echoed prompt is not the reply
+      if (grew === reported) return;
+      reported = grew;
+      try {
+        chrome.runtime.sendMessage({ type: 'prompt_reply', reply: {
+          v: 1, turnId, reply_chars: grew,
+          reply_script: scriptClass((convoEl().innerText||'').slice(-4000)),
+          ttft_ms: firstGrowth ? firstGrowth - tSend : null,
+          /* How long the model was working — the last moment the page changed or the stop
+             control was up. Not Date.now(), which would include our own settle delay. */
+          active_ms: Math.max(0, lastActive - tSend),
+          duration_ms: Date.now() - tSend
+        }});
+      } catch (_) { /* extension reloaded mid-answer; the last figure stands */ }
+    };
+    const stopAll = () => { if (done) return; done = true; obs.disconnect();
+      clearTimeout(settle); clearTimeout(idle); clearTimeout(cap); report(); };
+
+    const obs = new MutationObserver(() => {
+      if (done) return;
+      if (!firstGrowth && convoChars() > base + promptChars + 8) firstGrowth = Date.now();
+      lastActive = Date.now();
+      clearTimeout(settle);
+      settle = setTimeout(() => { if (generating()) { lastActive = Date.now(); return; } report(); }, 2500);
+      clearTimeout(idle);
+      idle = setTimeout(stopAll, 25000);          // 25s of complete stillness = the turn is over
+    });
+    obs.observe(convoEl(), { childList: true, subtree: true, characterData: true });
+    idle = setTimeout(stopAll, 25000);
+    cap = setTimeout(stopAll, 300000);            // never watch forever
+  }
+
   let lastSent = 0;
   function emit(reason) {
     const el = composerEl();
@@ -79,16 +147,39 @@
     if (now - lastSent < 1200) return; // one event per send, even if both keydown and click fire
     lastSent = now;
     const attachments = attachmentCount(el);
+    const turnId = `${now}-${++turnSeq}`;
     const event = {
-      v: 1, source: 'browser_ext', vendor,
+      v: 1, source: 'browser_ext', vendor, turnId,
       model_hint: modelHint(),
       task: classify(text, attachments),
       char_count: text.length,
+      script: scriptClass(text),            // a label, not the text — see engine.js scriptOf()
       attachment_count: attachments,
       ts: Math.floor(now / 1000)
     };
     // `text` goes out of scope here and is never referenced again.
     try { chrome.runtime.sendMessage({ type: 'prompt_event', event }); } catch (_) { /* extension reloaded; ignore */ }
+    // Count immediately on the assumption so the badge reacts, then correct it when the answer
+    // lands. A user who closes the tab mid-answer keeps the estimate rather than losing the turn.
+    watchReply(turnId, text.length, now);
+  }
+
+  /* ---- test bridge ---------------------------------------------------------------------------
+     Chrome will not let an automated test read chrome.storage, and "we could not test it" is how
+     three faults reached Madhur in a week. So on a page carrying ?sipcount_debug=1 — and only
+     there — the content script answers a postMessage by writing the extension's COUNTS (the same
+     numbers the popup shows: no text, nothing new) into a DOM node the test can read.
+     Off on every ordinary page. Must stay gated, or be removed, before the store build. */
+  if (/[?&]sipcount_debug=1/.test(location.search)) {
+    window.addEventListener('message', ev => {
+      if (ev.source !== window || ev.data?.sipcount !== 'state?') return;
+      chrome.runtime.sendMessage({ type: 'debug_state' }, res => {
+        let n = document.getElementById('sipcount-debug');
+        if (!n) { n = document.createElement('script'); n.type = 'application/json'; n.id = 'sipcount-debug'; document.documentElement.appendChild(n); }
+        n.textContent = JSON.stringify(res || { ok: false });
+      });
+    });
+    document.documentElement.setAttribute('data-sipcount', 'active');   // proves the script is running
   }
 
   // Enter (without Shift) inside the composer = send on all three sites.

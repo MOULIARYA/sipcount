@@ -6,7 +6,7 @@ const KEY = 'sipcount.v1';
 const dayKey = d => new Date(d).toISOString().slice(0, 10);
 /* region ids now come from the shared engine (7 regions, not 2). Anything unrecognised falls
    back to SIP.DEFAULT_REGION inside the adapter, so an old stored 'us_default' still works. */
-const defaults = () => ({ budget: 100, region: 'us_hyperscale', saved: 0, days: {}, last: null });
+const defaults = () => ({ budget: SIP.C.defaultBudgetMl, region: 'us_hyperscale', saved: 0, days: {}, last: null });
 
 async function getState() { const r = await chrome.storage.local.get(KEY); return Object.assign(defaults(), r[KEY] || {}); }
 async function setState(s) { await chrome.storage.local.set({ [KEY]: s }); }
@@ -17,7 +17,7 @@ async function handle(ev) {
   const s = await getState();
   const tier = SIP.resolveTier(ev.vendor, ev.model_hint);
   const task = ['text', 'code', 'long_context', 'image'].includes(ev.task) ? ev.task : 'text';
-  const inputTokens = SIP.tok(ev.char_count || 0);
+  const inputTokens = SIP.tok(ev.char_count || 0, ev.script);
   const e = SIP.estimate({ tier, task, region: s.region, inputTokens, items: 1 });
   const k = dayKey(Date.now());
   const b = s.days[k] || (s.days[k] = { n: 0, s1: 0, s2: 0, tier: {}, task: {}, vendor: {} });
@@ -26,9 +26,62 @@ async function handle(ev) {
   b.task[task] = (b.task[task] || 0) + e.total;
   b.vendor[ev.vendor] = (b.vendor[ev.vendor] || 0) + e.total;
   const sv = SIP.savingsIfLighter(tier, task, s.region, inputTokens);
-  s.last = { ts: ev.ts, vendor: ev.vendor, tier, task, ml: e.total, tokens: e.tokens, energyWh: e.energyWh, altTier: sv.alt, altSavesMl: sv.ml, model_hint: ev.model_hint };
+  s.last = { ts: ev.ts, vendor: ev.vendor, tier, task, ml: e.total, tokens: e.tokens, energyWh: e.energyWh, altTier: sv.alt, altSavesMl: sv.ml, model_hint: ev.model_hint, estimated: true };
+  /* Remember enough to correct this turn once the answer has finished arriving. Counts only —
+     no text, and the record is dropped as soon as it is used or the hour is up. */
+  if (ev.turnId) {
+    s.open = s.open || {};
+    s.open[ev.turnId] = { day: k, tier, task, vendor: ev.vendor, inputTokens, script: ev.script, charCount: ev.char_count, modelHint: ev.model_hint, ml: e.total, s1: e.s1, s2: e.s2, at: Date.now() };
+    for (const id of Object.keys(s.open)) if (Date.now() - s.open[id].at > 3600000) delete s.open[id];
+  }
   // keep 400 days max
   const keys = Object.keys(s.days).sort(); while (keys.length > 400) delete s.days[keys.shift()];
+  await setState(s);
+  await updateBadge(s);
+}
+
+/* The answer has landed, so replace the assumed reply length with the measured one (I-18).
+   The first figure was a guess by necessity — the reply had not been written yet — so this
+   subtracts what we assumed and adds what actually happened. */
+async function handleReply(r) {
+  const s = await getState();
+  const o = s.open && s.open[r.turnId];
+  if (!o) return;                                   // unknown or expired turn: leave what we have
+  const b = s.days[o.day];
+  if (b) {
+    const outTokens = SIP.tok(r.reply_chars || 0, r.reply_script);
+    // work done before a word appeared: tool calls, reasoning, files written
+    const hiddenTokens = SIP.hiddenFrom({ activeMs: r.active_ms, outputTokens: outTokens, tier: o.tier });
+    const fresh = SIP.estimate({ tier: o.tier, task: o.task, region: s.region, inputTokens: o.inputTokens, outputTokens: outTokens, hiddenTokens });
+    // Apply only the difference from whatever was last recorded for this turn. Reports arrive
+    // repeatedly as the answer grows, so this must be idempotent — adding the turn again each
+    // time would inflate the day badly on a long answer.
+    b.s1 += fresh.s1 - o.s1; b.s2 += fresh.s2 - o.s2;
+    const d = fresh.total - o.ml;
+    b.tier[o.tier] = (b.tier[o.tier] || 0) + d;
+    b.task[o.task] = (b.task[o.task] || 0) + d;
+    b.vendor[o.vendor] = (b.vendor[o.vendor] || 0) + d;
+    Object.assign(o, { ml: fresh.total, s1: fresh.s1, s2: fresh.s2, at: Date.now(), outTokens });
+    /* Calibration (I-30 / N11). Off unless switched on in the popup. One row per turn: counts and
+       timings only, never text — the same boundary as everything else. This is the data that
+       replaces the two guesses in the engine, the 5x output multiplier and the 90 tokens/second
+       rate, with measured numbers. Capped so it can never grow without bound. */
+    if (s.calibrate) {
+      s.cal = s.cal || [];
+      s.cal.push({ t: Date.now(), vendor: o.vendor, tier: o.tier, task: o.task, model: o.modelHint || null,
+        in_chars: o.charCount, in_script: o.script, in_tokens: o.inputTokens,
+        out_chars: r.reply_chars, out_script: r.reply_script, out_tokens: outTokens,
+        ttft_ms: r.ttft_ms, active_ms: r.active_ms, duration_ms: r.duration_ms,
+        hidden_tokens: hiddenTokens, ml: +fresh.total.toFixed(4), region: s.region });
+      while (s.cal.length > 500) s.cal.shift();
+    }
+    if (s.last && s.last.ts && Math.abs(Date.now() / 1000 - s.last.ts) < 3600) {
+      s.last = Object.assign({}, s.last, { ml: fresh.total, tokens: fresh.weightedTokens, energyWh: fresh.energyWh,
+        outTokens, hiddenTokens, // more work happened off-screen than on: self-scaling, unlike an arbitrary threshold
+        thinking: hiddenTokens > outTokens, ttftMs: r.ttft_ms, estimated: false,
+        altSavesMl: SIP.savingsIfLighter(o.tier, o.task, s.region, o.inputTokens, outTokens, hiddenTokens).ml });
+    }
+  }
   await setState(s);
   await updateBadge(s);
 }
@@ -65,7 +118,17 @@ async function updateBadge(s) {
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'prompt_event' && msg.event?.v === 1) { handle(msg.event).then(() => sendResponse({ ok: true })); return true; }
+  if (msg?.type === 'prompt_reply' && msg.reply?.v === 1) { handleReply(msg.reply).then(() => sendResponse({ ok: true })); return true; }
   if (msg?.type === 'refresh_badge') { updateBadge().then(() => sendResponse({ ok: true })); return true; }
+  /* Test hook. Returns counts only — the same numbers the popup shows — and only ever in
+     response to a request from our own content script on a page carrying ?sipcount_debug=1.
+     It exists because Chrome will not let an automated test read chrome.storage directly, and
+     "we could not test it" is how the last three faults shipped. */
+  if (msg?.type === 'debug_state') {
+    getState().then(s => { const t = s.days[dayKey(Date.now())] || null;
+      sendResponse({ ok: true, region: s.region, budget: s.budget, today: t, last: s.last, openTurns: Object.keys(s.open || {}).length }); });
+    return true;
+  }
 });
 chrome.runtime.onInstalled.addListener(() => updateBadge());
 chrome.runtime.onStartup.addListener(() => updateBadge());

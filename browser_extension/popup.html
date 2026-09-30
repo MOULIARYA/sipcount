@@ -4,57 +4,95 @@
 <meta charset="utf-8">
 <title>Sipcount</title>
 <style>
-:root{--ink:#0D1321;--surface:#161F31;--surface-2:#1E2A40;--line:#28364F;--text:#E8EEF6;--muted:#8C9AB3;--water:#7CC8FF;--water-deep:#3A9BE0;--water-soft:rgba(124,200,255,.14);--warn:#FF8A5B;--good:#7BE0A8;color-scheme:dark}
+/* The prototype's visual language, ported (I-44). True black, one green, the drop as the hero,
+   and the number as the largest thing on screen. No web fonts: an extension popup must open
+   instantly and offline, so this uses the system stack at the prototype's weights and tracking. */
+:root{
+  --ink:#070707; --panel:#101010; --line:#1E1E1E; --line-2:#2A2A2A;
+  --text:#FFFFFF; --muted:#A6A6A6; --dim:#8A8A8A;
+  --green:#00F076; --green-deep:#00B85A; --amber:#FFB800; --red:#FF3B30;
+  --display:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
 *{box-sizing:border-box}
-body{margin:0;width:340px;background:var(--ink);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px;display:flex;flex-direction:column;gap:14px}
-h1{margin:0;font-size:16px;font-weight:800;letter-spacing:-.01em}
-h2{margin:0;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+body{margin:0;width:340px;background:var(--ink);color:var(--text);
+  font:14px/1.45 var(--body);padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:7px}
+h1 svg{width:15px;height:19px}
+h2{margin:0;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-.pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
-.pill.warn{background:rgba(255,138,91,.15);color:var(--warn)}
-.panel{background:var(--surface);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
-.big{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.big small{font-size:15px;font-weight:500;color:var(--muted);margin-left:3px}
-.sub{color:var(--muted);font-size:13px}
-.track{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.track i{display:block;height:100%;background:var(--water);border-radius:99px}
-.track i.over{background:var(--warn)}
+.pill{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;
+  border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.pill.good{color:var(--green);border-color:rgba(0,240,118,.35)}
+.pill.warn{color:var(--amber);border-color:rgba(255,184,0,.35)}
+.pill.bad{color:var(--red);border-color:rgba(255,59,48,.4)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+/* the hero: drop on the left, the number filling the rest */
+.hero{display:flex;gap:14px;align-items:center}
+.drop{width:58px;height:75px;flex:none}
+.drop svg{width:100%;height:100%;display:block}
+.drop .fill{transition:transform 1.4s cubic-bezier(.3,0,.2,1),fill .5s}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.big{font-family:var(--display);font-size:40px;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.big small{font-size:15px;font-weight:600;color:var(--muted);margin-left:4px;letter-spacing:0}
+.ring{height:5px;border-radius:99px;background:#1A1A1A;overflow:hidden;margin-top:9px}
+.ring i{display:block;height:100%;border-radius:99px;background:var(--green);transition:width .9s ease}
+.ring i.amber{background:repeating-linear-gradient(135deg,var(--amber) 0 5px,#8a6400 5px 8px)}
+.ring i.red{background:repeating-linear-gradient(45deg,var(--red) 0 3px,#7a1c17 3px 5px)}
+.sub{color:var(--muted);font-size:12.5px}
+/* one plain line, the way the app says it — not "4.1 espressos" */
+.opp{color:var(--muted);font-size:12.5px;line-height:1.5;padding:0 2px}
+.nudge{background:rgba(0,240,118,.08);border:1px solid rgba(0,240,118,.18);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5}
+.nudge b{color:var(--green)}
+.nudge.quiet{background:var(--panel);border-color:var(--line);color:var(--muted)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tile{background:var(--surface);border-radius:12px;padding:10px 12px}
-.tile .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
-.tile .l{font-size:11px;color:var(--muted)}
-.nudge{background:var(--water-soft);border-radius:12px;padding:10px 12px;font-size:13px}
-.nudge b{color:var(--water)}
-.nudge.quiet{background:var(--surface-2);color:var(--muted)}
-.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:70px}
-.bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
-.bar i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--water-deep);min-height:2px}
-.bar i.today{background:var(--water)}
-.bar em{font-style:normal;font-size:10px;color:var(--muted)}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.tile .v{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.tile .l{font-size:11px;color:var(--dim);margin-top:4px}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:64px}
+.bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%}
+.bar i{display:block;width:100%;border-radius:4px 4px 2px 2px;background:#1F1F1F;min-height:2px}
+.bar i.today{background:var(--green)}
+.bar em{font-style:normal;font-size:9.5px;color:var(--dim)}
 .list{display:flex;flex-direction:column}
-.it{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.it{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .it:last-child{border-bottom:0}
 .it span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
 .actions{display:flex;gap:8px}
-button{flex:1;border:0;font:inherit;font-weight:700;font-size:13px;padding:10px;border-radius:10px;cursor:pointer;background:var(--surface-2);color:var(--text)}
-button.danger{color:var(--warn)}
-button:focus-visible{outline:2px solid var(--water);outline-offset:2px}
-label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-input[type=number]{width:84px;font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
-a{color:var(--water)}
-.foot{font-size:11px;color:var(--muted);text-align:center}
+button{flex:1;border:1px solid var(--line-2);font:inherit;font-weight:800;font-size:12.5px;padding:10px;border-radius:12px;
+  cursor:pointer;background:transparent;color:var(--text)}
+button.danger{color:var(--red);border-color:rgba(255,59,48,.3)}
+button:hover{border-color:#3A3A3A}
+button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+input[type=number],select{font:inherit;font-size:12.5px;color:var(--text);background:#101010;border:1px solid var(--line-2);
+  border-radius:9px;padding:7px 9px}
+input[type=number]{width:86px}
+select{max-width:170px}
+a{color:var(--green)}
+.foot{font-size:10.5px;color:var(--dim);text-align:center;margin:0;line-height:1.5}
 </style>
 </head>
 <body>
-  <div class="row"><h1>💧 Sipcount</h1><span class="pill" id="statusPill">Watching</span></div>
+  <div class="row">
+    <h1><svg viewBox="0 0 100 130" aria-hidden="true"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#00F076"/></svg>Sipcount</h1>
+    <span class="pill" id="statusPill">Watching</span>
+  </div>
 
   <div class="panel">
-    <h2>Today</h2>
-    <div class="big"><span id="todayMl">0</span><small>mL</small></div>
-    <div class="sub" id="todayEq">No prompts counted yet today</div>
-    <div class="track"><i id="fill" style="width:0%"></i></div>
-    <div class="sub" id="budgetLine"></div>
+    <div class="hero">
+      <div class="drop" id="drop" aria-hidden="true"></div>
+      <div style="flex:1;min-width:0">
+        <div class="eyebrow">Water today · this device</div>
+        <div class="big"><span id="todayMl">0</span><small>mL</small></div>
+        <div class="ring"><i id="fill" style="width:0%"></i></div>
+        <div class="sub" id="budgetLine" style="margin-top:7px"></div>
+      </div>
+    </div>
   </div>
+
+  <p class="opp" id="todayEq"></p>
 
   <div class="nudge" id="last"></div>
 
@@ -77,13 +115,16 @@ a{color:var(--water)}
   <!-- The engine has had seven regions since 2026-09-27, but there was no way to pick one, so an
        Indian user was shown the US figure — about half the real number. -->
   <label>Where your AI runs <select id="region"></select></label>
-  <p class="foot" id="regionNote" style="margin:4px 0 0"></p>
+  <p class="foot" id="regionNote" style="text-align:left"></p>
+
+  <label style="margin-top:2px">Calibration mode <input type="checkbox" id="calibrate" style="width:auto"></label>
+  <p class="foot" id="calNote" style="text-align:left"></p>
 
   <div class="actions">
     <button id="export">Copy CSV</button>
     <button id="clear" class="danger">Clear data</button>
   </div>
-  <p class="foot">Counts only. Nothing you type is stored or sent. <a href="https://github.com/mouliarya/sipcount/blob/main/browser_extension/PRIVACY.md" target="_blank" rel="noopener">Privacy</a></p>
+  <p class="foot">Counts only. Nothing you type is stored or sent. <a href="https://mouliarya.github.io/sipcount/privacy.html" target="_blank" rel="noopener">Privacy</a></p>
   <script src="engine.js"></script>
   <script src="popup.js"></script>
 </body>

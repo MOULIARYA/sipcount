@@ -30,12 +30,15 @@ const { C, estimate, regionParams, tok, fmt } =
    turning a model name on screen into a tier, and turning millilitres into everyday words. */
 const ADAPTER = `
 /* ---------------------------------------------------------------------------------------
-   Extension adapter. Above this line is engine.js, copied verbatim by tools/build-shared.js.
-   Below it is the part only the extension needs: reading a tier out of the model name shown
-   on the page, and the everyday comparison in the popup. Keeps the SIP.* names the existing
-   content/background/popup scripts already call, so nothing else had to change.
+   Extension adapter. Everything above is engine.js, copied verbatim, and everything in this
+   file lives INSIDE the closure below — only \`SIP\` reaches the global scope.
+
+   That matters: \`background.js\` is loaded with importScripts(), which shares one global
+   scope with this file. The engine declares dayKey, fmt, tok and others at its top level,
+   and background.js declares its own dayKey — two \`const dayKey\` in one scope is a syntax
+   error, and Chrome answers by refusing to register the service worker at all
+   ("Status code: 15"). Wrapping is the fix; parity.js asserts nothing else leaks.
    --------------------------------------------------------------------------------------- */
-const SIP = (() => {
   const DEFAULT_REGION = 'us_hyperscale';
   const EQ = [['bottle',500],['coffee cup',240],['espresso',30],['sip',15]];
   const paramsFor = (region, cooling, hydro) => {
@@ -51,28 +54,40 @@ const SIP = (() => {
   }
   /* same call shape the extension always used; outputTokens stays optional, so when the
      page gives us no answer length the task default applies, exactly as in the app */
-  function est({ tier, task, region, inputTokens = 0, outputTokens = null, items = 1, cooling, hydro }){
-    const e = estimate({ tier, task, inputTokens, outputTokens, items, params: paramsFor(region, cooling, hydro) });
+  function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, items = 1, cooling, hydro }){
+    const e = estimate({ tier, task, inputTokens, outputTokens, hiddenTokens, items, params: paramsFor(region, cooling, hydro) });
     return Object.assign({}, e, { tokens: e.weightedTokens });
   }
-  function savingsIfLighter(tier, task, region, inputTokens){
+  /* Compared on the SAME turn, not on a hypothetical 300-token answer — otherwise the popup can
+     claim a lighter model "would have saved" more water than the turn actually used. */
+  function savingsIfLighter(tier, task, region, inputTokens, outputTokens, hiddenTokens){
     const alt = tier === 'reasoning' ? 'standard' : tier === 'standard' ? 'lightweight' : null;
     if(!alt || task === 'image') return { alt:null, ml:0 };
-    return { alt, ml: est({tier,task,region,inputTokens}).total - est({tier:alt,task,region,inputTokens}).total };
+    /* A turn that spent most of its effort off-screen was researching, calling tools or writing a
+       file. Telling someone a light model "would have saved 96 mL" is wrong twice: a light model
+       could not have done the job, and the comparison assumes it would have done the same work.
+       Offer nothing rather than bad advice. */
+    if(hiddenTokens > outputTokens) return { alt:null, ml:0 };
+    const a = est({tier,task,region,inputTokens,outputTokens,hiddenTokens}).total;
+    const b = est({tier:alt,task,region,inputTokens,outputTokens,hiddenTokens}).total;
+    return { alt, ml: a - b };
   }
   function equiv(ml){
     for(const [l,v] of EQ) if(ml >= v) return \`\${fmt(ml/v,1)} \${l}\${ml/v >= 1.95 ? 's' : ''}\`;
     return \`\${fmt(ml/15,1)} of a sip\`;
   }
-  return { C, tok, fmt, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
-})();
-if (typeof module !== 'undefined') module.exports = SIP;
+  return { C, tok, fmt, scriptOf, hiddenFrom, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
 `;
 
 const banner = `/* GENERATED FILE — do not edit.
    Source: engine.js · rebuild with: node tools/build-shared.js
-   Constants version: ${C.version} */\n`;
-fs.writeFileSync(path.join(ROOT, 'browser_extension', 'engine.js'), banner + engineSrc + ADAPTER);
+   Constants version: ${C.version}
+
+   Everything is sealed inside one closure so that only \`SIP\` enters the global scope, because
+   background.js shares that scope via importScripts(). */\n`;
+fs.writeFileSync(path.join(ROOT, 'browser_extension', 'engine.js'),
+  banner + 'const SIP = (() => {\n' + engineSrc + ADAPTER + '\n})();\n' +
+  "if (typeof module !== 'undefined') module.exports = SIP;\n");
 
 /* a region is only as trustworthy as its least certain input */
 const RANK = { low: 0, medium: 1, high: 2 };
@@ -134,6 +149,24 @@ const models = {
 };
 fs.writeFileSync(path.join(ROOT, 'app', 'assets', 'calc', 'models.v2.json'), JSON.stringify(models, null, 2) + '\n');
 
+/* ---------- 3. the constants people can pick up without a release --------------------------
+   Numbers only, served from GitHub Pages, checked hard by applyConstants() before anything is
+   believed. This is how a fitted multiplier reaches an installed app. */
+const published = {
+  schema: 'sipcount-constants/1',
+  version: C.version,
+  published_at: new Date().toISOString().slice(0, 10),
+  note: 'GENERATED from engine.js. Numbers only — never code. Every value is re-checked against a physical band by applyConstants() before it is used; anything out of range rejects the whole file and the app keeps what it shipped with.',
+  outputPerInput: C.outputPerInput,
+  charsPerToken: C.charsPerToken,
+  charsPerTokenByScript: C.charsPerTokenByScript,
+  thinking: { tokensPerSec: C.thinking.tokensPerSec },
+  tiers: Object.fromEntries(Object.entries(C.tiers).map(([id, t]) => [id, { base: t.base }])),
+  regions: Object.fromEntries(Object.entries(C.regions).map(([id, r]) => [id, { pue: r.pue, wueSite: r.wueSite, ewif: r.ewif }]))
+};
+fs.writeFileSync(path.join(ROOT, 'docs', 'constants.json'), JSON.stringify(published, null, 2) + '\n');
+
 console.log('wrote browser_extension/engine.js   (engine + adapter)');
+console.log('wrote docs/constants.json           (publishable, ' + Object.keys(published.regions).length + ' regions)');
 console.log('wrote app/assets/calc/models.v2.json (constants ' + C.version + ', ' +
             Object.keys(C.regions).length + ' regions, ' + models.golden.length + ' golden cases)');

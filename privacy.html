@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sipcount — Privacy</title>
+<style>
+:root{--ink:#070707;--panel:#101010;--line:#1E1E1E;--text:#fff;--muted:#A6A6A6;--green:#00F076;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font:16px/1.65 'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  padding:44px 20px 80px}
+main{max-width:640px;margin:0 auto}
+h1{font-size:1.8em;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 34px}
+h2{font-size:1.02em;font-weight:800;letter-spacing:-.01em;margin:34px 0 10px}
+p,li{color:#D8D8D8}
+strong{color:#fff}
+.lede{font-size:1.12em;color:#fff;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--green);
+  border-radius:12px;padding:16px 18px;margin:0 0 30px}
+table{width:100%;border-collapse:collapse;margin:14px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.94em}
+th{color:var(--muted);font-size:.76em;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+td.no{color:var(--muted)}
+code{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.88em}
+a{color:var(--green)}
+footer{color:var(--muted);font-size:.85em;margin-top:44px;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Sipcount — Privacy</h1>
+  <p class="sub">Last updated 30 September 2026</p>
+
+  <p class="lede">Sipcount counts. It measures <strong>how long</strong> your prompts and the replies
+  are, and <strong>nothing about what they say</strong>. Nothing you type is stored, and nothing
+  leaves your device.</p>
+
+  <h2>What Sipcount looks at</h2>
+  <p>To estimate the water used to run a prompt, Sipcount needs its size. On the pages it supports —
+  chatgpt.com, claude.ai and gemini.google.com — it counts the number of characters you sent and the
+  number the reply came back with, notices which script they are written in so the count is right for
+  Hindi as well as English, reads the model name shown on screen, and times how long the model took.</p>
+  <p>The text itself is measured and immediately discarded. It is never copied, never stored and
+  never transmitted — there is no code in Sipcount that could do so.</p>
+
+  <h2>What is kept, and where</h2>
+  <table>
+    <tr><th>Kept on your device</th><th>Never kept</th></tr>
+    <tr>
+      <td>A daily total in millilitres<br>How many prompts, per day<br>Which AI tool, and which class of model<br>Your budget and your region</td>
+      <td class="no">Anything you typed<br>Anything the AI replied<br>Your name, email or account<br>Any time more precise than the date<br>Your location or IP address</td>
+    </tr>
+  </table>
+  <p>All of it lives in your own browser. You can see exactly what is there at any time — the popup
+  has a <strong>Copy CSV</strong> button that hands you everything Sipcount holds about you, one row
+  per day — and <strong>Clear data</strong> removes it.</p>
+
+  <h2>Nothing is sent anywhere</h2>
+  <p>The browser extension declares <strong>no network permission at all</strong>. You can check this
+  yourself: open <code>chrome://extensions</code>, click <em>Details</em> on Sipcount, and see that it
+  asks only for storage. An extension without network permission cannot contact a server, so there is
+  no analytics, no telemetry, no crash reporting and no account.</p>
+
+  <h2>Calibration mode</h2>
+  <p>Switched off unless you turn it on. It records one row per prompt — the same counts and timings
+  described above, still no text — so the estimates can be replaced with measurements. It stays on
+  your device until you export it and choose to send it to us. Turning it off stops the recording.</p>
+
+  <h2>Children</h2>
+  <p>Sipcount is designed to be used by people of any age, which is why it keeps nothing about anyone.
+  It asks your age once, uses it only to decide how the app behaves, and stores the answer as a
+  setting rather than a number. Sharing is switched off under 13. Syncing between devices, when it
+  arrives, will be available from 18 — see below.</p>
+
+  <h2>Syncing between your devices</h2>
+  <p>Not switched on in this version. When it is, it will work from a code generated on your device
+  and never sent to us. Your daily totals would travel between your own devices encrypted with a key
+  derived from that code, so we could not read them even in principle. Your age, your prompts and
+  your email address would never be part of it, and the date would remain the finest unit of time
+  recorded.</p>
+
+  <h2>If any of this changes</h2>
+  <p>This page is versioned in the open, alongside the code, at
+  <a href="https://github.com/mouliarya/sipcount">github.com/mouliarya/sipcount</a>. If Sipcount ever
+  begins collecting something, it will say so here first and in the app before it does.</p>
+
+  <footer>
+    Sipcount · <a href="https://github.com/mouliarya/sipcount">source code</a> ·
+    questions: raise an issue on GitHub.
+  </footer>
+</main>
+</body>
+</html>
