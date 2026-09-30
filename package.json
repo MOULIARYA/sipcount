@@ -7,6 +7,6 @@
     "test": "node docs/test/parity.js && node docs/test/extension.js && node docs/test/constants.js && node docs/test/regression.js && node docs/test/simulate.js"
   },
   "devDependencies": {
-    "jsdom": "^26.0.0"
+    "jsdom": "^30.0.0"
   }
 }

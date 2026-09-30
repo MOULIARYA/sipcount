@@ -28,8 +28,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install jsdom
-        run: npm ci || npm install
+      # `npm ci` only, deliberately: falling back to `npm install` once masked a version mismatch
+      # between package.json and the committed lockfile, and CI silently ran a different jsdom from
+      # the one used locally. A lockfile that does not match must fail loudly, not be worked around.
+      - name: Install the test harness
+        run: npm ci
+      - name: Prove jsdom is really there
+        run: node -e "console.log('jsdom', require('jsdom/package.json').version)" 
 
       # The generated files must be rebuildable and identical. If this step leaves the tree dirty,
       # someone hand-edited a generated file and the three products are about to drift apart.

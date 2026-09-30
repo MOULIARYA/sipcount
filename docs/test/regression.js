@@ -16,8 +16,14 @@ const ok=(name,cond,extra='')=>{ if(cond){pass++; console.log('  ✓',name);} el
 
 const dom=new JSDOM(html,{runScripts:'dangerously',resources:'usable',url:'file://'+path.join(tmp,'sipcount.html'),pretendToBeVisual:true,
   beforeParse(w){ w.onerror=(m,s,l,c,e)=>errors.push(String(e&&e.stack||m));
-    /* jsdom ships crypto.getRandomValues but not crypto.subtle; the sync code needs both. */
+    /* Browsers give a page crypto.subtle, TextEncoder and TextDecoder. jsdom gives none of them
+       reliably — which version you get decides — so the page's encryption code throws inside the
+       harness while working perfectly in a browser. Supplying them makes the test environment
+       match a real one; without this the suite passed on one machine and failed on another, which
+       is exactly the sort of difference CI exists to expose. */
     try{ const wc=require('crypto').webcrypto; if(wc && !(w.crypto&&w.crypto.subtle)) Object.defineProperty(w,'crypto',{value:wc,configurable:true,writable:true}); }catch(e){}
+    if(typeof w.TextEncoder==='undefined') w.TextEncoder=TextEncoder;
+    if(typeof w.TextDecoder==='undefined') w.TextDecoder=TextDecoder;
   }});
 const w=dom.window;
 w.addEventListener('load',()=>setTimeout(run,300));
