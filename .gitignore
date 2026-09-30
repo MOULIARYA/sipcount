@@ -1,3 +1,6 @@
 
 # large source images for the mascot frames — keep the WebP, not the 42 MB originals
 assets/src/
+
+# test harness only — the products themselves have no dependencies
+node_modules/

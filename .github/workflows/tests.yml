@@ -1,0 +1,72 @@
+name: Tests
+
+# Everything that can be checked without a browser or a phone, on every push.
+#
+# Until now the five JavaScript suites only ran when someone remembered to run them, and the Dart
+# engine's tests had NEVER been executed by anyone — they were written against numbers generated
+# from engine.js and taken on trust. This workflow is what turns "should agree" into "does agree".
+#
+# Neither suite sees pixels and neither visits a real website, so a green run here still does not
+# mean the thing works in a browser. It means the maths, the copy and the wiring are intact.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  javascript:
+    name: Prototype, engine and extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install jsdom
+        run: npm ci || npm install
+
+      # The generated files must be rebuildable and identical. If this step leaves the tree dirty,
+      # someone hand-edited a generated file and the three products are about to drift apart.
+      - name: Generated files are in step with engine.js
+        run: |
+          node tools/build-shared.js
+          git diff --exit-code -- browser_extension/engine.js app/assets/calc/models.v2.json docs/constants.json \
+            || (echo "::error::A generated file is stale or was hand-edited. Run: node tools/build-shared.js" && exit 1)
+
+      - name: One calculator, and the extension starts
+        run: node docs/test/parity.js
+      - name: Counting, correction and calibration
+        run: node docs/test/extension.js
+      - name: A published coefficient reaches apps; a bad file cannot
+        run: node docs/test/constants.js
+      - name: The prototype — screens, copy, behaviour
+        run: node docs/test/regression.js
+      - name: A whole conversation, streamed
+        run: node docs/test/simulate.js
+
+  dart:
+    name: Phone app engine
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyse
+        run: flutter analyze --no-fatal-infos
+      # The golden values these assert are generated from engine.js, so a failure here means the
+      # phone app and the web engine disagree about what a prompt costs — which is the one defect
+      # this project cannot ship.
+      - name: Engine agrees with engine.js
+        run: flutter test test/calculation_engine

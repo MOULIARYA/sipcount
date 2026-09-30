@@ -31,7 +31,7 @@ announced as started and then not written at all. Both are the same failure.
 | N9 | Timing → work that never reaches the screen | TOKEN-ECONOMICS §4 | ✅ | `hidden ≈ rate × active time − visible output`. Madhur's 5-minute research turn read **1 mL**; it is worth ~**176 mL**. `parity.js` (9), `simulate.js` §8. Duration, not TTFT — a research turn streams "Searching…" at once while working for minutes more |
 | N10 | Context-length factor, cached-history discount | TOKEN-ECONOMICS §3 | ⬜ | — needs history length, which only the extension can see |
 | N11 | Calibration mode: full per-turn record | I-18 / I-30 §5 | ✅ | built 2026-09-30, `extension.js` (7). Off by default; a switch in the popup, one row per turn — counts, scripts and timings, capped at 500, no text. Export gives the CSV to fit against |
-| N12 | Coefficients published so every app picks them up | I-20 | 🟡 | `docs/constants.json` + `applyConstants()`, `constants.js` (22). Numbers only, re-checked against physical bands, **fail closed**: wrong schema, unknown region/tier, NaN, Infinity, a string where a number belongs, or one bad value among good ones — all rejected whole. **Still to wire: the periodic fetch** in each product (never at launch; bundled values as fallback; off for under-18) |
+| N12 | Coefficients published so every app picks them up | I-20 | 🟡 | `docs/constants.json` + `applyConstants()`, `constants.js` (22). Numbers only, re-checked against physical bands, **fail closed**: wrong schema, unknown region/tier, NaN, Infinity, a string where a number belongs, or one bad value among good ones — all rejected whole. **Still to wire: the periodic fetch** in the phone and desktop builds (never at launch; bundled values as fallback; off for under-18). **Not in the extension** — that would need a host permission and cost the "no network permission" claim, and Chrome's auto-update already carries constants (D-31) |
 | N13 | Model → tier from the on-screen label | — | ✅ | live-verified: Flash→light, Opus→standard, o3→reasoning |
 
 ## B. Browser extension
@@ -53,7 +53,7 @@ announced as started and then not written at all. Both are the same failure.
 | # | Requirement | Status | Proof |
 |---|---|---|---|
 | P1 | Android counts prompts in shipping form | ⬜ | I-22 spike not run; needs test phones |
-| P2 | Dart engine agrees with `engine.js` | 🟡 | `water_calculator_test.dart` written; **never run — needs CI** |
+| P2 | Dart engine agrees with `engine.js` | 🟡 | `water_calculator_test.dart` written; CI added 2026-09-30 (`tests.yml`) so it finally runs. **Expect the first run to fail** — it was written without being able to execute it |
 | P3 | iPhone (lighter: Safari + Screen Time) | ⬜ | needs the $99 account |
 | P4 | iPhone (full: traffic tunnel) | ⏸ | needs the company |
 | P5 | Desktop counts the native apps | ⬜ | design agreed, `DESKTOP-SENSING.md` |

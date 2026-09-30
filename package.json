@@ -1,5 +1,12 @@
 {
-  "dependencies": {
-    "jsdom": "^30.1.1"
+  "name": "sipcount-checks",
+  "private": true,
+  "description": "Test harness only. The products themselves have no dependencies — the prototype, the extension and the phone app all ship as plain files.",
+  "scripts": {
+    "build": "node tools/build-shared.js",
+    "test": "node docs/test/parity.js && node docs/test/extension.js && node docs/test/constants.js && node docs/test/regression.js && node docs/test/simulate.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
   }
 }
