@@ -54,6 +54,11 @@ jobs:
         run: node docs/test/regression.js
       - name: A whole conversation, streamed
         run: node docs/test/simulate.js
+      # The fitter will be used once, on real data, to replace a constant that decides most of the
+      # headline number. A quietly wrong fitter is worse than no fitter, so it is checked against
+      # rates it cannot see.
+      - name: The calibration fitter recovers a rate it was never told
+        run: node docs/test/fit.js
 
   dart:
     name: Phone app engine

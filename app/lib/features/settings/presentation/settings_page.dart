@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
+import '../../probe/probe_page.dart';
 import '../../tracking/application/tracker.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -11,7 +12,17 @@ class SettingsPage extends StatelessWidget {
   static const _build = String.fromEnvironment('SIPCOUNT_BUILD', defaultValue: 'dev');
   static const _sha = String.fromEnvironment('SIPCOUNT_SHA', defaultValue: 'local');
 
-  static const _regionLabels = {'us_default': 'US hyperscale (default)', 'colo_average': 'Industry-average colocation'};
+  /// Was two entries from before the seven-region migration, so five regions showed the user a
+  /// raw id like "us_hyperscale". Names come from the shared constants now.
+  static const _regionLabels = {
+    'us_hyperscale': 'United States',
+    'us_ercot': 'United States · Texas',
+    'eu_average': 'Europe · EU average',
+    'nordic': 'Nordics',
+    'india': 'India',
+    'singapore': 'Singapore',
+    'japan': 'Japan',
+  };
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -37,6 +48,16 @@ class SettingsPage extends StatelessWidget {
                   SizedBox(width: 72, child: Text('${tracker.budgetMl} mL', textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700))),
                 ]),
                 const Text('500 mL ≈ a regular working day once the answers and the unseen work are counted. Lower it to challenge yourself.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
+              ]),
+              const SizedBox(height: 12),
+              _Section(title: 'Sensor probe (test build)', children: [
+                const Text('Can this phone see a prompt without routing traffic through anything? '
+                    'Reads byte counts only.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProbePage())),
+                  child: const Text('Open probe'),
+                ),
               ]),
               const SizedBox(height: 12),
               _Section(title: 'Data-centre assumptions', children: [

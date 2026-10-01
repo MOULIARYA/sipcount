@@ -58,6 +58,14 @@ const SIPCOUNT_CONFIG = {
      **Confidence: LOW.** This is the second placeholder after the 5× multiplier, and the same
      calibration (I-30) replaces it with a measured rate. */
   thinking: { tokensPerSec: 90, floorSec: 1.5, maxSec: 900 },
+  /* A long conversation costs more per word of answer. Generating each output token re-reads the
+     whole context, so the twentieth message in a thread is dearer than the first even if the reply
+     is identical — and heavy users live in long threads, so ignoring this under-counts exactly the
+     people who matter most. ML.ENERGY v3 measured ≈ +8% per extra 1,000 tokens of context on one
+     model at production batch; +3–8%/1k is the recommended modelling range (TOKEN-ECONOMICS §3).
+     We take the middle. Capped, because the factor must not run away on a very long thread.
+     **Confidence: LOW** — the third placeholder, and the same calibration replaces it. */
+  context: { perThousand: 0.05, max: 4 },
   outputPerInput: OUTPUT_PER_INPUT,
   referencePrompt: REFERENCE_PROMPT,
   weightNormalisation: WEIGHT_NORM,
@@ -146,7 +154,8 @@ function recalibrate(outputPerInput){
 }
 const BANDS = {
   outputPerInput:[1,20], charsPerToken:[1,10], 'thinking.tokensPerSec':[10,500],
-  'tier.base':[0.001,200], 'region.pue':[1,3], 'region.wueSite':[0,20], 'region.ewif':[0,40]
+  'tier.base':[0.001,200], 'region.pue':[1,3], 'region.wueSite':[0,20], 'region.ewif':[0,40],
+  'context.perThousand':[0,1], 'context.max':[1,20]
 };
 const inBand=(k,v)=>typeof v==='number' && isFinite(v) && v>=BANDS[k][0] && v<=BANDS[k][1];
 function applyConstants(raw){
@@ -158,6 +167,7 @@ function applyConstants(raw){
   if('outputPerInput' in raw && !inBand('outputPerInput',raw.outputPerInput)) return {ok:false, reason:'outputPerInput out of range'};
   if(raw.thinking && !inBand('thinking.tokensPerSec',raw.thinking.tokensPerSec)) return {ok:false, reason:'thinking rate out of range'};
   if('charsPerToken' in raw && !inBand('charsPerToken',raw.charsPerToken)) return {ok:false, reason:'charsPerToken out of range'};
+  if(raw.context && (!inBand('context.perThousand',raw.context.perThousand) || !inBand('context.max',raw.context.max))) return {ok:false, reason:'context factor out of range'};
   for(const [id,t] of Object.entries(raw.tiers||{})){
     if(!C.tiers[id]) return {ok:false, reason:'unknown tier '+id};
     if(!inBand('tier.base',t.base)) return {ok:false, reason:'tier '+id+' out of range'};
@@ -173,6 +183,7 @@ function applyConstants(raw){
   if(raw.charsPerTokenByScript) for(const [k,v] of Object.entries(raw.charsPerTokenByScript))
     if(k in C.charsPerTokenByScript && inBand('charsPerToken',v)){ C.charsPerTokenByScript[k]=v; applied.push('script:'+k); }
   if(raw.thinking){ C.thinking.tokensPerSec=raw.thinking.tokensPerSec; applied.push('thinking'); }
+  if(raw.context){ C.context.perThousand=raw.context.perThousand; C.context.max=raw.context.max; applied.push('context'); }
   for(const [id,t] of Object.entries(raw.tiers||{})){ C.tiers[id].base=t.base; applied.push('tier:'+id); }
   for(const [id,r] of Object.entries(raw.regions||{})){
     Object.assign(C.regions[id],{pue:r.pue,wueSite:r.wueSite,ewif:{incl:r.ewif.incl,excl:r.ewif.excl}}); applied.push('region:'+id); }
@@ -204,12 +215,21 @@ function hiddenFrom({activeMs, outputTokens=0, tier}={}){
   const secs=Math.min(C.thinking.maxSec, Math.max(0, activeMs/1000 - C.thinking.floorSec));
   return Math.max(0, Math.round(secs*C.thinking.tokensPerSec - outputTokens));
 }
-function estimate({tier,task,inputTokens=0,outputTokens=null,hiddenTokens=0,items=1,params}){
+/* How much dearer each output token is, given how much conversation precedes it. 1 on a fresh
+   chat, so the calibrated reference prompt is untouched. */
+function contextFactor(contextTokens){
+  if(!(contextTokens>0)) return 1;
+  return Math.min(C.context.max, 1 + C.context.perThousand*contextTokens/1000);
+}
+function estimate({tier,task,inputTokens=0,outputTokens=null,hiddenTokens=0,contextTokens=0,items=1,params}){
   const T=C.tiers[tier], K=C.tasks[task], P=params, W=C.tokenWeights; let energy, weighted=0;
   const outTok = outputTokens==null ? (K.out||0) : outputTokens;
   /* hidden tokens are generated one at a time exactly like visible ones, so they carry the
-     output weight, not the input weight */
-  if(K.fixed!=null){ energy=K.fixed*items; } else { weighted=inputTokens*W.input+(outTok+hiddenTokens)*W.output; energy=T.wh1k*weighted/1000; }
+     output weight, not the input weight. The context factor applies to the visible answer, per
+     the equation in TOKEN-ECONOMICS §3 — b(L)·T_out and plain b·T_hidden. */
+  if(K.fixed!=null){ energy=K.fixed*items; }
+  else { weighted=inputTokens*W.input + outTok*W.output*contextFactor(contextTokens) + hiddenTokens*W.output;
+         energy=T.wh1k*weighted/1000; }
   const f=energy*P.pue;
   /* an image task spends no text tokens — report both sides as 0 so day totals stay honest */
   return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens:K.fixed!=null?0:inputTokens, outputTokens:K.fixed!=null?0:outTok, hiddenTokens:K.fixed!=null?0:hiddenTokens, weightedTokens:weighted,
@@ -383,8 +403,8 @@ function weeklyAnalysis(store){
   }
   /* same call shape the extension always used; outputTokens stays optional, so when the
      page gives us no answer length the task default applies, exactly as in the app */
-  function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, items = 1, cooling, hydro }){
-    const e = estimate({ tier, task, inputTokens, outputTokens, hiddenTokens, items, params: paramsFor(region, cooling, hydro) });
+  function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, contextTokens = 0, items = 1, cooling, hydro }){
+    const e = estimate({ tier, task, inputTokens, outputTokens, hiddenTokens, contextTokens, items, params: paramsFor(region, cooling, hydro) });
     return Object.assign({}, e, { tokens: e.weightedTokens });
   }
   /* Compared on the SAME turn, not on a hypothetical 300-token answer — otherwise the popup can
@@ -405,7 +425,7 @@ function weeklyAnalysis(store){
     for(const [l,v] of EQ) if(ml >= v) return `${fmt(ml/v,1)} ${l}${ml/v >= 1.95 ? 's' : ''}`;
     return `${fmt(ml/15,1)} of a sip`;
   }
-  return { C, tok, fmt, scriptOf, hiddenFrom, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
+  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
 
 })();
 if (typeof module !== 'undefined') module.exports = SIP;

@@ -60,7 +60,7 @@ console.log('\nTHE EXTENSION LOADS THE WAY CHROME LOADS IT');
 }
 
 /* load both engines the way their own product does */
-const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom};'))();
+const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom, contextFactor};'))();
 const ext = (new Function('module', load('browser_extension/engine.js') + '\nreturn SIP;'))({ });
 
 console.log('\nTHE SAME PROMPT GIVES THE SAME ANSWER');
@@ -138,6 +138,34 @@ console.log('\nWORK THAT NEVER REACHES THE SCREEN');
   ok('but ordinary turns still get the advice', ext.savingsIfLighter('standard', 'text', 'india', 30, 900, 40).alt === 'lightweight');
 }
 
+console.log('\nA LONG CONVERSATION COSTS MORE');
+/* Each output token re-reads the whole context, so the twentieth message in a thread is dearer
+   than the first even when the reply is identical — and heavy users live in long threads. */
+{
+  const f = app.contextFactor;
+  ok('a fresh chat is unaffected', f(0) === 1 && f(undefined) === 1);
+  ok('and so is the calibrated reference prompt', (() => {
+    const P = app.regionParams('us_hyperscale', 'reported', true);
+    return Math.abs(app.estimate({ tier: 'standard', task: 'text', inputTokens: 100, outputTokens: 300, contextTokens: 0, params: P }).energyWh - 0.30) < 1e-9;
+  })());
+  ok('a long thread costs more for the same answer', f(30000) > 2, f(30000).toFixed(2) + 'x');
+  ok('but it cannot run away', f(10_000_000) === app.C.context.max);
+  ok('it lifts the answer, not the question', (() => {
+    const P = app.regionParams('india', 'reported', true);
+    const allIn = app.estimate({ tier: 'standard', task: 'text', inputTokens: 4000, outputTokens: 0, contextTokens: 40000, params: P }).total;
+    const base  = app.estimate({ tier: 'standard', task: 'text', inputTokens: 4000, outputTokens: 0, contextTokens: 0, params: P }).total;
+    return Math.abs(allIn - base) < 1e-9;      // no output tokens ⇒ context changes nothing
+  })());
+  ok('the extension agrees', Math.abs(
+      ext.estimate({ tier: 'standard', task: 'text', region: 'india', inputTokens: 50, outputTokens: 800, contextTokens: 30000 }).total
+      - app.estimate({ tier: 'standard', task: 'text', inputTokens: 50, outputTokens: 800, contextTokens: 30000, params: app.regionParams('india', 'reported', true) }).total) < 1e-9);
+  ok('and it can be re-fitted without a release', (() => {
+    const e = (new Function(load('engine.js') + '\nreturn {C, applyConstants, contextFactor};'))();
+    const r = e.applyConstants(Object.assign(JSON.parse(load('docs/constants.json')), { version: 'z', context: { perThousand: 0.08, max: 6 } }));
+    return r.ok && e.contextFactor(30000) > f(30000);
+  })());
+}
+
 console.log('\nTHE 5x MULTIPLIER CAN BE REPLACED SAFELY');
 /* D-22: 5x is a placeholder until I-30 measures it. Swapping it must not move the calibrated
    reference prompt off 0.30 Wh — the normalisation has to follow the multiplier automatically. */
@@ -157,6 +185,14 @@ ok('no live code hardcodes the old 400/320', !/400\s*\/\s*320/.test(engineCode))
 ok('the tiers derive from the multiplier', /wh1k:\s*[\d.]+\s*\*\s*WEIGHT_NORM/.test(engineCode));
 
 console.log('\nTHE FLUTTER CONSTANTS MATCH TOO');
+/* Every region the constants carry must have a human name in the phone app, or the user is shown
+   a raw id. Five of them were, from the two-region era, until 2026-10-01 (I-52). */
+{
+  const dart = load('app/lib/features/settings/presentation/settings_page.dart');
+  const labelled = [...dart.matchAll(/'([a-z_]+)':\s*'/g)].map(m => m[1]);
+  const missing = Object.keys(app.C.regions).filter(r => !labelled.includes(r));
+  ok('every region has a name in the phone app', missing.length === 0, missing.join(', '));
+}
 const j = JSON.parse(load('app/assets/calc/models.v2.json'));
 ok('same constants version', j.constants_version === app.C.version);
 ok('same regions', Object.keys(j.regions).join() === Object.keys(app.C.regions).join());

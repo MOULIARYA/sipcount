@@ -499,6 +499,14 @@ nav button[aria-current=page]{color:var(--green)}
       <button aria-pressed="false" data-t="image">Image</button>
     </div>
 
+    <!-- Without this the simulator says a heavy prompt costs 6 mL when the real one costs 176.
+         One control, three plain choices, no numbers and no jargon (I-49). -->
+    <div class="seg" id="thinkSeg" role="group" aria-label="How long it worked before answering">
+      <button aria-pressed="true" data-s="0">Straight away</button>
+      <button aria-pressed="false" data-s="25">Thought a bit</button>
+      <button aria-pressed="false" data-s="270">Did research</button>
+    </div>
+
     <div class="stack" id="lenWrap" style="gap:4px">
       <div class="row between"><span class="k2">Your question</span><span class="sub" id="lenLabel" style="font-size:.8em"></span></div>
       <input type="range" id="lenRange" min="20" max="6000" step="20" value="400" aria-label="How long is your question" data-unit="characters">
@@ -1506,7 +1514,17 @@ $('lenRange').oninput=e=>{ const chars=+e.target.value; $('promptBox').value='';
 $('outRange').oninput=e=>{ $('outTok').value=+e.target.value; renderEst(); };
 $('promptBox').oninput=e=>{ const chars=e.target.value.length; $('lenRange').value=Math.min(6000,Math.max(20,Math.round(chars/20)*20)); $('inTok').value=tok(chars); renderEst(); };
 $('modelSel').onchange=renderEst;
-function current(){ return estimate({tier:$('modelSel').value,task,inputTokens:inTokens(),outputTokens:outTokens(),params:params()}); }
+/* How long the model worked before a word appeared. Time spent working but not writing is work
+   you never see — research, tools, a file — and it is where the water actually goes. */
+let thinkSecs=0;
+function current(){
+  const tier=$('modelSel').value, outTok=outTokens();
+  const activeMs=(thinkSecs + outTok/C.thinking.tokensPerSec + C.thinking.floorSec)*1000;
+  const hiddenTokens=hiddenFrom({activeMs, outputTokens:outTok, tier});
+  return estimate({tier,task,inputTokens:inTokens(),outputTokens:outTok,hiddenTokens,params:params()});
+}
+$('thinkSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
+  thinkSecs=+b.dataset.s; [...$('thinkSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b)); renderEst(); };
 const words=t=>Math.round(t*0.75);
 const lengthWord=w=>w<=0?'nothing at all':w<60?'a line or two':w<200?'a short reply':w<500?'a few paragraphs':w<1200?'a long piece':'an essay';
 function renderEst(){
@@ -1527,6 +1545,11 @@ function renderEst(){
     : `<b>${share<1?'Under 1':fmt(share,share<10?1:0)}%</b> of today. After sending: <b>${mascot().state(projected).toLowerCase()}</b>.`;
   const n=$('nudge');
   if(task==='image'){ const ref=estimate({tier:'standard',task:'text',inputTokens:100,outputTokens:300,params:params()}).total; n.className='nudge'; n.innerHTML=`<span>🖼️</span><span>One picture ≈ <b>${Math.round(e.total/ref)} ordinary questions</b>.</span>`; return; }
+  /* A turn that spent most of its effort off-screen was researching or calling tools. A lighter
+     model could not have done it, so offering one is bad advice — the same rule as the extension. */
+  if(e.hiddenTokens>e.outputTokens){ n.className='nudge';
+    const times=Math.max(2,Math.round(e.hiddenTokens/Math.max(1,e.outputTokens)));
+    n.innerHTML=`<span>🔎</span><span>Most of that is work you never see — searching, reading, writing files. Roughly <b>${times}×</b> as much as the answer in front of you.</span>`; return; }
   const alt=tier==='reasoning'?'standard':(tier==='standard'?'lightweight':null);
   const halve=e.total*(1-e.inputShare)/2;
   if(alt){ const a=estimate({tier:alt,task,inputTokens:e.inputTokens,outputTokens:e.outputTokens,params:params()}); const sv=e.total-a.total; n.className='nudge'; n.innerHTML=`<span>🔁</span><span>A <b>${C.tiers[alt].label.toLowerCase()} model</b> saves <b>${fmt(sv,sv<10?2:1)} mL</b>. Half the answer saves <b>${fmt(halve,halve<10?2:1)} mL</b>.</span>`; }

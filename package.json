@@ -4,7 +4,7 @@
   "description": "Test harness only. The products themselves have no dependencies — the prototype, the extension and the phone app all ship as plain files.",
   "scripts": {
     "build": "node tools/build-shared.js",
-    "test": "node docs/test/parity.js && node docs/test/extension.js && node docs/test/constants.js && node docs/test/regression.js && node docs/test/simulate.js"
+    "test": "node docs/test/parity.js && node docs/test/extension.js && node docs/test/constants.js && node docs/test/regression.js && node docs/test/simulate.js && node docs/test/fit.js"
   },
   "devDependencies": {
     "jsdom": "^30.0.0"

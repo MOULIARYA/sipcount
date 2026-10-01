@@ -11,6 +11,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.sipcount.ai_water.listener.ListenerStreamHandler
 import io.sipcount.ai_water.listener.PendingQueue
+import io.sipcount.ai_water.probe.NetworkProbe
 
 class MainActivity : FlutterActivity() {
 
@@ -28,6 +29,25 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "drainPending" -> result.success(PendingQueue.drain(applicationContext))
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+        /* Spike channel (I-22). Asks whether a phone can see an individual prompt from per-app
+           byte counters alone — if it can, the whole VpnService design becomes unnecessary. */
+        MethodChannel(messenger, "ai_water/probe").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "hasPermission" -> result.success(NetworkProbe.hasPermission(applicationContext))
+                "openUsageAccess" -> {
+                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    result.success(null)
+                }
+                "apps" -> result.success(NetworkProbe.installedApps(applicationContext))
+                "start" -> result.success(NetworkProbe.start(applicationContext))
+                "stop" -> { NetworkProbe.stop(); result.success(null) }
+                "status" -> result.success(mapOf("running" to NetworkProbe.isRunning(), "samples" to NetworkProbe.count()))
+                "dump" -> result.success(NetworkProbe.dump())
                 else -> result.notImplemented()
             }
         }

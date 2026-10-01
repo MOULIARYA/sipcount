@@ -44,7 +44,8 @@ const SIP = vm.runInContext('SIP', ctx);
   console.log('\nCOUNTING A TURN');
   const promptChars = 30, inTok = SIP.tok(promptChars);
   await send({ type: 'prompt_event', event: { v: 1, vendor: 'anthropic', turnId: 't1', model_hint: null, task: 'text', char_count: promptChars, attachment_count: 0, ts: Math.floor(Date.now() / 1000) } });
-  const assumed = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok }).total;
+  const ctxTok = SIP.tok(promptChars);            // no history in these turns, so context is just the prompt
+  const assumed = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok, contextTokens: ctxTok }).total;
   ok('a prompt is counted immediately, on the assumed answer', near(todayMl(), assumed), `${todayMl()} vs ${assumed}`);
   ok('and it is flagged as an estimate', state().last.estimated === true);
   ok('the turn is held open for correction', state().open && Object.keys(state().open).length === 1);
@@ -52,7 +53,7 @@ const SIP = vm.runInContext('SIP', ctx);
   console.log('\nCORRECTING IT WHEN THE ANSWER LANDS');
   const replyChars = 8000;                                   // ≈2,000 output tokens: a long answer
   await send({ type: 'prompt_reply', reply: { v: 1, turnId: 't1', reply_chars: replyChars, ttft_ms: 900, duration_ms: 12000 } });
-  const measured = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok, outputTokens: SIP.tok(replyChars) }).total;
+  const measured = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok, outputTokens: SIP.tok(replyChars), contextTokens: ctxTok }).total;
   ok('the day total becomes the MEASURED figure', near(todayMl(), measured), `${todayMl().toFixed(4)} vs ${measured.toFixed(4)}`);
   ok('which is much larger than the assumption', measured > assumed * 4, `${assumed.toFixed(2)} → ${measured.toFixed(2)} mL`);
   ok('it corrects rather than double-counting', !near(todayMl(), assumed + measured));
@@ -68,7 +69,7 @@ const SIP = vm.runInContext('SIP', ctx);
      happened live: a 4,000-character reply was finalised at 190 characters during a pause). Each
      report must move the total to the NEW measurement, never add the turn again. */
   await send({ type: 'prompt_reply', reply: { v: 1, turnId: 't1', reply_chars: 16000 } });
-  const grown = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok, outputTokens: SIP.tok(16000) }).total;
+  const grown = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: inTok, outputTokens: SIP.tok(16000), contextTokens: ctxTok }).total;
   ok('a later, larger report replaces the earlier one', near(todayMl(), grown), `${todayMl().toFixed(3)} vs ${grown.toFixed(3)}`);
   ok('and does not add the turn twice', todayMl() < measured + grown);
   await send({ type: 'prompt_reply', reply: { v: 1, turnId: 't1', reply_chars: 16000 } });
@@ -106,6 +107,43 @@ const SIP = vm.runInContext('SIP', ctx);
     await send({ type: 'prompt_reply', reply: { v: 1, turnId: 'c3', reply_chars: 500, reply_script: 'latin', ttft_ms: 600, active_ms: 4000, duration_ms: 5000 } });
     ok('the log is capped and cannot grow without bound', state().cal.length <= 500, String(state().cal.length));
     state().calibrate = false;
+  }
+
+  console.log('\nTHINGS THAT HAPPEN IN REAL USE AND NOBODY TESTED');
+  {
+    /* A turn sent at 23:59 whose answer arrives at 00:01 must correct YESTERDAY. Getting this
+       wrong moves water between days silently — the kind of error a user would notice as "my
+       total jumped overnight" and never be able to explain. */
+    const days = Object.keys(state().days);
+    await send({ type: 'prompt_event', event: { v: 1, vendor: 'openai', turnId: 'mid', model_hint: null, task: 'text', char_count: 40, script: 'latin', attachment_count: 0, ts: Math.floor(Date.now() / 1000) } });
+    const yesterday = '2026-09-29';
+    state().days[yesterday] = { n: 1, s1: 1, s2: 1, tier: {}, task: {}, vendor: {} };
+    state().open.mid.day = yesterday;                       // as if the prompt was sent before midnight
+    const todayBefore = todayMl();
+    await send({ type: 'prompt_reply', reply: { v: 1, turnId: 'mid', reply_chars: 6000, reply_script: 'latin', active_ms: 20000 } });
+    ok('a turn that spans midnight corrects the day it was sent', state().days[yesterday].s1 + state().days[yesterday].s2 > 2);
+    ok('and leaves today alone', Math.abs(todayMl() - todayBefore) < 1e-9, `${todayBefore.toFixed(3)} → ${todayMl().toFixed(3)}`);
+
+    /* Two tabs open on the same site send at the same moment. Each content script numbers its own
+       turns from 1, so a shared id would make one tab's answer correct the other tab's prompt. */
+    const c = load('browser_extension/content.js');
+    ok('turn ids cannot collide between tabs', /Math\.random|crypto/.test(c.match(/const turnId = [^;]+;/)[0]),
+       c.match(/const turnId = [^;]+;/)[0]);
+
+    /* An unrecognised model must cost the ordinary amount — never silently more or less. */
+    const base = todayMl();
+    await send({ type: 'prompt_event', event: { v: 1, vendor: 'openai', turnId: 'unk', model_hint: 'gpt-9-quantum-edition', task: 'text', char_count: 40, script: 'latin', attachment_count: 0, ts: Math.floor(Date.now() / 1000) } });
+    const unknownCost = todayMl() - base;
+    const standard = SIP.estimate({ tier: 'standard', task: 'text', region: state().region, inputTokens: SIP.tok(40), contextTokens: SIP.tok(40) }).total;
+    ok('an unknown model is priced as an ordinary one', Math.abs(unknownCost - standard) < 1e-6, `${unknownCost.toFixed(4)} vs ${standard.toFixed(4)}`);
+    ok('and a missing model name is too', SIP.resolveTier('openai', null) === 'standard');
+
+    /* An image prompt spends no text tokens, so a huge pasted prompt must not inflate it. */
+    const b4 = todayMl();
+    await send({ type: 'prompt_event', event: { v: 1, vendor: 'openai', turnId: 'img', model_hint: null, task: 'image', char_count: 9000, script: 'latin', attachment_count: 0, ts: Math.floor(Date.now() / 1000) } });
+    const imgCost = todayMl() - b4;
+    ok('an image costs the same however long the request was', Math.abs(imgCost -
+       SIP.estimate({ tier: 'standard', task: 'image', region: state().region, inputTokens: 0, items: 1 }).total) < 1e-6);
   }
 
   console.log('\nTHE TEST BRIDGE LEAKS NOTHING');

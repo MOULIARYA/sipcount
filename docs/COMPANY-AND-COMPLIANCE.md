@@ -31,7 +31,7 @@ value beyond the paperwork.
 | E1 | ⚖️ **Read your Xebia employment contract** | — | IP assignment, moonlighting, conflict-of-interest clauses. Do this *before* registering anything. If the contract claims work product, that is far cheaper to resolve now than after a company exists and a product ships. |
 | E2 | ⚖️ **Founders' agreement with Mouli** | — | Who owns the IP, the split, what happens if one of you leaves, who decides what. You are already several weeks into real work with a clear division of labour and no document. |
 | E3 | **Apple Developer Program, individual** | $99/yr | Unblocks all iPhone and macOS development and testing immediately. Does not need the company. Buy now. |
-| E4 | **Chrome Web Store developer account** | $5 one-time | Unblocks shipping the extension — the nearest surface to release. |
+| E4 | **Chrome Web Store developer account** | $5 one-time | Unblocks shipping the extension. **Publish from a dedicated Sipcount Gmail through a group publisher (a Google Group with both founders in it), not from either personal account.** A store item belongs to whoever publishes it and moving it later is awkward; a group keeps ownership shared and surviving either founder stepping away, and the same address becomes the Apple and Play identity so all three stores sit under one thing the company can own. Parked 2026-09-30 pending Mouli. |
 | E5 | **Domain** | ~$12/yr | Needed for the privacy policy URL, which every store requires. |
 | E6 | ⚖️ **Trademark check on "Sipcount"** | varies | Worth a proper class-based search before more brand investment. A casual web search is not this. |
 

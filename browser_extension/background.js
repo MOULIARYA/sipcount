@@ -18,7 +18,10 @@ async function handle(ev) {
   const tier = SIP.resolveTier(ev.vendor, ev.model_hint);
   const task = ['text', 'code', 'long_context', 'image'].includes(ev.task) ? ev.task : 'text';
   const inputTokens = SIP.tok(ev.char_count || 0, ev.script);
-  const e = SIP.estimate({ tier, task, region: s.region, inputTokens, items: 1 });
+  // the conversation the model must re-read, counted the same way at first estimate and at
+  // correction — otherwise the number moves for a reason that has nothing to do with the answer
+  const contextTokens = SIP.tok((ev.context_chars || 0) + (ev.char_count || 0), ev.script);
+  const e = SIP.estimate({ tier, task, region: s.region, inputTokens, contextTokens, items: 1 });
   const k = dayKey(Date.now());
   const b = s.days[k] || (s.days[k] = { n: 0, s1: 0, s2: 0, tier: {}, task: {}, vendor: {} });
   b.n++; b.s1 += e.s1; b.s2 += e.s2;
@@ -31,7 +34,7 @@ async function handle(ev) {
      no text, and the record is dropped as soon as it is used or the hour is up. */
   if (ev.turnId) {
     s.open = s.open || {};
-    s.open[ev.turnId] = { day: k, tier, task, vendor: ev.vendor, inputTokens, script: ev.script, charCount: ev.char_count, modelHint: ev.model_hint, ml: e.total, s1: e.s1, s2: e.s2, at: Date.now() };
+    s.open[ev.turnId] = { day: k, tier, task, vendor: ev.vendor, inputTokens, script: ev.script, charCount: ev.char_count, modelHint: ev.model_hint, contextTokens, ml: e.total, s1: e.s1, s2: e.s2, at: Date.now() };
     for (const id of Object.keys(s.open)) if (Date.now() - s.open[id].at > 3600000) delete s.open[id];
   }
   // keep 400 days max
@@ -52,7 +55,7 @@ async function handleReply(r) {
     const outTokens = SIP.tok(r.reply_chars || 0, r.reply_script);
     // work done before a word appeared: tool calls, reasoning, files written
     const hiddenTokens = SIP.hiddenFrom({ activeMs: r.active_ms, outputTokens: outTokens, tier: o.tier });
-    const fresh = SIP.estimate({ tier: o.tier, task: o.task, region: s.region, inputTokens: o.inputTokens, outputTokens: outTokens, hiddenTokens });
+    const fresh = SIP.estimate({ tier: o.tier, task: o.task, region: s.region, inputTokens: o.inputTokens, outputTokens: outTokens, hiddenTokens, contextTokens: o.contextTokens });
     // Apply only the difference from whatever was last recorded for this turn. Reports arrive
     // repeatedly as the answer grows, so this must be idempotent — adding the turn again each
     // time would inflate the day badly on a long answer.
@@ -70,7 +73,7 @@ async function handleReply(r) {
       s.cal = s.cal || [];
       s.cal.push({ t: Date.now(), vendor: o.vendor, tier: o.tier, task: o.task, model: o.modelHint || null,
         in_chars: o.charCount, in_script: o.script, in_tokens: o.inputTokens,
-        out_chars: r.reply_chars, out_script: r.reply_script, out_tokens: outTokens,
+        out_chars: r.reply_chars, out_script: r.reply_script, out_tokens: outTokens, context_tokens: o.contextTokens,
         ttft_ms: r.ttft_ms, active_ms: r.active_ms, duration_ms: r.duration_ms,
         hidden_tokens: hiddenTokens, ml: +fresh.total.toFixed(4), region: s.region });
       while (s.cal.length > 500) s.cal.shift();

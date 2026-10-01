@@ -2,7 +2,9 @@
 
 *Copy and paste. Written 2026-09-30 against the listing form's actual fields and limits.*
 
-Developer account: **$5, one-off** — Madhur is setting it up. Everything below is ready for it.
+Developer account: **$5, one-off** — parked 2026-09-30 to be done with Mouli. **Decide the account first:** publish from a dedicated Sipcount Gmail via a group publisher, not a personal account (see `COMPANY-AND-COMPLIANCE.md` E4). Everything below is ready and waiting.
+
+Screenshots are done: `store-1.jpg` and `store-2.jpg`, both 1280×800, composited so nothing personal appears.
 
 ---
 
@@ -121,10 +123,10 @@ The listing cannot be submitted without these, and they are the one part I canno
 ## Before submitting — check each one
 
 - [ ] Version bumped in `manifest.json` (currently `0.3.0`)
-- [ ] `node docs/test/regression.js · parity.js · extension.js · simulate.js · constants.js` all green
+- [x] All five suites green, and now enforced on every push by `.github/workflows/tests.yml`
 - [ ] **Remove the test bridge**, or confirm it stays gated behind `?sipcount_debug=1` — it is gated today, and it should be a deliberate decision, not an oversight
 - [ ] Calibration mode defaults to off
-- [ ] `privacy.html` actually live at the URL above (push, then open it)
+- [x] `privacy.html` live and confirmed 2026-09-30
 - [ ] Load the packed `.zip` unpacked one last time and send a real prompt
 - [ ] Zip `browser_extension/` **without** `TESTING.md` and `INSTALL.md`
 

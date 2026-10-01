@@ -72,6 +72,24 @@ design every product ports from. Docs and decisions live here.
 
 ---
 
+## Devices available (2026-10-01)
+
+Between the two founders every platform has a machine, so **nothing is blocked on buying hardware**
+— only on accounts, certificates, and Android *coverage* across chipsets.
+
+| | Madhur | Mouli |
+|---|---|---|
+| Android phone | ✔ | |
+| Windows desktop | ✔ | |
+| MacBook | | ✔ |
+| iPhone | | ✔ |
+
+Madhur's two are the development pair: he installs test builds already and the APK pipeline exists.
+Mouli's are the product owner's devices — fine for reviewing a finished build, a bigger ask for
+unsigned development ones, so iOS and macOS wait until there is something worth her installing.
+The three test phones remain worth buying for *coverage* (chipsets, Android versions, carrier
+behaviour), but they are no longer the go/no-go blocker they were.
+
 ## Waiting on Madhur
 
 Track E has the full list. The four that cannot be started by anyone else:

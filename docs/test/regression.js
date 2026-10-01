@@ -129,9 +129,30 @@ async function run(){
   ok('no token talk anywhere on it', !/token/i.test($('s-today').textContent));
 
   console.log('\nSIMULATOR');
+  /* The simulator could show a heavy prompt at 6 mL when the extension measured 176 — the
+     reference design under-stating the shipping product by 30x (I-49). */
+  w.eval("show('log')");
+  ok('you can say it went away and worked', !!$('thinkSeg') && $('thinkSeg').querySelectorAll('button').length===3);
+  ok('and the water reflects it', (()=>{
+     const quick=w.eval("thinkSecs=0; renderEst(); current().total");
+     const deep =w.eval("thinkSecs=270; renderEst(); current().total");
+     w.eval("thinkSecs=0; renderEst();");
+     return deep > quick*5; })());
+  ok('no lighter-model advice on a turn that was mostly unseen work', (()=>{
+     w.eval("thinkSecs=270; renderEst();");
+     const t=$('nudge').textContent; w.eval("thinkSecs=0; renderEst();");
+     return /never see/.test(t) && !/saves/.test(t); })());
+  ok('but ordinary turns still get the advice', (()=>{ w.eval("thinkSecs=0; renderEst();");
+     return /saves|Lightest model/.test($('nudge').textContent); })());
   w.eval("show('log')");
   ok('sliders labelled in words', /words/.test($('lenLabel').textContent) && /words/.test($('outLabel').textContent));
+  /* the no-jargon rule has to hold in EVERY state of the screen, not just the default one —
+     the research nudge said "tokens" and the suite waved it through because it only ever looked
+     at the resting state */
   ok('no jargon', !/(Wh|PUE|WUE|token)/.test($('s-log').textContent));
+  ok('no jargon even when it did research', (()=>{ w.eval("thinkSecs=270; renderEst();");
+     const t=$('s-log').textContent; w.eval("thinkSecs=0; renderEst();");
+     return !/(Wh|PUE|WUE|token)/.test(t); })());
   /* decision 3: a what-if and nothing else — the real total must be untouchable by hand */
   const before=w.eval('todayStats().total'); w.eval('logOne()');
   ok('simulating never touches today’s total', w.eval('todayStats().total')===before);

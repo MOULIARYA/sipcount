@@ -1,7 +1,20 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Deliberately NO android.permission.INTERNET: the app cannot send anything anywhere. -->
 
-    <application
+        <!-- Spike only (I-22): read per-app byte totals to see whether a prompt is visible without a
+         VpnService. A special permission the user grants in Settings; it reveals byte counts, not
+         content. Remove with the probe if the answer turns out to be no. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+
+    <!-- Android 11+ hides other packages unless they are declared; we only ever ask these three
+         for their UID, never for anything else. -->
+    <queries>
+        <package android:name="com.openai.chatgpt" />
+        <package android:name="com.anthropic.claude" />
+        <package android:name="com.google.android.apps.bard" />
+    </queries>
+
+<application
         android:label="Sipcount"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"

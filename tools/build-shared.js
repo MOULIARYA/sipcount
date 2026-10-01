@@ -54,8 +54,8 @@ const ADAPTER = `
   }
   /* same call shape the extension always used; outputTokens stays optional, so when the
      page gives us no answer length the task default applies, exactly as in the app */
-  function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, items = 1, cooling, hydro }){
-    const e = estimate({ tier, task, inputTokens, outputTokens, hiddenTokens, items, params: paramsFor(region, cooling, hydro) });
+  function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, contextTokens = 0, items = 1, cooling, hydro }){
+    const e = estimate({ tier, task, inputTokens, outputTokens, hiddenTokens, contextTokens, items, params: paramsFor(region, cooling, hydro) });
     return Object.assign({}, e, { tokens: e.weightedTokens });
   }
   /* Compared on the SAME turn, not on a hypothetical 300-token answer — otherwise the popup can
@@ -76,7 +76,7 @@ const ADAPTER = `
     for(const [l,v] of EQ) if(ml >= v) return \`\${fmt(ml/v,1)} \${l}\${ml/v >= 1.95 ? 's' : ''}\`;
     return \`\${fmt(ml/15,1)} of a sip\`;
   }
-  return { C, tok, fmt, scriptOf, hiddenFrom, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
+  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
 `;
 
 const banner = `/* GENERATED FILE — do not edit.
@@ -161,6 +161,7 @@ const published = {
   charsPerToken: C.charsPerToken,
   charsPerTokenByScript: C.charsPerTokenByScript,
   thinking: { tokensPerSec: C.thinking.tokensPerSec },
+  context: { perThousand: C.context.perThousand, max: C.context.max },
   tiers: Object.fromEntries(Object.entries(C.tiers).map(([id, t]) => [id, { base: t.base }])),
   regions: Object.fromEntries(Object.entries(C.regions).map(([id, r]) => [id, { pue: r.pue, wueSite: r.wueSite, ewif: r.ewif }]))
 };

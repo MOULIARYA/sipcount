@@ -147,13 +147,17 @@
     if (now - lastSent < 1200) return; // one event per send, even if both keydown and click fire
     lastSent = now;
     const attachments = attachmentCount(el);
-    const turnId = `${now}-${++turnSeq}`;
+    /* Two tabs on the same site number their turns from 1 independently, so a timestamp and a
+       counter can collide — and a collision would make one tab's answer correct the other tab's
+       prompt. The random tail makes that impossible. */
+    const turnId = `${now}-${++turnSeq}-${Math.random().toString(36).slice(2, 8)}`;
     const event = {
       v: 1, source: 'browser_ext', vendor, turnId,
       model_hint: modelHint(),
       task: classify(text, attachments),
       char_count: text.length,
       script: scriptClass(text),            // a label, not the text — see engine.js scriptOf()
+      context_chars: convoChars(),          // how much conversation the model must re-read
       attachment_count: attachments,
       ts: Math.floor(now / 1000)
     };
