@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.sipcount.ai_water.listener.ListenerStreamHandler
 import io.sipcount.ai_water.listener.PendingQueue
 import io.sipcount.ai_water.probe.NetworkProbe
+import io.sipcount.ai_water.probe.ProbeService
 
 class MainActivity : FlutterActivity() {
 
@@ -32,7 +33,6 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
-    }
 
         /* Spike channel (I-22). Asks whether a phone can see an individual prompt from per-app
            byte counters alone — if it can, the whole VpnService design becomes unnecessary. */
@@ -44,9 +44,18 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "apps" -> result.success(NetworkProbe.installedApps(applicationContext))
-                "start" -> result.success(NetworkProbe.start(applicationContext))
-                "stop" -> { NetworkProbe.stop(); result.success(null) }
-                "status" -> result.success(mapOf("running" to NetworkProbe.isRunning(), "samples" to NetworkProbe.count()))
+                // Sampling lives in a foreground service: the whole run happens while this app is
+                // backgrounded, and a cached process gets frozen.
+                "start" -> {
+                    if (NetworkProbe.hasPermission(applicationContext)) {
+                        ProbeService.start(applicationContext); result.success(true)
+                    } else result.success(false)
+                }
+                "stop" -> { ProbeService.stop(applicationContext); result.success(null) }
+                "status" -> result.success(mapOf(
+                    "running" to NetworkProbe.isRunning(),
+                    "samples" to NetworkProbe.count(),
+                    "capped" to NetworkProbe.isCapped()))
                 "dump" -> result.success(NetworkProbe.dump())
                 else -> result.notImplemented()
             }

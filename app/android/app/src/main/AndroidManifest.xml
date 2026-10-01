@@ -6,12 +6,23 @@
          content. Remove with the probe if the answer turns out to be no. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
 
+    <!-- Spike only: the probe must keep counting while the person is inside ChatGPT, i.e. while
+         Sipcount is backgrounded and would otherwise be frozen. Goes with the probe. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Android 11+ hides other packages unless they are declared; we only ever ask these three
          for their UID, never for anything else. -->
+    <!-- One <queries> element only: a second one in the same manifest is a merge error. -->
     <queries>
         <package android:name="com.openai.chatgpt" />
         <package android:name="com.anthropic.claude" />
         <package android:name="com.google.android.apps.bard" />
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
     </queries>
 
 <application
@@ -54,15 +65,14 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!-- Spike only (I-22). Remove with the probe once the question is answered. -->
+        <service
+            android:name=".probe.ProbeService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT" />
-            <data android:mimeType="text/plain" />
-        </intent>
-    </queries>
 </manifest>

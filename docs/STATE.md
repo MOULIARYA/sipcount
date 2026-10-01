@@ -133,3 +133,12 @@ Full reasoning in `ISSUES.md`; this is the index.
    numbers, but CI has to go green before it is trusted.
 5. **Neither test suite sees pixels.** Every visual bug that reached Mouli this month was of a kind
    they cannot catch.
+6. **No test suite compiles Kotlin.** The Dart gets analysed and run in CI; the Android native side
+   is only ever checked by `Android APK`, which runs last and takes three minutes. Build #19 failed
+   on a brace in `MainActivity.kt` that no reviewer and no suite could have caught — the first
+   compile is the first feedback. Treat every native change as unverified until that job is green.
+7. **The probe can return a false "no".** `NetworkStatsManager` serves data the system has flushed
+   into buckets at a cadence that is neither documented nor guaranteed. If the counters move in
+   coarse steps, that is the API being too blunt, not the phone being unable to see a prompt. The
+   log carries running totals as well as deltas precisely so the two can be told apart. A flat log
+   is not a verdict for the VpnService. See `NetworkProbe.kt`.

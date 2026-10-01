@@ -7,6 +7,8 @@
 /// Reads byte totals. No packets, no hostnames, nothing typed.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,14 +25,25 @@ class _ProbePageState extends State<ProbePage> {
 
   bool _permitted = false;
   bool _running = false;
+  bool _capped = false;
   int _samples = 0;
   List<String> _apps = const [];
   String? _error;
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    // A stalled row count during a ten-minute run reads as "it is broken"; it is not, we simply
+    // never asked again.
+    _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refresh());
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -44,6 +57,7 @@ class _ProbePageState extends State<ProbePage> {
         _apps = apps;
         _running = status['running'] == true;
         _samples = (status['samples'] as int?) ?? 0;
+        _capped = status['capped'] == true;
         _error = null;
       });
     } on PlatformException catch (e) {
@@ -98,7 +112,8 @@ class _ProbePageState extends State<ProbePage> {
               ],
               _Row(label: 'Usage access', value: _permitted ? 'granted' : 'not granted yet'),
               _Row(label: 'AI apps found', value: _apps.isEmpty ? 'none' : _apps.join(', ')),
-              _Row(label: 'Rows recorded', value: '$_samples'),
+              _Row(label: 'Recording', value: _running ? 'yes' : 'no'),
+              _Row(label: 'Rows recorded', value: _capped ? '$_samples (full)' : '$_samples'),
               const SizedBox(height: 20),
               if (!_permitted)
                 FilledButton(
@@ -122,7 +137,8 @@ class _ProbePageState extends State<ProbePage> {
               const Text('What to do', style: TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               const Text(
-                '1. Start recording.\n'
+                '1. Start recording. A notification appears and stays — that is deliberate: it is how '
+                'you know something is sampling, and Android would freeze the counting without it.\n'
                 '2. Open ChatGPT (or Claude, or Gemini) and send five or six prompts over about ten '
                 'minutes — some short, one that produces a long answer, and leave a quiet minute or '
                 'two between a couple of them.\n'
