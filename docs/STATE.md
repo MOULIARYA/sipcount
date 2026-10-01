@@ -137,8 +137,10 @@ Full reasoning in `ISSUES.md`; this is the index.
    is only ever checked by `Android APK`, which runs last and takes three minutes. Build #19 failed
    on a brace in `MainActivity.kt` that no reviewer and no suite could have caught — the first
    compile is the first feedback. Treat every native change as unverified until that job is green.
-7. **The probe can return a false "no".** `NetworkStatsManager` serves data the system has flushed
-   into buckets at a cadence that is neither documented nor guaranteed. If the counters move in
-   coarse steps, that is the API being too blunt, not the phone being unable to see a prompt. The
-   log carries running totals as well as deltas precisely so the two can be told apart. A flat log
-   is not a verdict for the VpnService. See `NetworkProbe.kt`.
+7. **Check the API reference before writing against it.** Three Android builds were burned on code
+   written from memory. The third failure exposed the first two as beside the point: Android's own
+   documentation says `NetworkStatsManager` buckets are hours long and "cannot be used to measure
+   data usage on a fine grained time scale", and `TrafficStats` has refused per-app counters for
+   other apps since Android 7. Ten minutes of reading would have replaced a day of building. The
+   cost of the mistake was not the failed builds; it was nearly handing Madhur a flat log to read
+   as a fact about phones. See I-55.

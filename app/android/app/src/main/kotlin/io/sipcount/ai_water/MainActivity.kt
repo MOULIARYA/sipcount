@@ -11,8 +11,6 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.sipcount.ai_water.listener.ListenerStreamHandler
 import io.sipcount.ai_water.listener.PendingQueue
-import io.sipcount.ai_water.probe.NetworkProbe
-import io.sipcount.ai_water.probe.ProbeService
 
 class MainActivity : FlutterActivity() {
 
@@ -33,33 +31,9 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
-
-        /* Spike channel (I-22). Asks whether a phone can see an individual prompt from per-app
-           byte counters alone — if it can, the whole VpnService design becomes unnecessary. */
-        MethodChannel(messenger, "ai_water/probe").setMethodCallHandler { call, result ->
-            when (call.method) {
-                "hasPermission" -> result.success(NetworkProbe.hasPermission(applicationContext))
-                "openUsageAccess" -> {
-                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    result.success(null)
-                }
-                "apps" -> result.success(NetworkProbe.installedApps(applicationContext))
-                // Sampling lives in a foreground service: the whole run happens while this app is
-                // backgrounded, and a cached process gets frozen.
-                "start" -> {
-                    if (NetworkProbe.hasPermission(applicationContext)) {
-                        ProbeService.start(applicationContext); result.success(true)
-                    } else result.success(false)
-                }
-                "stop" -> { ProbeService.stop(applicationContext); result.success(null) }
-                "status" -> result.success(mapOf(
-                    "running" to NetworkProbe.isRunning(),
-                    "samples" to NetworkProbe.count(),
-                    "capped" to NetworkProbe.isCapped()))
-                "dump" -> result.success(NetworkProbe.dump())
-                else -> result.notImplemented()
-            }
-        }
+        /* The probe channel that lived here is gone: the question it was built to ask is answered
+           by Android's own documentation (see I-55). Nothing replaces it — the reply is read on
+           screen, the same way the extension reads it. */
     }
 
     private fun isServiceEnabled(): Boolean {

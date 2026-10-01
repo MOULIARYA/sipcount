@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
-import '../../probe/probe_page.dart';
 import '../../tracking/application/tracker.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -48,16 +47,6 @@ class SettingsPage extends StatelessWidget {
                   SizedBox(width: 72, child: Text('${tracker.budgetMl} mL', textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700))),
                 ]),
                 const Text('500 mL ≈ a regular working day once the answers and the unseen work are counted. Lower it to challenge yourself.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
-              ]),
-              const SizedBox(height: 12),
-              _Section(title: 'Sensor probe (test build)', children: [
-                const Text('Can this phone see a prompt without routing traffic through anything? '
-                    'Reads byte counts only.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProbePage())),
-                  child: const Text('Open probe'),
-                ),
               ]),
               const SizedBox(height: 12),
               _Section(title: 'Data-centre assumptions', children: [
