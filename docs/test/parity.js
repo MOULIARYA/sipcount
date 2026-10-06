@@ -205,5 +205,90 @@ for (const g of j.golden) {
 }
 ok(`${j.golden.length} golden cases reproduce`, !gbad, gbad ? JSON.stringify(gbad) : '');
 
+/* Parity used to mean only "both sides compute the same number from the same inputs". That let the
+   phone app sit on its own invented defaults — 100 mL after we agreed 500, and a region id that had
+   stopped existing — because neither was ever an input to a shared calculation. A shared default is
+   as much a shared constant as a coefficient, so it is checked like one. */
+ok('the agreed daily budget reaches the phone app', j.default_budget_ml === app.C.defaultBudgetMl,
+   `engine ${app.C.defaultBudgetMl} vs published ${j.default_budget_ml}`);
+ok('the starting region reaches the phone app', j.default_region_id === app.C.defaultRegionId,
+   `engine ${app.C.defaultRegionId} vs published ${j.default_region_id}`);
+ok('the starting region is a region that exists', !!j.regions[j.default_region_id], j.default_region_id);
+{
+  /* The crash this is here to prevent: a fresh install read `us_default`, the constants had no such
+     region, and the first prompt counted threw on the null. No literal region id belongs in app
+     code — the constants are the only list. */
+  const stale = [];
+  for (const f of ['app/lib/features/tracking/application/tracker.dart',
+                   'app/lib/features/calculation_engine/data/aggregate_store.dart']) {
+    const src = load(f);
+    for (const m of src.matchAll(/'([a-z]+_[a-z_]+)'/g)) {
+      const id = m[1];
+      if (/^(us|eu|india|singapore|japan|nordic|colo)_/.test(id) && !app.C.regions[id]) stale.push(`${f}: ${id}`);
+    }
+  }
+  ok('no phone code names a region the constants do not have', stale.length === 0, stale.join(', '));
+}
+
+/* ---------------------------------------------------------------------------------------------
+   THE APP MUST NOT SILENTLY FALL BEHIND THE DESIGN
+
+   Every suite here compared numbers. None compared the shipping app to the prototype it is built
+   from, so the phone app sat three revisions behind for three weeks with CI fully green (I-58).
+   These three checks are the gate: a contract stamp, the palette, and the copy rules. They cannot
+   tell whether a screen looks right — nothing automated can — but they make drift loud.
+--------------------------------------------------------------------------------------------- */
+console.log('\nTHE PHONE APP AGAINST THE REFERENCE DESIGN');
+{
+  const html = load('sipcount.html');
+  const dartContract = load('app/lib/app/ui_contract.dart');
+  const proto = Number((html.match(/name="sipcount-ui-contract"\s+content="(\d+)"/) || [])[1]);
+  const ack = Number((dartContract.match(/acknowledgedPrototypeContract\s*=\s*(\d+)/) || [])[1]);
+  const impl = Number((dartContract.match(/implementedUiContract\s*=\s*(\d+)/) || [])[1]);
+
+  ok('the prototype declares a UI contract number', Number.isFinite(proto));
+  ok('the phone app declares which contract it implements', Number.isFinite(impl) && Number.isFinite(ack));
+  /* Not `impl === proto` — that would leave CI red until the port lands, and a build that cannot be
+     made green is a build that stops being read. It is the ACKNOWLEDGEMENT that must keep up: the
+     next prototype change fails here until someone looks at the difference and decides. */
+  ok('the prototype has not moved without anyone deciding what the app does about it',
+     ack === proto,
+     `prototype is at contract ${proto}, phone app last acknowledged ${ack}. Review what changed, ` +
+     `then either port it and raise both numbers in app/lib/app/ui_contract.dart, or raise ` +
+     `acknowledgedPrototypeContract alone and book the gap in docs/TRACEABILITY.md (P7).`);
+  if (impl < proto) {
+    console.log(`  · known gap: app implements ${impl}, prototype is ${proto} — booked as P7 / I-58`);
+  }
+}
+{
+  /* The palette drifted from true-black-and-green to navy-and-blue and nothing noticed, because
+     theme.dart and the prototype's :root had no relationship beyond a comment claiming one. */
+  const root = (load('sipcount.html').match(/:root\{([\s\S]*?)\}/) || [])[1] || '';
+  const cssVar = n => ((root.match(new RegExp('--' + n + ':\\s*(#[0-9A-Fa-f]{6})')) || [])[1] || '').toUpperCase();
+  const dart = load('app/lib/app/theme.dart');
+  const dartColor = n => ((dart.match(new RegExp('\\b' + n + '\\s*=\\s*Color\\(0xFF([0-9A-Fa-f]{6})\\)')) || [])[1] || '').toUpperCase();
+  const mapping = [['bg', 'ink'], ['surface', 'surface'], ['surface2', 'surface-2'], ['line', 'line'],
+                   ['text', 'text'], ['muted', 'muted'], ['water', 'green'], ['waterDeep', 'green-deep'],
+                   ['warn', 'amber'], ['danger', 'red'], ['good', 'green']];
+  // both sides normalised to bare uppercase hex: the CSS carries a leading '#', the Dart does not
+  const hex = s => s.replace('#', '');
+  const wrong = mapping.filter(([d, c]) => dartColor(d) !== hex(cssVar(c)) || !dartColor(d))
+                       .map(([d, c]) => `${d}=${dartColor(d) || '?'} but --${c}=${cssVar(c) || '?'}`);
+  ok('the phone app uses the prototype palette', wrong.length === 0, wrong.join('; '));
+}
+{
+  /* The copy pass retired this vocabulary from the prototype; "Scope 1 / Scope 2" survived on the
+     phone's main screen for three weeks. A copy rule that holds in only one product is not a rule. */
+  const banned = /\b(PUE|WUE|Scope [12]|tokens?)\b/;
+  const offenders = [];
+  for (const f of ['app/lib/features/tracking/presentation/today_page.dart',
+                   'app/lib/features/settings/presentation/settings_page.dart']) {
+    for (const m of load(f).matchAll(/'([^'\\]{12,})'/g)) {       // user-visible strings only
+      if (banned.test(m[1])) offenders.push(`${f.split('/').pop()}: “${m[1].slice(0, 60)}”`);
+    }
+  }
+  ok('no jargon in the phone app’s user-facing copy', offenders.length === 0, offenders.join(' | '));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -41,7 +41,13 @@ class Tracker extends ChangeNotifier {
   DateTime? lastEventAt;
 
   static Future<Tracker> start({ListenerChannel? channel}) async {
-    final t = Tracker._(await ConstantsRepository.load(), await AggregateStore.open(), channel ?? ListenerChannel());
+    final constants = await ConstantsRepository.load();
+    final store = await AggregateStore.open(
+      defaultBudgetMl: constants.defaultBudgetMl,
+      defaultRegionId: constants.defaultRegionId,
+      knownRegionIds: constants.regionIds.toSet(),
+    );
+    final t = Tracker._(constants, store, channel ?? ListenerChannel());
     t._days = t._store.readAll();
     await t.refreshListenerState();
     for (final e in await t._channel.drainPending()) {
@@ -56,7 +62,10 @@ class Tracker extends ChangeNotifier {
   String get constantsVersion => _constants.constantsVersion;
   int get budgetMl => _store.budgetMl;
   String get regionId => _store.regionId;
-  List<String> get selectableRegions => const ['us_default', 'colo_average'];
+  /// From the constants, not a literal. The hard-coded pair that used to live here outlived the
+  /// seven-region migration by three weeks and would have offered the user two regions that no
+  /// longer exist. A test now rejects any region id written literally in this file.
+  List<String> get selectableRegions => _constants.regionIds;
 
   DayTotals get today => _days[AggregateStore.dayKey(DateTime.now())] ?? DayTotals();
 

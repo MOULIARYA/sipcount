@@ -44,6 +44,9 @@ h2{margin:0;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:u
 /* one plain line, the way the app says it — not "4.1 espressos" */
 .opp{color:var(--muted);font-size:12.5px;line-height:1.5;padding:0 2px}
 .nudge{background:rgba(0,240,118,.08);border:1px solid rgba(0,240,118,.18);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5}
+/* Amber, not green: this is the one card that says the product is not doing its job. */
+.alarm{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.4);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:var(--text)}
+.alarm b{color:var(--amber)}
 .nudge b{color:var(--green)}
 .nudge.quiet{background:var(--panel);border-color:var(--line);color:var(--muted)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -79,6 +82,11 @@ a{color:var(--green)}
     <h1><svg viewBox="0 0 100 130" aria-hidden="true"><path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="#00F076"/></svg>Sipcount</h1>
     <span class="pill" id="statusPill">Watching</span>
   </div>
+
+  <!-- Shown only when the extension has stopped understanding one of the three sites. We have no
+       telemetry and want none, so the person using it is the alarm: they are the only one who can
+       see that the number has gone quiet. Hidden on every ordinary day. -->
+  <div class="alarm" id="healthWarn" hidden></div>
 
   <div class="panel">
     <div class="hero">

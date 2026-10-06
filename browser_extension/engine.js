@@ -99,6 +99,10 @@ const SIPCOUNT_CONFIG = {
      the whole keep-it-alive mechanic stopped meaning anything. 500 ≈ a regular working day.
      (I-45, Madhur 2026-09-30.) */
   defaultBudgetMl: 500,
+  /* The region a fresh install starts in. Here rather than in each product because the phone app
+     invented its own ('us_default') and kept it through the seven-region migration, which left it
+     looking up a region that no longer existed. */
+  defaultRegionId: 'us_hyperscale',
   zones: { green:0.5, amber:0.7 },
   /* Reading a tier out of the model name shown on screen. Shared, not per-product: the extension,
      the phone apps and the desktop build must all classify "Gemini Flash-Lite" the same way or the
@@ -318,8 +322,8 @@ function makeStore(KEY, defaults){
   let S;
   function load(){
     try{ const j=JSON.parse(localStorage.getItem(KEY)); if(j&&j.days){ const s=Object.assign({}, defaults, j); if(!C.regions[s.region]) s.region=defaults.region; if(!C.cooling[s.cooling]) s.cooling='reported'; return s; } }catch(e){}
-    let days={}, budget=100, region='us_hyperscale';
-    for(const k of ['sipcount.v9','sipcount.v8a','sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||100; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
+    let days={}, budget=C.defaultBudgetMl, region=C.defaultRegionId;
+    for(const k of ['sipcount.v9','sipcount.v8a','sipcount.v7','sipcount.v6','sipcount.v5','sipcount.v4','sipcount.v3','sipcount.v2','sipcount.v1']){ try{ const old=JSON.parse(localStorage.getItem(k)); if(old&&old.days){ days=old.days; budget=old.budget||C.defaultBudgetMl; region=C.regions[old.region]?old.region:region; break; } }catch(e){} }
     return Object.assign({}, defaults, { budget, region, days, installedAt: (()=>{ const ks=Object.keys(days).sort(); return ks.length? new Date(ks[0]+'T12:00:00').getTime() : Date.now(); })() });
   }
   S=load();

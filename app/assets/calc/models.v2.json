@@ -7,6 +7,8 @@
     "Units: energy in Wh; WUE and EWIF in L/kWh (numerically identical to mL/Wh), so water_mL = energy_Wh * pue * (wue_site + ewif_grid).",
     "Output tokens are weighted 5x input tokens and energy_wh_per_1k_tokens is re-normalised by 400/320 so the reference prompt (100 in + 300 out) is unchanged at 0.30 Wh on the standard tier. See docs/TOKEN-ECONOMICS.md."
   ],
+  "default_budget_ml": 500,
+  "default_region_id": "us_hyperscale",
   "token_estimation": {
     "chars_per_token": 4
   },

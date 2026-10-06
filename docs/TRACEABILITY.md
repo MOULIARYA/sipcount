@@ -4,7 +4,7 @@
 requirement. Updated at the end of every build — a requirement with no test in the last column is
 **not done**, whatever anyone said in a chat.*
 
-Last updated 2026-09-30.
+Last updated 2026-10-06.
 
 **Why this exists:** on 2026-09-29 the extension was reported as "working" after it counted two real
 prompts. Against its own written specification (`TOKEN-ECONOMICS.md` §4, I-18) it was doing about a
@@ -52,7 +52,12 @@ announced as started and then not written at all. Both are the same failure.
 
 | # | Requirement | Status | Proof |
 |---|---|---|---|
-| P1 | Android counts prompts in shipping form | ⬜ | I-22 spike not run; needs test phones |
+| P1 | Android counts prompts in shipping form | ⬜ | the network route is closed (I-55); the accessibility listener is the only sensor left |
+| **P7** | **The phone app looks and reads like the signed-off prototype** | ❌ | **This row did not exist until 2026-10-05, which is how the app drifted three weeks without anything going red** (I-58). App implements contract **11**, prototype is at **15**: characters, Log screen, fact banner, About rewrite, age tier and sync are all missing. Palette and copy rules are now enforced (P11) |
+| **P11** | **A prototype change cannot land without the apps being considered** | ✅ | **A gate, not a row** — a row is only a note someone has to remember. `sipcount.html` carries a `sipcount-ui-contract` number; `app/lib/app/ui_contract.dart` declares what it implements *and* what gap has been acknowledged; `parity.js` fails the moment the prototype's number moves past the acknowledgement, and names what to do. It checks the **acknowledgement**, not the implementation, so a tracked gap does not leave CI permanently red — a build nobody can make green is a build nobody reads. Also enforced: the Flutter palette must equal the prototype's `:root` (the navy/blue drift would have failed on day one), and no PUE / WUE / Scope / token wording in user-facing Dart strings. **Verified by deliberately bumping the prototype to 16 and watching it fail** |
+| **P8** | **Shared defaults reach the phone, not just shared formulas** | ✅ | `parity.js` — the budget and starting region are published from `engine.js` and asserted, and no region id may be written literally in phone code. Added after a fresh install was found defaulting to a region that no longer existed and would have thrown on the first prompt (I-59) |
+| **P9** | **Demo controls cannot reach a user** | ✅ | gated behind `SIPCOUNT_DEMO`, set only by the test-APK build |
+| **P10** | **Accessibility use satisfies Play policy** | 🟡 | permitted — Play "permits the use of the AccessibilityService API for a wide range of applications", and we trip none of the prohibitions (no autonomous action, no settings changes, no security bypass). **Outstanding: affirmative in-app consent** (we have a disclosure but no tap-to-accept), **a standalone disclosure** not mixed with other data copy, the **Play Console declaration form**, and the **disclosure video**. See I-57 |
 | P2 | Dart engine agrees with `engine.js` | ✅ | **verified by CI 2026-09-30.** `flutter analyze` + `flutter test` green against golden values generated from `engine.js`. The Dart was written without ever being executed, so this was the one claim in the project made on trust; it is now made by machine |
 | P3 | iPhone (lighter: Safari + Screen Time) | ⬜ | needs the $99 account |
 | P4 | iPhone (full: traffic tunnel) | ⏸ | needs the company |
@@ -68,9 +73,25 @@ scale line, contrast, dead code, sync dark.
 
 ---
 
-## The three suites
+## E. How we keep this honest
 
-Run all three before any push. Anything below that is not a check.
+*Standing practices, not requirements. Madhur, 2026-10-05: "keep updating the matrix and run our
+tests against it so that we don't miss anything when we are switching from one track to another",
+and "do a thorough research of technical solutions every 3 days".*
+
+| # | Practice | Status | Proof |
+|---|---|---|---|
+| H1 | **This matrix is checked by a test, not by memory** | ✅ | `traceability.js` — every row has a status, no row claims ✅ with an empty proof column, every test file the matrix names exists, **every suite that exists is named here** (so a new test cannot be invisible), and the matrix's "Last updated" date may not be older than the newest decision in `ISSUES.md`. That last check is the one that catches a track switch: decisions land in ISSUES, and if the matrix has not moved with them, the build says so |
+| H2 | **Platform research every three days** | ✅ | `docs/PLATFORM-RESEARCH-LOG.md`, freshness enforced by `traceability.js`: a note after 3 days, a **failing build after 10**. Warn then fail, because a red build on day four teaches everyone to ignore the colour. Each pass covers Android, iOS, the extension, desktop, and any new published energy or water figures — primary sources only, decisive sentence quoted verbatim with its URL |
+| H3 | **A prototype change cannot land without the apps being considered** | ✅ | see P11 — contract stamp, palette equality, copy rules |
+| H4 | **The product says when it has stopped measuring** | ✅ | `extension.js` (11) — the extension checks whether it still understands chatgpt.com, claude.ai and gemini.google.com, and the popup says in plain words when it cannot see prompts, or cannot read which model is in use. **This is the one that covers the risk the research cadence misses**: a site redesign, which has already silently zeroed our counting once (I-42). With no telemetry the user is the only possible alarm, so the product tells them rather than waiting for someone to notice the number looks low. One bad day is ignored; two separate days warns; one good sighting clears it. The health record holds day strings and counters — no URL, no text, no fine timestamps |
+| H5 | **We know what is in the field, and what a change obliges** | ✅ | `docs/RELEASES.md`, checked by `traceability.js` — every shipped artefact with its constants version, prototype contract and sensing method, plus a four-class rule (A forward-only → D cannot be fixed by a release) applied to every change *before* it merges. Written because on 2026-10-05 we could not answer "which builds in the wild carry the old 100 mL budget?". Anything marked broken in the field must state what has to happen to it |
+
+---
+
+## The suites
+
+Run all of them before any push. Anything below that is not a check.
 
 ```
 node docs/test/regression.js   # 120 — the prototype: screens, copy, behaviour
@@ -79,6 +100,9 @@ node docs/test/extension.js    #  40 — counting, correction, calibration, midn
 node docs/test/simulate.js     #  17 — a whole conversation: streaming, pauses, agentic turns
 node docs/test/constants.js    #  22 — a published coefficient reaches apps; a bad file cannot
 node docs/test/fit.js          #  10 — the calibration fitter recovers a rate it was never told
+node docs/test/traceability.js #  17 — this matrix and docs/RELEASES.md: rows, proofs, suite
+                               #     coverage, and whether either has fallen behind ISSUES.md
+                               #     or the three-day research cadence
 
 `docs/STORE-LISTING.md` holds every field the Chrome Web Store submission asks for.
 ```

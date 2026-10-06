@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
+import '../../probe/probe_page.dart';
 import '../../tracking/application/tracker.dart';
+
+/// Same gate as the demo controls: CI sets it for the sideloaded test APK, a store build never
+/// does, so the spike cannot reach a user by being forgotten.
+const bool _showProbe = bool.fromEnvironment('SIPCOUNT_DEMO');
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.tracker});
@@ -49,6 +54,20 @@ class SettingsPage extends StatelessWidget {
                 const Text('500 mL ≈ a regular working day once the answers and the unseen work are counted. Lower it to challenge yourself.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
               ]),
               const SizedBox(height: 12),
+              // Test builds only, same gate as the demo row: this never reaches a user.
+              if (_showProbe) ...[
+                _Section(title: 'Sensor probe (test build)', children: [
+                  const Text('Can this phone tell one prompt from the next without routing traffic '
+                      'through anything? Reads byte counts only.',
+                      style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProbePage())),
+                    child: const Text('Open probe'),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+              ],
               _Section(title: 'Data-centre assumptions', children: [
                 DropdownButtonFormField<String>(
                   initialValue: tracker.regionId,
@@ -87,7 +106,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.delete_outline, color: SipColors.warn),
+                  icon: const Icon(Icons.delete_outline, color: SipColors.danger),
                   label: const Text('Delete all totals on this device'),
                   onPressed: () async {
                     final ok = await showDialog<bool>(

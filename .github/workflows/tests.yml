@@ -59,6 +59,11 @@ jobs:
       # rates it cannot see.
       - name: The calibration fitter recovers a rate it was never told
         run: node docs/test/fit.js
+      # The matrix has twice been the thing that failed rather than the code, so it is checked like
+      # code: proofs point at real suites, no suite is unrecorded, and it may not fall behind the
+      # decisions in ISSUES.md or the agreed research cadence.
+      - name: The traceability matrix checks itself
+        run: node docs/test/traceability.js
 
   dart:
     name: Phone app engine

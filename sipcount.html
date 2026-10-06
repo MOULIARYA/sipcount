@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<!-- The reference design's contract number. Bump it whenever a change here is one the phone and
+     desktop apps are expected to follow — new screen, changed flow, renamed concept, new copy rule.
+     `parity.js` fails until each app declares the same number, so a prototype change can no longer
+     land quietly while the shipping apps stay months behind (I-58). Do NOT bump for a typo fix. -->
+<meta name="sipcount-ui-contract" content="15">
 <title>Sipcount</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>

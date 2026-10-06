@@ -18,6 +18,16 @@ class ConstantsRepository {
   }
 
   String get constantsVersion => _raw['constants_version'] as String;
+
+  /// The agreed daily budget, from the shared constants rather than a number invented here.
+  /// No `??` fallback on purpose: a missing key means the generated file is stale, and that should
+  /// fail loudly instead of silently restoring the 100 mL this app used to make up for itself.
+  int get defaultBudgetMl => (_raw['default_budget_ml'] as num).toInt();
+
+  /// Likewise the starting region. This app used to default to `us_default`, an id that stopped
+  /// existing at the seven-region migration, so a fresh install looked up a region that was not
+  /// there and threw on the first prompt it counted.
+  String get defaultRegionId => _raw['default_region_id'] as String;
   double get charsPerToken => (_raw['token_estimation']['chars_per_token'] as num).toDouble();
   Map<String, num> get equivalentsMl => Map<String, num>.from(_raw['equivalents_ml'] as Map);
 

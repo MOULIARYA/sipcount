@@ -186,6 +186,34 @@
     document.documentElement.setAttribute('data-sipcount', 'active');   // proves the script is running
   }
 
+  /* ---- is this file still talking to the page it was written for? ---------------------------
+     The thing most likely to break Sipcount is not a platform policy, it is one of these three
+     sites redesigning. It has happened once already: ChatGPT stopped using `#prompt-textarea`,
+     this list had no bare `textarea` fallback, and the extension counted NOTHING on chatgpt.com.
+     Nobody noticed for days, and when it surfaced it surfaced as Madhur saying the number looked
+     low — a human being the alarm.
+
+     So the extension now checks whether the page still matches its own assumptions, and reports
+     only a verdict: is there a composer, is there a model name. No URL, no text, no counts. We
+     have no telemetry and want none, so the user is told instead of us: the popup says counting
+     looks broken and to check for an update. The product notices its own blindness. */
+  function reportHealth() {
+    // Only on a real AI page, and only once the single-page app has had a chance to render.
+    if (vendor === 'unknown') return;
+    const composerFound = !!document.querySelector(SITE.composer);
+    // a site with no model selectors configured cannot be judged on this
+    const modelExpected = (SITE.model || []).length > 0;
+    try {
+      chrome.runtime.sendMessage({ type: 'site_health', vendor, composerFound, modelExpected,
+                                   modelFound: modelExpected ? !!modelHint() : null }, () => void chrome.runtime.lastError);
+    } catch (e) { /* worker asleep or context torn down; the next page load reports again */ }
+  }
+  // Twice: once after the first render, once later, because these are single-page apps and the
+  // composer frequently does not exist yet on the first pass. A single early check would report
+  // every cold load as a breakage.
+  setTimeout(reportHealth, 4000);
+  setTimeout(reportHealth, 15000);
+
   // Enter (without Shift) inside the composer = send on all three sites.
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;

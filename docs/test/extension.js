@@ -184,6 +184,53 @@ const SIP = vm.runInContext('SIP', ctx);
   ok('it waits while the model is still writing', /aria-label\*="Stop"/.test(c) && /generating\(\)/.test(c));
   ok('reports are cumulative, not one-shot', /if \(grew === reported\) return/.test(c));
 
+  /* ---- the extension notices when it has gone blind -----------------------------------------
+     The most likely failure in this product is not a policy change, it is one of these three
+     sites redesigning. It happened once: ChatGPT moved off `#prompt-textarea`, the extension
+     counted nothing on chatgpt.com, and the way we found out was Madhur saying the number looked
+     low (I-42). With no telemetry the user is the only possible alarm, so the product has to say
+     so — and the alarm itself needs testing, or it rots like anything else. */
+  console.log('\nIT SAYS SO WHEN IT CANNOT SEE THE PAGE');
+  {
+    const bad = { type: 'site_health', vendor: 'openai', composerFound: false, modelExpected: true, modelFound: false };
+    const good = { ...bad, composerFound: true, modelFound: true };
+    const warn = async () => (await send({ type: 'health' })).warnings.map(w => `${w.site}:${w.kind}`);
+    const h = () => state().health.openai;
+
+    // reset whatever the earlier turns left behind
+    const s0 = state(); s0.health = {}; store['sipcount.v1'] = s0;
+
+    await send(bad);
+    ok('one bad day is not an alarm — a cold load is not a redesign', (await warn()).length === 0);
+    h().missDay = '2000-01-01'; await send(bad);          // pretend a second, separate day
+    ok('two separate days is', (await warn()).includes('ChatGPT:blind'));
+
+    await send(good);
+    ok('and a single good sighting clears it', (await warn()).length === 0 && h().missDays === 0);
+
+    // the quieter, costlier fault: prompts counted, but every model read as the default tier
+    h().modelMissDay = '2000-01-01'; h().modelMissDays = 1;
+    await send({ ...good, modelFound: false });
+    ok('an unreadable model name warns separately', (await warn()).includes('ChatGPT:model'));
+
+    const s1 = state(); s1.health = {}; store['sipcount.v1'] = s1;
+    await send({ ...bad, vendor: 'nonsense' });
+    ok('a vendor we do not watch is ignored', !state().health.nonsense);
+
+    const hs = JSON.stringify(state().health);
+    ok('the health record holds days and counts, nothing else',
+       !/http|chatgpt\.com|claude\.ai|:\d{10,}/.test(hs), hs);
+
+    const c2 = load('browser_extension/content.js');
+    ok('the page reports a verdict, never a URL or any text',
+       /composerFound/.test(c2) && !/location\.href|document\.title/.test(c2.split('function reportHealth')[1] || ''));
+    ok('it waits for the single-page app to render before judging it', /setTimeout\(reportHealth, \d{4}/.test(c2));
+    const p = load('browser_extension/popup.js');
+    ok('the popup tells the user in plain words', /cannot see your prompts/.test(p));
+    ok('with no jargon', !/selector|DOM|composer|missDays >= 2 \?/.test(p.split('function renderHealth')[1].split('async function render')[0].replace(/missDays|modelMissDays/g, '')));
+    ok('and says the total is too low, which is the part that matters', /too low|low side/.test(p));
+  }
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();

@@ -105,6 +105,11 @@ const models = {
     'Units: energy in Wh; WUE and EWIF in L/kWh (numerically identical to mL/Wh), so water_mL = energy_Wh * pue * (wue_site + ewif_grid).',
     'Output tokens are weighted 5x input tokens and energy_wh_per_1k_tokens is re-normalised by 400/320 so the reference prompt (100 in + 300 out) is unchanged at 0.30 Wh on the standard tier. See docs/TOKEN-ECONOMICS.md.'
   ],
+  /* The phone app hardcoded its own 100 mL for three weeks because this generator never offered it
+     the agreed number — a hole in "one calculator" that parity.js could not see, because it only
+     ever compared what both sides computed, never what only one side knew. */
+  default_budget_ml: C.defaultBudgetMl,
+  default_region_id: C.defaultRegionId,
   token_estimation: { chars_per_token: C.charsPerToken },
   token_weights: C.tokenWeights,
   task_profiles: Object.fromEntries(Object.entries(C.tasks).map(([id, t]) => [id,

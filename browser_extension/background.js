@@ -6,7 +6,54 @@ const KEY = 'sipcount.v1';
 const dayKey = d => new Date(d).toISOString().slice(0, 10);
 /* region ids now come from the shared engine (7 regions, not 2). Anything unrecognised falls
    back to SIP.DEFAULT_REGION inside the adapter, so an old stored 'us_default' still works. */
-const defaults = () => ({ budget: SIP.C.defaultBudgetMl, region: 'us_hyperscale', saved: 0, days: {}, last: null });
+const defaults = () => ({ budget: SIP.C.defaultBudgetMl, region: 'us_hyperscale', saved: 0, days: {}, last: null, health: {} });
+
+/* How many separate days a site must look wrong before we say so. One day is noise: a cold load,
+   a slow network, a page that never finished rendering. Two different days is a redesign. */
+const HEALTH_DAYS_BEFORE_WARNING = 2;
+
+/**
+ * Keep a verdict per site on whether this extension still understands its page.
+ *
+ * Stores day strings and small counters — never a URL, never text, never a timestamp finer than
+ * the calendar day. That is the same bar as the counters themselves, so this adds nothing new to
+ * what the privacy page already promises.
+ */
+async function handleHealth(h) {
+  if (!['openai', 'anthropic', 'google'].includes(h.vendor)) return;
+  const s = await getState();
+  const today = dayKey(Date.now());
+  const v = (s.health[h.vendor] ||= { okDay: null, missDay: null, missDays: 0, modelMissDay: null, modelMissDays: 0 });
+
+  if (h.composerFound) {
+    // A good sighting clears the slate: whatever was wrong is wrong no longer.
+    v.okDay = today; v.missDays = 0; v.missDay = null;
+  } else if (v.missDay !== today) {
+    // once per day, so a tab left open all afternoon cannot manufacture a warning
+    v.missDay = today; v.missDays++;
+  }
+
+  /* A model name we cannot read is a quieter fault than a composer we cannot find, and a more
+     expensive one: it silently prices a reasoning prompt as a standard one, which was a ~10×
+     undercount when it last happened (I-42). Tracked separately so the popup can say which. */
+  if (h.modelExpected) {
+    if (h.modelFound) { v.modelMissDays = 0; v.modelMissDay = null; }
+    else if (v.modelMissDay !== today) { v.modelMissDay = today; v.modelMissDays++; }
+  }
+  await setState(s);
+}
+
+/** Sites that have looked wrong on enough separate days to tell the user about. */
+function healthWarnings(s) {
+  const NAMES = { openai: 'ChatGPT', anthropic: 'Claude', google: 'Gemini' };
+  const out = [];
+  for (const [vendor, v] of Object.entries(s.health || {})) {
+    if (!v) continue;
+    if (v.missDays >= HEALTH_DAYS_BEFORE_WARNING) out.push({ site: NAMES[vendor] || vendor, kind: 'blind' });
+    else if (v.modelMissDays >= HEALTH_DAYS_BEFORE_WARNING) out.push({ site: NAMES[vendor] || vendor, kind: 'model' });
+  }
+  return out;
+}
 
 async function getState() { const r = await chrome.storage.local.get(KEY); return Object.assign(defaults(), r[KEY] || {}); }
 async function setState(s) { await chrome.storage.local.set({ [KEY]: s }); }
@@ -123,13 +170,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'prompt_event' && msg.event?.v === 1) { handle(msg.event).then(() => sendResponse({ ok: true })); return true; }
   if (msg?.type === 'prompt_reply' && msg.reply?.v === 1) { handleReply(msg.reply).then(() => sendResponse({ ok: true })); return true; }
   if (msg?.type === 'refresh_badge') { updateBadge().then(() => sendResponse({ ok: true })); return true; }
+  if (msg?.type === 'site_health' && msg.vendor) { handleHealth(msg).then(() => sendResponse({ ok: true })); return true; }
+  if (msg?.type === 'health') { getState().then(s => sendResponse({ ok: true, warnings: healthWarnings(s) })); return true; }
   /* Test hook. Returns counts only — the same numbers the popup shows — and only ever in
      response to a request from our own content script on a page carrying ?sipcount_debug=1.
      It exists because Chrome will not let an automated test read chrome.storage directly, and
      "we could not test it" is how the last three faults shipped. */
   if (msg?.type === 'debug_state') {
     getState().then(s => { const t = s.days[dayKey(Date.now())] || null;
-      sendResponse({ ok: true, region: s.region, budget: s.budget, today: t, last: s.last, openTurns: Object.keys(s.open || {}).length }); });
+      sendResponse({ ok: true, region: s.region, budget: s.budget, today: t, last: s.last,
+                     openTurns: Object.keys(s.open || {}).length,
+                     health: s.health || {}, warnings: healthWarnings(s) }); });
     return true;
   }
 });

@@ -6,6 +6,10 @@ import '../../../app/theme.dart';
 import '../../calculation_engine/domain/model_profile.dart';
 import '../application/tracker.dart';
 
+/// Off unless a build asks for it. CI passes it for the sideloaded test APK; a store build never
+/// will, so the demo controls cannot reach a user by being forgotten.
+const bool _showDemo = bool.fromEnvironment('SIPCOUNT_DEMO');
+
 String fmtMl(double ml) => ml >= 100 ? ml.round().toString() : ml >= 10 ? ml.toStringAsFixed(1) : ml.toStringAsFixed(2);
 
 String equivLabel(String key) => switch (key) {
@@ -42,7 +46,7 @@ class TodayPage extends StatelessWidget {
                   _Pill(text: tracker.listenerEnabled ? 'Listening' : 'Paused', color: tracker.listenerEnabled ? SipColors.good : SipColors.muted),
                 ]),
                 const SizedBox(height: 4),
-                Text('Water your AI prompts used today', style: TextStyle(color: SipColors.muted)),
+                Text('The water your AI prompts used today', style: TextStyle(color: SipColors.muted)),
                 const SizedBox(height: 20),
                 if (!tracker.listenerEnabled) ...[
                   _EnableCard(onTap: tracker.openEnableSettings),
@@ -87,10 +91,13 @@ class TodayPage extends StatelessWidget {
                       style: const TextStyle(color: SipColors.muted, fontSize: 12),
                     ),
                   ),
+                // "Scope 1 / Scope 2" is carbon-accounting vocabulary and was retired from the
+                // prototype in the copy pass; it had survived here. Same two numbers, named the way
+                // the prototype names them under "Where it goes".
                 Row(children: [
-                  Expanded(child: _Stat(label: 'On-site cooling', value: '${fmtMl(t.scope1Ml)} mL', sub: 'Scope 1')),
+                  Expanded(child: _Stat(label: 'Server cooling', value: '${fmtMl(t.scope1Ml)} mL', sub: 'at the data centre')),
                   const SizedBox(width: 12),
-                  Expanded(child: _Stat(label: 'Power generation', value: '${fmtMl(t.scope2Ml)} mL', sub: 'Scope 2')),
+                  Expanded(child: _Stat(label: 'Power plants', value: '${fmtMl(t.scope2Ml)} mL', sub: 'making the electricity')),
                 ]),
                 const SizedBox(height: 12),
                 Card(
@@ -127,8 +134,13 @@ class TodayPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _DemoRow(tracker: tracker),
-                const SizedBox(height: 12),
+                // Gated per the v1 scope decision: the demo buttons are for us, not for users, and
+                // a "fake prompt" control on the main screen undercuts the one thing the app is
+                // asking people to believe. CI switches it on for the test APK only.
+                if (_showDemo) ...[
+                  _DemoRow(tracker: tracker),
+                  const SizedBox(height: 12),
+                ],
                 const Text(
                   'Nothing you type is stored or sent anywhere. Sipcount only keeps daily totals on this phone.',
                   textAlign: TextAlign.center,

@@ -20,6 +20,39 @@ const DROP = (level, colour) => { const y = 130 * (1 - level); return `<svg view
   <path d="M50 4 C50 4 12 52 12 82 a38 38 0 0 0 76 0 C88 52 50 4 50 4 Z" fill="none"
         stroke="${colour}" stroke-opacity="${level < 0.06 ? 0.85 : 0.35}" stroke-width="2"/></svg>`; };
 
+/**
+ * Tell the person when Sipcount has stopped understanding one of the three sites.
+ *
+ * This is the only card that admits the product is failing, and that is deliberate. We keep no
+ * telemetry, so there is nobody else to tell: if ChatGPT redesigns and the counter quietly reads
+ * zero, the user is the only one in a position to notice — and last time they noticed by feel,
+ * days late (I-42). An honest meter says when it has stopped measuring.
+ *
+ * Plain language, no jargon: not "selector mismatch", just "it cannot see your prompts".
+ */
+function renderHealth(s) {
+  const n = $('healthWarn');
+  if (!n) return;
+  const h = s.health || {};
+  const NAMES = { openai: 'ChatGPT', anthropic: 'Claude', google: 'Gemini' };
+  const blind = [], vague = [];
+  for (const [vendor, v] of Object.entries(h)) {
+    if (!v) continue;
+    if ((v.missDays || 0) >= 2) blind.push(NAMES[vendor] || vendor);
+    else if ((v.modelMissDays || 0) >= 2) vague.push(NAMES[vendor] || vendor);
+  }
+  if (!blind.length && !vague.length) { n.hidden = true; n.innerHTML = ''; return; }
+  const list = a => a.length === 1 ? a[0] : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const parts = [];
+  if (blind.length) parts.push(`<b>Sipcount cannot see your prompts on ${list(blind)}.</b> ` +
+    `The site has probably been redesigned, so nothing there is being counted and your total is too low. ` +
+    `Check for an extension update — and if there isn't one yet, we don't know about it, so please tell us.`);
+  if (vague.length) parts.push(`<b>Sipcount can't tell which model you're using on ${list(vague)}.</b> ` +
+    `Prompts are still counted, but heavier models are being charged as ordinary ones, so your total is on the low side.`);
+  n.innerHTML = parts.join('<br><br>');
+  n.hidden = false;
+}
+
 async function render() {
   const s = await load(), fmt = SIP.fmt;
   const t = s.days[dayKey(Date.now())] || { n: 0, s1: 0, s2: 0 }, ml = t.s1 + t.s2, pct = Math.min(1, ml / s.budget);
@@ -36,6 +69,7 @@ async function render() {
   $('statusPill').className = 'pill ' + { green: 'good', amber: 'warn', red: 'bad' }[z];
   $('statusPill').textContent = `${ui.ico} ${ml > s.budget ? 'Over budget' : ui.label}`;
   $('tPrompts').textContent = t.n;
+  renderHealth(s);
   const keys = last7(), vals = keys.map(k => { const b = s.days[k]; return b ? b.s1 + b.s2 : 0; }), max = Math.max(1, ...vals);
   $('tWeek').textContent = fmt(vals.reduce((a, b) => a + b, 0)) + ' mL';
   // today's bar carries the day's zone colour — a green bar on a red day reads as a contradiction

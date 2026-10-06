@@ -4,17 +4,22 @@ library;
 
 import 'package:flutter/material.dart';
 
+/// Every value here is checked against `sipcount.html`'s `:root` by `parity.js`. Change one without
+/// changing the prototype (or the other way round) and the build fails — the navy-and-blue palette
+/// this used to hold survived three weeks after the prototype went true-black and green, because
+/// nothing compared them.
 abstract final class SipColors {
-  static const bg = Color(0xFF0D1321);
-  static const surface = Color(0xFF161F31);
-  static const surface2 = Color(0xFF1E2A40);
-  static const line = Color(0xFF28364F);
-  static const text = Color(0xFFE8EEF6);
-  static const muted = Color(0xFF8C9AB3);
-  static const water = Color(0xFF7CC8FF);
-  static const waterDeep = Color(0xFF3A9BE0);
-  static const warn = Color(0xFFFF8A5B);
-  static const good = Color(0xFF7BE0A8);
+  static const bg = Color(0xFF000000); // --ink
+  static const surface = Color(0xFF141414); // --surface
+  static const surface2 = Color(0xFF1E1E1E); // --surface-2
+  static const line = Color(0xFF262626); // --line
+  static const text = Color(0xFFFFFFFF); // --text
+  static const muted = Color(0xFFA6A6A6); // --muted
+  static const water = Color(0xFF00F076); // --green — the brand accent
+  static const waterDeep = Color(0xFF00B85A); // --green-deep
+  static const warn = Color(0xFFFFB800); // --amber
+  static const danger = Color(0xFFFF3B30); // --red
+  static const good = Color(0xFF00F076); // --green
 }
 
 ThemeData sipcountTheme() {
