@@ -60,7 +60,7 @@ console.log('\nTHE EXTENSION LOADS THE WAY CHROME LOADS IT');
 }
 
 /* load both engines the way their own product does */
-const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom, contextFactor};'))();
+const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom, contextFactor, ZONE_UI};'))();
 const ext = (new Function('module', load('browser_extension/engine.js') + '\nreturn SIP;'))({ });
 
 console.log('\nTHE SAME PROMPT GIVES THE SAME ANSWER');
@@ -200,7 +200,9 @@ ok('token weights carried over', j.token_weights.input === app.C.tokenWeights.in
 let gbad = null;
 for (const g of j.golden) {
   const p = app.regionParams(g.region, app.C.regions[g.region].defaultCooling || 'reported', true);
-  const e = app.estimate({ tier: g.tier, task: g.task, inputTokens: g.inputTokens, outputTokens: g.outputTokens, items: g.items || 1, params: p });
+  const e = app.estimate({ tier: g.tier, task: g.task, inputTokens: g.inputTokens, outputTokens: g.outputTokens,
+                           items: g.items || 1, hiddenTokens: g.hiddenTokens || 0,
+                           contextTokens: g.contextTokens || 0, params: p });
   if (Math.abs(e.total - g.expect_total_ml) > 1e-6) gbad = g;
 }
 ok(`${j.golden.length} golden cases reproduce`, !gbad, gbad ? JSON.stringify(gbad) : '');
@@ -214,6 +216,57 @@ ok('the agreed daily budget reaches the phone app', j.default_budget_ml === app.
 ok('the starting region reaches the phone app', j.default_region_id === app.C.defaultRegionId,
    `engine ${app.C.defaultRegionId} vs published ${j.default_region_id}`);
 ok('the starting region is a region that exists', !!j.regions[j.default_region_id], j.default_region_id);
+
+/* Content, not just coefficients. The phone app was three revisions behind the design partly
+   because it *could not* catch up: the zone pill, the fact banner, the brand names and the
+   opportunity-cost words were never published to it, so a port would have meant retyping the copy
+   into Dart where it would drift again. Published now, and held equal here. */
+ok('the zone thresholds reach the phone app',
+   j.zones && j.zones.green === app.C.zones.green && j.zones.amber === app.C.zones.amber);
+ok('the zone labels reach it, word for word',
+   !!j.zone_ui && Object.keys(app.C.zones).concat('red').every(z => j.zone_ui[z]?.label === app.ZONE_UI[z].label));
+ok('the brand names reach it', !!j.brands && Object.entries(app.C.brands).every(([k, v]) => j.brands[k] === v));
+ok('every fact reaches it with its source and link',
+   Array.isArray(j.facts) && j.facts.length === app.C.facts.length &&
+   j.facts.every(f => f.hook && f.text && f.source && /^https?:\/\//.test(f.url || '')),
+   `${j.facts?.length} of ${app.C.facts.length}`);
+ok('the facts are not reworded on the way',
+   j.facts.every((f, i) => f.text === app.C.facts[i].t && f.hook === app.C.facts[i].hook));
+{
+  /* The mascot art is Mouli's. The phone shows the same five frames the prototype cross-fades,
+     so the picture cannot quietly become a Flutter re-creation of it. */
+  const fsx = require('fs');
+  const missing = [];
+  for (const [name, frames] of Object.entries(j.characters || {})) {
+    if (frames.length !== 5) missing.push(`${name} has ${frames.length} frames`);
+    for (const f of frames) if (!fsx.existsSync(require('path').join(__dirname, '..', '..', 'assets', f))) missing.push(f);
+  }
+  ok('every mascot frame the app is told about really exists', missing.length === 0, missing.join(', '));
+}
+{
+  /* The hole that made "one calculator" only half true: engine.js has taken `hiddenTokens` and
+     `contextTokens` since 2026-09-30, the phone could express neither, and every golden case
+     happened to use the subset both supported — so parity passed while the phone ran a simpler
+     engine and undercounted an agentic turn by roughly 28× (I-62). */
+  ok('the unseen-work constants reach the phone app',
+     j.thinking && j.thinking.tokens_per_sec === app.C.thinking.tokensPerSec &&
+     j.thinking.floor_sec === app.C.thinking.floorSec && j.thinking.max_sec === app.C.thinking.maxSec);
+  ok('the context-length constants reach it',
+     j.context && j.context.per_thousand === app.C.context.perThousand && j.context.max === app.C.context.max);
+  const withHidden = j.golden.filter(g => (g.hiddenTokens || 0) > 0);
+  const withCtx = j.golden.filter(g => (g.contextTokens || 0) > 0);
+  ok('a golden case exercises unseen work', withHidden.length > 0);
+  ok('a golden case exercises a long thread', withCtx.length > 0);
+  ok('every golden case carries the question/answer split', j.golden.every(g => 'expect_input_share' in g));
+  /* The rule, not just the arithmetic: estimate() charges whatever hidden work it is handed, so
+     the judgement about how much there is has to be pinned separately. */
+  ok('the unseen-work rule ships as fixtures', Array.isArray(j.hidden_rule) && j.hidden_rule.length >= 6);
+  ok('and the fixtures reproduce engine.js',
+     (j.hidden_rule || []).every(f => f.expect_hidden_tokens ===
+        app.hiddenFrom({ activeMs: f.active_ms, outputTokens: f.output_tokens, tier: f.tier })));
+  ok('a reasoning turn is never charged twice for thinking',
+     (j.hidden_rule || []).filter(f => f.tier === 'reasoning').every(f => f.expect_hidden_tokens === 0));
+}
 {
   /* The crash this is here to prevent: a fresh install read `us_default`, the constants had no such
      region, and the first prompt counted threw on the null. No literal region id belongs in app
@@ -278,16 +331,26 @@ console.log('\nTHE PHONE APP AGAINST THE REFERENCE DESIGN');
 }
 {
   /* The copy pass retired this vocabulary from the prototype; "Scope 1 / Scope 2" survived on the
-     phone's main screen for three weeks. A copy rule that holds in only one product is not a rule. */
-  const banned = /\b(PUE|WUE|Scope [12]|tokens?)\b/;
+     phone's main screen for three weeks. A copy rule that holds in only one product is not a rule.
+
+     Checking two named files was itself too narrow: the port put an insight line in tracker.dart
+     reading "those prompts used no tokens", straight out of the prototype, and this test could not
+     see it. Every Dart file now, comments stripped — a comment explaining tokens is fine, a label
+     the user reads is not. */
+  const banned = /\b(PUE|WUE|EWIF|Scope [12]|tokens?|Wh)\b/;
   const offenders = [];
-  for (const f of ['app/lib/features/tracking/presentation/today_page.dart',
-                   'app/lib/features/settings/presentation/settings_page.dart']) {
-    for (const m of load(f).matchAll(/'([^'\\]{12,})'/g)) {       // user-visible strings only
-      if (banned.test(m[1])) offenders.push(`${f.split('/').pop()}: “${m[1].slice(0, 60)}”`);
+  const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? walk(path.join(d, e.name)) : (e.name.endsWith('.dart') ? [path.join(d, e.name)] : []));
+  for (const abs of walk(path.join(__dirname, '..', '..', 'app', 'lib'))) {
+    const src = fs.readFileSync(abs, 'utf8')
+      .replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const m of src.matchAll(/'([^'\\\n]{12,})'/g)) {
+      if (banned.test(m[1]) && !m[1].startsWith('assets/')) {
+        offenders.push(`${path.basename(abs)}: “${m[1].slice(0, 60)}”`);
+      }
     }
   }
-  ok('no jargon in the phone app’s user-facing copy', offenders.length === 0, offenders.join(' | '));
+  ok('no jargon anywhere in the phone app’s user-facing copy', offenders.length === 0, offenders.join(' | '));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

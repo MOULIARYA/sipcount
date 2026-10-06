@@ -26,6 +26,12 @@ class DayTotals {
   final Map<String, double> mlByTier = {};
   final Map<String, double> mlByTask = {};
 
+  /// Which AI it was, by millilitres and by count. The insights card cannot say "you leaned on
+  /// Claude" without this, and until 2026-10-06 the phone did not keep it at all — which is why
+  /// the brand bars could never have been ported.
+  final Map<String, double> mlByVendor = {};
+  final Map<String, int> promptsByVendor = {};
+
   double get totalMl => scope1Ml + scope2Ml;
 
   Map<String, Object> toJson() => {
@@ -35,6 +41,8 @@ class DayTotals {
         'wh': energyWh,
         'tiers': mlByTier,
         'tasks': mlByTask,
+        'vendors': mlByVendor,
+        'vendorN': promptsByVendor,
       };
 
   static DayTotals fromJson(Map<String, dynamic> j) {
@@ -45,6 +53,10 @@ class DayTotals {
       ..energyWh = (j['wh'] as num?)?.toDouble() ?? 0;
     (j['tiers'] as Map?)?.forEach((k, v) => d.mlByTier[k as String] = (v as num).toDouble());
     (j['tasks'] as Map?)?.forEach((k, v) => d.mlByTask[k as String] = (v as num).toDouble());
+    // Absent on days recorded before 2026-10-06, so the insights card simply has nothing to say
+    // about those days rather than guessing a brand.
+    (j['vendors'] as Map?)?.forEach((k, v) => d.mlByVendor[k as String] = (v as num).toDouble());
+    (j['vendorN'] as Map?)?.forEach((k, v) => d.promptsByVendor[k as String] = (v as num).toInt());
     return d;
   }
 }
@@ -93,7 +105,7 @@ class AggregateStore {
     return j.map((k, v) => MapEntry(k, DayTotals.fromJson(v as Map<String, dynamic>)));
   }
 
-  Future<void> add(DateTime when, WaterEstimate e, ModelTier tier, TaskType task) async {
+  Future<void> add(DateTime when, WaterEstimate e, ModelTier tier, TaskType task, {String? vendor}) async {
     final all = readAll();
     final key = dayKey(when);
     final d = all.putIfAbsent(key, DayTotals.new);
@@ -103,6 +115,10 @@ class AggregateStore {
     d.energyWh += e.energyWh;
     d.mlByTier.update(tier.name, (v) => v + e.totalMl, ifAbsent: () => e.totalMl);
     d.mlByTask.update(task.name, (v) => v + e.totalMl, ifAbsent: () => e.totalMl);
+    if (vendor != null) {
+      d.mlByVendor.update(vendor, (v) => v + e.totalMl, ifAbsent: () => e.totalMl);
+      d.promptsByVendor.update(vendor, (v) => v + 1, ifAbsent: () => 1);
+    }
     await _write(all);
   }
 
@@ -116,6 +132,76 @@ class AggregateStore {
   /// A stored id that the constants no longer carry is treated as absent. The prototype's store has
   /// always done this (`if(!C.regions[s.region]) s.region=defaults.region`); this side had not, so a
   /// region that was renamed under an existing install became a crash rather than a fallback.
+  // ---- small preferences ------------------------------------------------------------------
+  // Still only counts and choices: which character you picked, what you named it, which cards
+  // you have dismissed, and which facts have already been shown today. No prompt content, no
+  // times finer than the calendar day.
+
+  static const _mascotKey = 'sipcount.mascot';
+  static const _namesKey = 'sipcount.names';
+  static const _watchKey = 'sipcount.watch_seen';
+  static const _widgetKey = 'sipcount.widget_seen';
+  static const _installedKey = 'sipcount.installed_at';
+  static const _ageKey = 'sipcount.age_tier';
+  static const _factsKey = 'sipcount.facts';
+
+  String get mascotId => _prefs.getString(_mascotKey) ?? 'plant';
+  Future<void> setMascotId(String v) => _prefs.setString(_mascotKey, v);
+
+  Map<String, String> get mascotNames {
+    final raw = _prefs.getString(_namesKey);
+    if (raw == null) return {};
+    try {
+      return Map<String, String>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> setMascotName(String id, String name) async {
+    final all = mascotNames;
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      all.remove(id);
+    } else {
+      all[id] = trimmed.length > 16 ? trimmed.substring(0, 16) : trimmed;
+    }
+    await _prefs.setString(_namesKey, jsonEncode(all));
+  }
+
+  bool get watchSeen => _prefs.getBool(_watchKey) ?? false;
+  Future<void> setWatchSeen() => _prefs.setBool(_watchKey, true);
+
+  bool get widgetSeen => _prefs.getBool(_widgetKey) ?? false;
+  Future<void> setWidgetSeen() => _prefs.setBool(_widgetKey, true);
+
+  /// The day the app first ran, so "Tracking since" and the alive-day count have a floor. Set
+  /// once; a reinstall legitimately starts again because nothing left the device.
+  String? get installedAt => _prefs.getString(_installedKey);
+  Future<void> setInstalledAtIfUnset(DateTime t) async {
+    if (_prefs.getString(_installedKey) == null) await _prefs.setString(_installedKey, dayKey(t));
+  }
+
+  /// The derived tier only — never the age that was typed. 13 gates sharing and the worst
+  /// character stage; 18 gates sync.
+  int? get ageTier => _prefs.getInt(_ageKey);
+  Future<void> setAgeTier(int v) => _prefs.setInt(_ageKey, v);
+
+  /// `{dayKey: {"shown": [indices], "prompts": n}}`, kept for today only.
+  Map<String, dynamic> factState(String day) {
+    try {
+      final all = jsonDecode(_prefs.getString(_factsKey) ?? '{}') as Map<String, dynamic>;
+      return (all[day] as Map<String, dynamic>?) ?? {'shown': <int>[], 'prompts': 0};
+    } catch (_) {
+      return {'shown': <int>[], 'prompts': 0};
+    }
+  }
+
+  Future<void> setFactState(String day, Map<String, dynamic> v) async {
+    // only today is kept: yesterday's fact history is of no use to anyone
+    await _prefs.setString(_factsKey, jsonEncode({day: v}));
+  }
+
   String get regionId {
     final stored = _prefs.getString(_regionKey);
     return (stored != null && _knownRegionIds.contains(stored)) ? stored : defaultRegionId;

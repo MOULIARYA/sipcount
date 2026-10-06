@@ -9,7 +9,32 @@ class WaterEstimate {
     required this.tokensUsed,
     required this.confidence,
     required this.constantsVersion,
+    this.inputTokens = 0,
+    this.outputTokens = 0,
+    this.hiddenTokens = 0,
+    this.weightedTokens = 0,
+    this.weightedInputTokens = 0,
   });
+
+  /// Kept separately because the split is the product's main insight: most of the water goes into
+  /// the answer, not the question.
+  final int inputTokens;
+  final int outputTokens;
+
+  /// Work that never reached the screen — searching, reading, calling tools. On an agentic turn
+  /// this is most of the cost, and leaving it out undercounted by ~28× (I-18, N9).
+  final int hiddenTokens;
+
+  /// Input and output after weighting, which is what the energy figure is actually built from.
+  final double weightedTokens;
+
+  /// The question's share of that, already weighted. Carried rather than recomputed here: writing
+  /// `inputTokens * 0.2` in this file would put the input weight in two places, and a constant in
+  /// two places is a constant that will disagree with itself.
+  final double weightedInputTokens;
+
+  /// How much of the weighted work was reading your question. Drives the split bar.
+  double get inputShare => weightedTokens <= 0 ? 0 : weightedInputTokens / weightedTokens;
 
   /// Energy attributed to the query before PUE overhead.
   final double energyWh;

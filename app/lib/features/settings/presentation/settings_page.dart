@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
 import '../../probe/probe_page.dart';
+import '../../tracking/domain/character.dart';
 import '../../tracking/application/tracker.dart';
 
 /// Same gate as the demo controls: CI sets it for the sideloaded test APK, a store build never
@@ -68,6 +69,42 @@ class SettingsPage extends StatelessWidget {
                 ]),
                 const SizedBox(height: 12),
               ],
+              _Section(title: 'Your character', children: [
+                const Text('It follows the day’s water. The closer you get to your budget, the worse it fares.',
+                    style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                const SizedBox(height: 10),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  for (final c in kCharacters)
+                    _CharacterChip(
+                      character: c,
+                      selected: tracker.mascot.id == c.id,
+                      unlocked: tracker.unlockedCharacters.contains(c.id),
+                      onTap: () => tracker.setMascot(c.id),
+                    ),
+                ]),
+                if (tracker.nextLockedCharacter != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '${tracker.nextLockedCharacter!.label} arrives after '
+                    '${tracker.nextLockedCharacter!.unlockDays} days under budget in a row. '
+                    'You are on ${tracker.streakDays}.',
+                    style: const TextStyle(color: SipColors.muted, fontSize: 12, height: 1.4),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                TextField(
+                  key: ValueKey('name-${tracker.mascot.id}'),
+                  decoration: InputDecoration(
+                    labelText: 'Name your ${tracker.mascot.label.toLowerCase()}',
+                    hintText: tracker.mascot.label,
+                    counterText: '',
+                  ),
+                  maxLength: 16,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: tracker.nameMascot,
+                ),
+              ]),
+              const SizedBox(height: 12),
               _Section(title: 'Data-centre assumptions', children: [
                 DropdownButtonFormField<String>(
                   initialValue: tracker.regionId,
@@ -133,6 +170,52 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      );
+}
+
+/// One character to choose from. Locked ones stay visible on purpose — a thing you can see but
+/// have not earned is the reason to keep the next day under budget.
+class _CharacterChip extends StatelessWidget {
+  const _CharacterChip({
+    required this.character,
+    required this.selected,
+    required this.unlocked,
+    required this.onTap,
+  });
+  final Character character;
+  final bool selected;
+  final bool unlocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: selected,
+        enabled: unlocked,
+        label: unlocked ? character.label : '${character.label}, locked',
+        child: InkWell(
+          onTap: unlocked ? onTap : null,
+          borderRadius: BorderRadius.circular(99),
+          child: Opacity(
+            opacity: unlocked ? 1 : .4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+              decoration: BoxDecoration(
+                color: selected ? SipColors.good : Colors.transparent,
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: selected ? SipColors.good : SipColors.line),
+              ),
+              child: Text(
+                '${unlocked ? character.emoji : '🔒'} ${character.label}',
+                style: TextStyle(
+                  color: selected ? Colors.black : SipColors.text,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 12.5,
+                ),
+              ),
+            ),
           ),
         ),
       );

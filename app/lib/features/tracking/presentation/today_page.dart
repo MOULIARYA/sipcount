@@ -1,281 +1,586 @@
-import 'dart:math' as math;
+/// The Today screen, ported from the prototype's `#s-today` (contract 15).
+///
+/// Order and copy follow the reference design deliberately: the number first, the character
+/// second, the comparison line third. A few hundred millilitres is a small figure and a small
+/// figure shown alone argues against caring — the character and the scale line are what make it
+/// mean something, so they are not decoration and they are not optional.
+library;
 
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
-import '../../calculation_engine/domain/model_profile.dart';
+import '../../calculation_engine/data/constants_repository.dart';
+import '../../calculation_engine/domain/plain_words.dart';
 import '../application/tracker.dart';
+import 'widgets/water_drop.dart';
 
 /// Off unless a build asks for it. CI passes it for the sideloaded test APK; a store build never
 /// will, so the demo controls cannot reach a user by being forgotten.
 const bool _showDemo = bool.fromEnvironment('SIPCOUNT_DEMO');
 
-String fmtMl(double ml) => ml >= 100 ? ml.round().toString() : ml >= 10 ? ml.toStringAsFixed(1) : ml.toStringAsFixed(2);
-
-String equivLabel(String key) => switch (key) {
-      'sip' => 'sips',
-      'espresso_cup' => 'espresso cups',
-      'coffee_cup' => 'cups of coffee',
-      'water_bottle' => 'water bottles',
-      _ => key,
+Color zoneColour(String zone) => switch (zone) {
+      'amber' => SipColors.warn,
+      'red' => SipColors.danger,
+      _ => SipColors.good,
     };
 
-class TodayPage extends StatelessWidget {
+class TodayPage extends StatefulWidget {
   const TodayPage({super.key, required this.tracker});
   final Tracker tracker;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: tracker,
-        builder: (context, _) {
-          final t = tracker.today;
-          final budget = tracker.budgetMl;
-          final double pct = budget == 0 ? 0.0 : (t.totalMl / budget).clamp(0.0, 1.0).toDouble();
-          final over = t.totalMl > budget;
-          final eq = tracker.equivalence.best(t.totalMl);
-          final week = tracker.lastDays(7);
-          final weekMax = week.fold<double>(0, (a, d) => math.max(a, d.totalMl));
+  State<TodayPage> createState() => _TodayPageState();
+}
 
-          return SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              children: [
-                Row(children: [
-                  Text('Sipcount', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -.5)),
-                  const Spacer(),
-                  _Pill(text: tracker.listenerEnabled ? 'Listening' : 'Paused', color: tracker.listenerEnabled ? SipColors.good : SipColors.muted),
-                ]),
-                const SizedBox(height: 4),
-                Text('The water your AI prompts used today', style: TextStyle(color: SipColors.muted)),
-                const SizedBox(height: 20),
-                if (!tracker.listenerEnabled) ...[
-                  _EnableCard(onTap: tracker.openEnableSettings),
-                  const SizedBox(height: 16),
-                ],
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(children: [
-                      SizedBox(height: 170, child: CustomPaint(painter: _DropletPainter(pct), child: const SizedBox.expand())),
-                      const SizedBox(height: 12),
-                      Text.rich(TextSpan(children: [
-                        TextSpan(text: fmtMl(t.totalMl), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, letterSpacing: -1.5)),
-                        const TextSpan(text: ' mL', style: TextStyle(fontSize: 20, color: SipColors.muted, fontWeight: FontWeight.w600)),
-                      ])),
-                      Text(
-                        t.promptCount == 0 ? 'No prompts counted yet' : '≈ ${eq.count.toStringAsFixed(eq.count >= 10 ? 0 : 1)} ${equivLabel(eq.label)} · ${t.promptCount} prompt${t.promptCount == 1 ? '' : 's'}',
-                        style: const TextStyle(color: SipColors.muted),
-                      ),
-                      const SizedBox(height: 14),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(value: pct, minHeight: 8, backgroundColor: SipColors.surface2, color: over ? SipColors.warn : SipColors.water),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        over ? 'Over budget by ${fmtMl(t.totalMl - budget)} mL (budget $budget mL)' : '${(pct * 100).round()}% of your $budget mL daily budget',
-                        style: TextStyle(color: over ? SipColors.warn : SipColors.muted, fontSize: 13),
-                      ),
-                    ]),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (tracker.lastNudge != null) _Nudge(text: tracker.lastNudge!),
-                if (tracker.lastNudge != null) const SizedBox(height: 12),
-                if (tracker.lastEventAt != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'Last counted: ${tracker.lastVendor} · ${tracker.lastEventAt!.hour.toString().padLeft(2, '0')}:${tracker.lastEventAt!.minute.toString().padLeft(2, '0')} · ${fmtMl(tracker.lastEstimate?.totalMl ?? 0)} mL',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: SipColors.muted, fontSize: 12),
-                    ),
-                  ),
-                // "Scope 1 / Scope 2" is carbon-accounting vocabulary and was retired from the
-                // prototype in the copy pass; it had survived here. Same two numbers, named the way
-                // the prototype names them under "Where it goes".
-                Row(children: [
-                  Expanded(child: _Stat(label: 'Server cooling', value: '${fmtMl(t.scope1Ml)} mL', sub: 'at the data centre')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _Stat(label: 'Power plants', value: '${fmtMl(t.scope2Ml)} mL', sub: 'making the electricity')),
-                ]),
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(children: [
-                        const Text('Last 7 days', style: TextStyle(fontWeight: FontWeight.w700)),
-                        const Spacer(),
-                        Text('${fmtMl(tracker.sumMl(7))} mL · ${tracker.sumPrompts(7)} prompts', style: const TextStyle(color: SipColors.muted, fontSize: 13)),
-                      ]),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        height: 72,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            for (var i = 0; i < week.length; i++) ...[
-                              Expanded(
-                                child: Container(
-                                  height: weekMax == 0 ? 4.0 : math.max(4.0, 72 * week[i].totalMl / weekMax),
-                                  decoration: BoxDecoration(
-                                    color: i == week.length - 1 ? SipColors.water : SipColors.waterDeep.withValues(alpha: .55),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                              ),
-                              if (i < week.length - 1) const SizedBox(width: 6),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ]),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Gated per the v1 scope decision: the demo buttons are for us, not for users, and
-                // a "fake prompt" control on the main screen undercuts the one thing the app is
-                // asking people to believe. CI switches it on for the test APK only.
-                if (_showDemo) ...[
-                  _DemoRow(tracker: tracker),
-                  const SizedBox(height: 12),
-                ],
-                const Text(
-                  'Nothing you type is stored or sent anywhere. Sipcount only keeps daily totals on this phone.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: SipColors.muted, fontSize: 12),
-                ),
+class _TodayPageState extends State<TodayPage> {
+  /// The comparison line alternates between the personal one and the scale one on each visit, so
+  /// neither becomes wallpaper.
+  bool _altLine = false;
+  WaterFact? _fact;
+
+  @override
+  void initState() {
+    super.initState();
+    _altLine = DateTime.now().minute.isEven;
+    _fact = widget.tracker.takeFactIfDue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.tracker;
+    return ListenableBuilder(
+      listenable: t,
+      builder: (context, _) {
+        final day = t.today;
+        final ml = day.totalMl;
+        final pct = t.todayPct;
+        final zone = t.zone;
+        final colour = zoneColour(zone);
+        final look = t.zoneLook;
+
+        return SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            children: [
+              // ---- header ----------------------------------------------------------------
+              Row(children: [
+                Text('Sipcount',
+                    style: Theme.of(context).textTheme.headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -.5)),
+                const Spacer(),
+                _Pill(text: '${look.icon} ${look.label}', colour: colour),
+              ]),
+              const SizedBox(height: 14),
+
+              if (!t.listenerEnabled) ...[
+                _EnableCard(onTap: t.openEnableSettings),
+                const SizedBox(height: 14),
               ],
-            ),
-          );
-        },
+
+              // ---- the number ------------------------------------------------------------
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Row(children: [
+                    WaterDrop(level: (1 - pct).clamp(0.0, 1.0), colour: colour),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const _Eyebrow('Today · this device'),
+                        const SizedBox(height: 2),
+                        Row(crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic, children: [
+                          Text(fmt(ml, ml < 10 ? 1 : 0),
+                              style: const TextStyle(fontSize: 46, fontWeight: FontWeight.w800,
+                                  letterSpacing: -2, height: 1.05)),
+                          const SizedBox(width: 5),
+                          const Text('mL',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: SipColors.muted)),
+                        ]),
+                        const SizedBox(height: 10),
+                        _Ring(pct: pct, zone: zone),
+                        const SizedBox(height: 7),
+                        Text('${(pct * 100).round()}% of ${t.budgetMl} mL used',
+                            style: const TextStyle(color: SipColors.muted, fontSize: 12.5)),
+                      ]),
+                    ),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---- the character ---------------------------------------------------------
+              _CharacterCard(tracker: t, colour: colour, icon: look.icon),
+              const SizedBox(height: 12),
+
+              // ---- what the number means -------------------------------------------------
+              Text(
+                (_altLine ? scaleLine(ml) : null) ?? opportunityCost(ml),
+                style: const TextStyle(color: SipColors.muted, fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 14),
+
+              if (_fact != null) ...[
+                _FactCard(fact: _fact!, onClose: () => setState(() => _fact = null)),
+                const SizedBox(height: 12),
+              ],
+
+              if (t.showWatchCard) ...[
+                _Notice(
+                  text: 'Sipcount is watching for your prompts. Use ChatGPT, Claude or Gemini and come back.',
+                  actionLabel: 'Got it',
+                  onAction: t.dismissWatchCard,
+                ),
+                const SizedBox(height: 12),
+              ] else if (t.showWidgetCard) ...[
+                _Notice(
+                  text: 'Add Sipcount to your home screen.',
+                  actionLabel: 'Not now',
+                  onAction: t.dismissWidgetCard,
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // ---- insights --------------------------------------------------------------
+              _InsightsCard(tracker: t),
+              const SizedBox(height: 12),
+
+              // ---- analytics -------------------------------------------------------------
+              _AnalyticsCard(tracker: t),
+              const SizedBox(height: 16),
+
+              if (_showDemo) ...[
+                _DemoRow(tracker: t),
+                const SizedBox(height: 12),
+              ],
+
+              const Text(
+                'Nothing you type is stored or sent anywhere. Sipcount only keeps daily totals on this phone.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: SipColors.muted, fontSize: 12, height: 1.5),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+
+class _Eyebrow extends StatelessWidget {
+  const _Eyebrow(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) => Text(text.toUpperCase(),
+      style: const TextStyle(color: SipColors.muted, fontSize: 10.5,
+          fontWeight: FontWeight.w700, letterSpacing: 1.1));
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.text, required this.colour});
+  final String text;
+  final Color colour;
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+        decoration: BoxDecoration(
+          color: colour.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: colour.withValues(alpha: .35)),
+        ),
+        child: Text(text.toUpperCase(),
+            style: TextStyle(color: colour, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: .8)),
       );
+}
+
+/// Never colour alone: each zone also has a texture, so the status survives colour-blindness and
+/// a greyscale screenshot.
+class _Ring extends StatelessWidget {
+  const _Ring({required this.pct, required this.zone});
+  final double pct;
+  final String zone;
+
+  @override
+  Widget build(BuildContext context) {
+    final colour = zoneColour(zone);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(99),
+      child: Container(
+        height: 8,
+        color: SipColors.surface2,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: pct.clamp(0.0, 1.0),
+            child: zone == 'green'
+                ? Container(color: colour)
+                : CustomPaint(painter: _StripePainter(colour, zone == 'red' ? 45 : 135)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StripePainter extends CustomPainter {
+  _StripePainter(this.colour, this.degrees);
+  final Color colour;
+  final int degrees;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = colour);
+    final dark = Paint()
+      ..color = Colors.black.withValues(alpha: .45)
+      ..strokeWidth = 3;
+    final step = degrees == 45 ? 5.0 : 8.0;
+    for (var x = -size.height; x < size.width + size.height; x += step) {
+      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), dark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StripePainter old) => old.colour != colour || old.degrees != degrees;
 }
 
 class _EnableCard extends StatelessWidget {
   const _EnableCard({required this.onTap});
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Turn on counting', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-            const SizedBox(height: 6),
+            const Text('Turn on counting',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 8),
             const Text(
-              'Sipcount needs the Accessibility permission to notice when you tap Send in ChatGPT, Claude, Gemini or Chrome. It counts characters and throws the text away instantly.',
-              style: TextStyle(color: SipColors.muted, height: 1.35),
+              'Sipcount needs the Accessibility permission to notice when you tap Send in ChatGPT, '
+              'Claude, Gemini or Chrome. It counts characters and throws the text away instantly.',
+              style: TextStyle(color: SipColors.muted, fontSize: 13, height: 1.45),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             FilledButton(onPressed: onTap, child: const Text('Open Accessibility settings')),
           ]),
         ),
       );
 }
 
-class _Nudge extends StatelessWidget {
-  const _Nudge({required this.text});
-  final String text;
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: SipColors.water.withValues(alpha: .12), borderRadius: BorderRadius.circular(16)),
-        child: Row(children: [
-          const Icon(Icons.tips_and_updates_outlined, color: SipColors.water),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(height: 1.3))),
-        ]),
-      );
-}
+/// The ecosystem card. The art is Mouli's five frames; the state word and the line come from the
+/// shared character definitions, so the phone says what the prototype says.
+class _CharacterCard extends StatelessWidget {
+  const _CharacterCard({required this.tracker, required this.colour, required this.icon});
+  final Tracker tracker;
+  final Color colour;
+  final String icon;
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.sub});
-  final String label, value, sub;
   @override
-  Widget build(BuildContext context) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(sub, style: const TextStyle(color: SipColors.muted, fontSize: 11, letterSpacing: .8)),
-            const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-            Text(label, style: const TextStyle(color: SipColors.muted, fontSize: 12)),
+  Widget build(BuildContext context) {
+    final c = tracker.mascot;
+    final stage = tracker.mascotStage;
+    final frames = tracker.constants.characterFrames[c.id];
+    final alive = tracker.aliveDays;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (frames != null && frames.length == 5)
+            SizedBox(
+              height: 190,
+              width: double.infinity,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 550),
+                child: Image.asset(
+                  'assets/characters/${frames[stage]}',
+                  key: ValueKey(frames[stage]),
+                  fit: BoxFit.contain,
+                  // If the art is missing the card still has to read, so fall back to the emoji
+                  // rather than showing a broken-image box.
+                  errorBuilder: (_, __, ___) =>
+                      Center(child: Text(c.emoji, style: const TextStyle(fontSize: 72))),
+                ),
+              ),
+            ),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: Text('$icon ${tracker.mascotLabel} · ${c.stateAt(stage)}',
+                  style: TextStyle(color: colour, fontWeight: FontWeight.w800, fontSize: 15)),
+            ),
+            Text('$alive ${alive == 1 ? 'day' : 'days'} alive',
+                style: const TextStyle(color: SipColors.muted, fontSize: 12)),
           ]),
-        ),
-      );
+          const SizedBox(height: 6),
+          // Shown at every stage, not only when things are going wrong — the careful user was
+          // being told nothing at all.
+          Text(c.lineAt(stage, tracker.mascotName),
+              style: const TextStyle(color: SipColors.muted, fontSize: 13, height: 1.45)),
+        ]),
+      ),
+    );
+  }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.text, required this.color});
+class _Notice extends StatelessWidget {
+  const _Notice({required this.text, required this.actionLabel, required this.onAction});
   final String text;
-  final Color color;
+  final String actionLabel;
+  final VoidCallback onAction;
+
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: color.withValues(alpha: .15), borderRadius: BorderRadius.circular(999)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
-          Text(text, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121212),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0x4D3B82F6)),
+        ),
+        child: Row(children: [
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 12.5, height: 1.45))),
+          const SizedBox(width: 8),
+          TextButton(onPressed: onAction, child: Text(actionLabel)),
         ]),
       );
 }
 
-/// Lets the demo work before the Accessibility permission is granted.
+class _FactCard extends StatefulWidget {
+  const _FactCard({required this.fact, required this.onClose});
+  final WaterFact fact;
+  final VoidCallback onClose;
+  @override
+  State<_FactCard> createState() => _FactCardState();
+}
+
+class _FactCardState extends State<_FactCard> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = widget.fact;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SipColors.line),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(f.emoji, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _open = true),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(f.hook, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+              if (!_open)
+                const Padding(
+                  padding: EdgeInsets.only(top: 3),
+                  child: Text('Tap to read',
+                      style: TextStyle(color: SipColors.warn, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(f.text, style: const TextStyle(color: SipColors.muted, fontSize: 12.5, height: 1.5)),
+                    const SizedBox(height: 6),
+                    Text('Source: ${f.source}',
+                        style: const TextStyle(color: SipColors.good, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  ]),
+                ),
+            ]),
+          ),
+        ),
+        IconButton(
+          onPressed: widget.onClose,
+          icon: const Icon(Icons.close, size: 18, color: SipColors.muted),
+          tooltip: 'Close',
+        ),
+      ]),
+    );
+  }
+}
+
+class _InsightsCard extends StatelessWidget {
+  const _InsightsCard({required this.tracker});
+  final Tracker tracker;
+
+  @override
+  Widget build(BuildContext context) {
+    final bars = tracker.brandBars;
+    final total = bars.fold(0.0, (a, b) => a + b.$2);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Expanded(child: _Eyebrow('Insights')),
+            Text(tracker.insightScope, style: const TextStyle(color: SipColors.muted, fontSize: 12)),
+          ]),
+          const SizedBox(height: 10),
+          Text(tracker.insightLines.join(' '),
+              style: const TextStyle(fontSize: 13, height: 1.5)),
+          if (bars.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            for (final b in bars)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Row(children: [
+                  SizedBox(width: 68, child: Text(b.$1, style: const TextStyle(fontSize: 12))),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(99),
+                      child: Container(
+                        height: 6,
+                        color: SipColors.surface2,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            widthFactor: total <= 0 ? 0 : (b.$2 / total).clamp(0.0, 1.0),
+                            child: Container(color: SipColors.waterDeep),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 86,
+                    child: Text('${fmt(b.$2)} mL · ${b.$3}',
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(fontSize: 11.5, color: SipColors.muted)),
+                  ),
+                ]),
+              ),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+class _AnalyticsCard extends StatelessWidget {
+  const _AnalyticsCard({required this.tracker});
+  final Tracker tracker;
+
+  @override
+  Widget build(BuildContext context) {
+    final week = tracker.sumMl(7);
+    final all = tracker.allTimeMl;
+    final v = scaleVolume(all);
+    final since = tracker.trackingSince;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Where it goes, over the week rather than today, so one heavy prompt does not define it.
+    final days = tracker.lastDays(7);
+    final s1 = days.fold(0.0, (a, d) => a + d.scope1Ml);
+    final s2 = days.fold(0.0, (a, d) => a + d.scope2Ml);
+    final p1 = (s1 + s2) > 0 ? s1 / (s1 + s2) : 0.15;
+    final a = (p1 * 100).round();
+
+    return Card(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 18),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+          title: const _Eyebrow('Detailed analytics'),
+          children: [
+            Row(children: [
+              Expanded(child: _Metric(value: '${tracker.today.promptCount}', label: 'Prompts today')),
+              const SizedBox(width: 12),
+              Expanded(child: _Metric(value: fmt(week), label: 'mL last 7 days')),
+            ]),
+            const SizedBox(height: 16),
+            const _Eyebrow('All time'),
+            const SizedBox(height: 6),
+            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(v.value, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -1)),
+              const SizedBox(width: 4),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(v.unit, style: const TextStyle(fontSize: 14, color: SipColors.muted, fontWeight: FontWeight.w600)),
+              ),
+              const Spacer(),
+              Text('Tracking since ${months[since.month - 1]} ${since.year}',
+                  style: const TextStyle(color: SipColors.muted, fontSize: 11.5)),
+            ]),
+            const SizedBox(height: 4),
+            Text(macroEquiv(all), style: const TextStyle(color: SipColors.muted, fontSize: 12.5)),
+            const SizedBox(height: 16),
+            const _Eyebrow('Where it goes'),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: SizedBox(
+                height: 8,
+                child: Row(children: [
+                  Expanded(flex: a <= 0 ? 1 : a, child: Container(color: SipColors.good)),
+                  Expanded(flex: (100 - a) <= 0 ? 1 : 100 - a, child: Container(color: SipColors.waterDeep)),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(children: [
+              _LegendDot(colour: SipColors.good, label: 'Server cooling', value: '$a%'),
+              const SizedBox(width: 16),
+              _LegendDot(colour: SipColors.waterDeep, label: 'Power plants', value: '${100 - a}%'),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.value, required this.label});
+  final String value;
+  final String label;
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -.8)),
+        const SizedBox(height: 2),
+        _Eyebrow(label),
+      ]);
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.colour, required this.label, required this.value});
+  final Color colour;
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: colour, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 6),
+        Text('$label $value', style: const TextStyle(color: SipColors.muted, fontSize: 11.5)),
+      ]);
+}
+
 class _DemoRow extends StatelessWidget {
   const _DemoRow({required this.tracker});
   final Tracker tracker;
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Try it (demo)', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Try it (test build)', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            const Text('Adds a fake prompt so you can see the counter move.', style: TextStyle(color: SipColors.muted, fontSize: 12)),
+            const Text('Adds a fake prompt so you can see the counter move.',
+                style: TextStyle(color: SipColors.muted, fontSize: 12)),
             const SizedBox(height: 10),
             Wrap(spacing: 8, runSpacing: 8, children: [
               OutlinedButton(onPressed: () => tracker.simulate(charCount: 400), child: const Text('Standard prompt')),
               OutlinedButton(onPressed: () => tracker.simulate(modelHint: 'o3', charCount: 400), child: const Text('Reasoning')),
-              OutlinedButton(onPressed: () => tracker.simulate(vendor: 'google', modelHint: 'flash', charCount: 400), child: const Text('Lightweight')),
-              OutlinedButton(onPressed: () => tracker.simulate(task: TaskType.image), child: const Text('Image')),
+              OutlinedButton(
+                  onPressed: () => tracker.simulate(vendor: 'google', modelHint: 'flash', charCount: 400),
+                  child: const Text('Lightweight')),
             ]),
           ]),
         ),
       );
-}
-
-class _DropletPainter extends CustomPainter {
-  _DropletPainter(this.fill);
-  final double fill; // 0..1
-
-  Path _drop(Size s) {
-    final w = s.width, h = s.height;
-    final cx = w / 2;
-    final r = math.min(w, h) * .33;
-    final cy = h - r - 4;
-    final p = Path()..moveTo(cx, 4);
-    p.cubicTo(cx + r * .05, h * .30, cx + r, cy - r * .55, cx + r, cy);
-    p.arcToPoint(Offset(cx - r, cy), radius: Radius.circular(r), clockwise: true, largeArc: true);
-    p.cubicTo(cx - r, cy - r * .55, cx - r * .05, h * .30, cx, 4);
-    p.close();
-    return p;
-  }
-
-  @override
-  void paint(Canvas c, Size s) {
-    final path = _drop(s);
-    c.drawPath(path, Paint()..color = SipColors.surface2);
-    c.save();
-    c.clipPath(path);
-    final top = s.height * (1 - fill);
-    c.drawRect(Rect.fromLTWH(0, top, s.width, s.height - top), Paint()..shader = const LinearGradient(colors: [SipColors.water, SipColors.waterDeep], begin: Alignment.topCenter, end: Alignment.bottomCenter).createShader(Rect.fromLTWH(0, top, s.width, s.height - top)));
-    c.restore();
-    c.drawPath(path, Paint()..color = SipColors.line..style = PaintingStyle.stroke..strokeWidth = 1.5);
-  }
-
-  @override
-  bool shouldRepaint(_DropletPainter old) => old.fill != fill;
 }

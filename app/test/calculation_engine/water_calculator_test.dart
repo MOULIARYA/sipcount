@@ -79,11 +79,18 @@ void main() {
           inputTokens: (g['inputTokens'] as num).toInt(),
           outputTokens: (g['outputTokens'] as num?)?.toInt(),
           itemCount: (g['items'] as num?)?.toInt() ?? 1,
+          // Absent from the first five cases, which is exactly how the Dart side went weeks
+          // without being able to express either of them (I-62).
+          hidden: (g['hiddenTokens'] as num?)?.toInt() ?? 0,
+          contextTokens: (g['contextTokens'] as num?)?.toInt() ?? 0,
+          contextPerThousand: (raw['context']['per_thousand'] as num).toDouble(),
+          contextMax: (raw['context']['max'] as num).toDouble(),
         );
         expect(e.energyWh, closeTo((g['expect_energy_wh'] as num).toDouble(), eps));
         expect(e.scope1Ml, closeTo((g['expect_scope1_ml'] as num).toDouble(), eps));
         expect(e.scope2Ml, closeTo((g['expect_scope2_ml'] as num).toDouble(), eps));
         expect(e.totalMl, closeTo((g['expect_total_ml'] as num).toDouble(), eps));
+        expect(e.inputShare, closeTo((g['expect_input_share'] as num).toDouble(), 1e-5));
       });
     }
   });
@@ -139,6 +146,60 @@ void main() {
     test('excluding hydro lowers the grid figure where it matters', () {
       final nordic = regionOf('nordic');
       expect(nordic.gridFor(includeHydro: false)!, lessThan(nordic.gridFor(includeHydro: true)!));
+    });
+  });
+
+  /* ---- the corrections the phone could not express until 2026-10-06 ------------------------
+     `estimate()` charges whatever unseen work it is handed. The judgement about how much there
+     is — and that a reasoning model has none, because it is already priced at roughly ten times
+     a standard one — lives in the rule, so the rule is pinned from generated fixtures rather
+     than described in a comment. */
+  group('unseen work follows the same rule as the extension', () {
+    final fixtures = (raw['hidden_rule'] as List).cast<Map<String, dynamic>>();
+    final th = raw['thinking'] as Map<String, dynamic>;
+
+    test('there are fixtures to check', () => expect(fixtures, isNotEmpty));
+
+    for (final f in fixtures) {
+      final label = '${f['active_ms']} ms, ${f['output_tokens']} out, ${f['tier']}';
+      test('$label reproduces engine.js', () {
+        expect(
+          WaterCalculator.hiddenTokens(
+            active: Duration(milliseconds: (f['active_ms'] as num).toInt()),
+            outputTokens: (f['output_tokens'] as num).toInt(),
+            tier: ModelTier.values.byName(f['tier'] as String),
+            tokensPerSec: (th['tokens_per_sec'] as num).toDouble(),
+            floorSec: (th['floor_sec'] as num).toDouble(),
+            maxSec: (th['max_sec'] as num).toDouble(),
+          ),
+          (f['expect_hidden_tokens'] as num).toInt(),
+        );
+      });
+    }
+
+    test('a five-minute research turn is worth far more than its visible answer', () {
+      // The fault this is here to prevent: Madhur's real five-minute research turn read 1 mL and
+      // was worth about 176. A turn whose unseen work does not dwarf the answer means the rule
+      // has stopped working.
+      final hidden = WaterCalculator.hiddenTokens(
+          active: const Duration(minutes: 5), outputTokens: 600, tier: ModelTier.standard);
+      expect(hidden, greaterThan(600 * 10));
+    });
+  });
+
+  group('a long conversation costs more per answer', () {
+    test('a fresh chat is unmultiplied', () => expect(WaterCalculator.contextFactor(0), 1));
+
+    test('the multiplier is capped', () {
+      expect(WaterCalculator.contextFactor(100000000,
+              perThousand: (raw['context']['per_thousand'] as num).toDouble(),
+              max: (raw['context']['max'] as num).toDouble()),
+          (raw['context']['max'] as num).toDouble());
+    });
+
+    test('30k of thread costs about 2.5x per answer token', () {
+      final per = (raw['context']['per_thousand'] as num).toDouble();
+      expect(WaterCalculator.contextFactor(30000, perThousand: per), closeTo(1 + per * 30, 1e-9));
     });
   });
 }

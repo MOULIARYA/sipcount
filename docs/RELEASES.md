@@ -55,7 +55,7 @@ is the centre of the privacy claim — but it means the field can lag by however
 |---|---|---|---|---|---|---|
 | APK #18 | 2026-09-30 | 2026-09-30 | 11 | accessibility listener | 🔴 | **Class C.** Budget defaulted to 100 mL (agreed 500) and region defaulted to `us_default`, an id that no longer exists — so the first prompt counted would have thrown (I-59). Superseded; do not use |
 | APK #19, #20 | 2026-10-01 | — | — | — | ⚫ | Never built: compile errors (I-53) |
-| next APK | pending | 2026-09-30 | 11 | accessibility listener + probe spike | 🟡 | Fixes I-59, raises the budget, retires the Scope 1/2 wording, gates the demo row and the probe behind `SIPCOUNT_DEMO`. Still contract 11, so still three revisions behind the design (P7) |
+| next APK | pending | 2026-09-30 | **15** | accessibility listener + probe spike | 🟡 | **The port (I-63).** Four screens, the draining drop, the characters on Mouli's art, insights, analytics, fact cards, the Simulate estimator, the About copy, the intro age band. Also fixes I-59, raises the budget to 500, retires the Scope 1/2 wording, gates the demo row and the probe behind `SIPCOUNT_DEMO`, and brings the phone's calculator up to the shared engine (I-62). **Class B for anyone on APK #18**: their stored totals are fine and carry forward, but a day recorded before this build has no brand breakdown, so the insights card simply says so rather than guessing |
 
 **Distribution:** sideloaded APK only, and that channel is now effectively closed in India — Play
 Protect blocks sideloaded apps declaring `ACCESSIBILITY` (I-57). Testing moves to the Play internal

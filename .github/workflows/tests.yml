@@ -41,7 +41,7 @@ jobs:
       - name: Generated files are in step with engine.js
         run: |
           node tools/build-shared.js
-          git diff --exit-code -- browser_extension/engine.js app/assets/calc/models.v2.json docs/constants.json \
+          git diff --exit-code -- browser_extension/engine.js app/assets/calc/models.v2.json docs/constants.json app/assets/characters \
             || (echo "::error::A generated file is stale or was hand-edited. Run: node tools/build-shared.js" && exit 1)
 
       - name: One calculator, and the extension starts

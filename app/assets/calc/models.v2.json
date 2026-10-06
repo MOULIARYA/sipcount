@@ -12,6 +12,15 @@
   "token_estimation": {
     "chars_per_token": 4
   },
+  "thinking": {
+    "tokens_per_sec": 90,
+    "floor_sec": 1.5,
+    "max_sec": 900
+  },
+  "context": {
+    "per_thousand": 0.05,
+    "max": 4
+  },
   "token_weights": {
     "input": 0.2,
     "output": 1
@@ -275,10 +284,209 @@
     "flush": 6000,
     "showerMin": 9000
   },
+  "zones": {
+    "green": 0.5,
+    "amber": 0.7
+  },
+  "zone_ui": {
+    "green": {
+      "icon": "✓",
+      "label": "Optimal"
+    },
+    "amber": {
+      "icon": "⚠️",
+      "label": "Elevated"
+    },
+    "red": {
+      "icon": "🛑",
+      "label": "Limit Exceeded"
+    }
+  },
+  "brands": {
+    "openai": "ChatGPT",
+    "anthropic": "Claude",
+    "google": "Gemini",
+    "unknown": "Other"
+  },
+  "characters": {
+    "plant": [
+      "plant-0.webp",
+      "plant-1.webp",
+      "plant-2.webp",
+      "plant-3.webp",
+      "plant-4.webp"
+    ],
+    "bear": [
+      "bear-0.webp",
+      "bear-1.webp",
+      "bear-2.webp",
+      "bear-3.webp",
+      "bear-4.webp"
+    ],
+    "glacier": [
+      "glacier-0.webp",
+      "glacier-1.webp",
+      "glacier-2.webp",
+      "glacier-3.webp",
+      "glacier-4.webp"
+    ],
+    "leopard": [
+      "leopard-0.webp",
+      "leopard-1.webp",
+      "leopard-2.webp",
+      "leopard-3.webp",
+      "leopard-4.webp"
+    ]
+  },
+  "facts": [
+    {
+      "emoji": "💧",
+      "hook": "How much water is drinkable?",
+      "text": "Only 2.5% of Earth's water is fresh — and just 1.2% of that is in rivers and lakes.",
+      "full": "Of all water on Earth, about 2.5% is freshwater. Of that, 68.7% is locked in ice and snow and 30.1% is groundwater; only around 1.2% is surface water such as rivers, lakes and swamps.",
+      "source": "USGS Water Science School",
+      "url": "https://www.usgs.gov/special-topics/water-science-school/science/where-earths-water"
+    },
+    {
+      "emoji": "⚡",
+      "hook": "Your charger has a water bill",
+      "text": "Making 1 kWh of US electricity used about 57 litres of water in 2015.",
+      "full": "US power plants withdrew about 15 gallons (57 litres) of water per kilowatt-hour generated in 2015. Most is returned to the source warmer; a share evaporates.",
+      "source": "USGS 2015",
+      "url": "https://www.usgs.gov/mission-areas/water-resources/science/thermoelectric-power-water-use"
+    },
+    {
+      "emoji": "🖥️",
+      "hook": "Data centres are growing fast",
+      "text": "US data centres used 4.4% of the country’s electricity in 2023 — could hit 12% by 2028.",
+      "full": "Lawrence Berkeley National Laboratory estimates US data centres consumed 176 TWh in 2023 and could reach 325–580 TWh by 2028, driven largely by AI hardware.",
+      "source": "LBNL 2024 report",
+      "url": "https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf"
+    },
+    {
+      "emoji": "🌡️",
+      "hook": "What training GPT-3 drank",
+      "text": "Training GPT-3 evaporated about 700,000 litres of clean water — mostly to cool the servers.",
+      "full": "Researchers estimate training GPT-3 in Microsoft’s US data centres directly evaporated about 700,000 litres of freshwater for cooling.",
+      "source": "Li et al. 2023",
+      "url": "https://arxiv.org/abs/2304.03271"
+    },
+    {
+      "emoji": "🤖",
+      "hook": "Five drops per prompt",
+      "text": "A typical Gemini text prompt uses about 0.26 mL of water on-site — roughly five drops.",
+      "full": "Google measured a median Gemini Apps text prompt at 0.24 Wh and 0.26 mL of water for data-centre cooling (August 2025). That excludes the water used to make the electricity, which Sipcount adds.",
+      "source": "Google 2025",
+      "url": "https://arxiv.org/abs/2508.15734"
+    },
+    {
+      "emoji": "📈",
+      "hook": "Google's water bill, in one year",
+      "text": "Google used about 41 billion litres of water in 2025 — up 34% in a single year.",
+      "full": "Google reported 10.9 billion gallons (about 41 billion litres) of water consumption in 2025, a 34% rise on the year before, driven by its AI data-centre buildout. It says replenishment projects returned roughly 78% of that volume to watersheds.",
+      "source": "Google Environmental Report 2026",
+      "url": "https://sustainability.google/google-2026-environmental-report/"
+    },
+    {
+      "emoji": "🚱",
+      "hook": "1 in 4 people…",
+      "text": "2.2 billion people still lacked safely managed drinking water in 2022.",
+      "full": "The WHO/UNICEF Joint Monitoring Programme reports that in 2022, 2.2 billion people lacked safely managed drinking water, including 115 million who drank untreated surface water.",
+      "source": "WHO/UNICEF JMP 2023",
+      "url": "https://www.unwater.org/publications/who/unicef-joint-monitoring-program-update-report-2023"
+    },
+    {
+      "emoji": "🌍",
+      "hook": "25 countries running dry",
+      "text": "25 countries — home to 1 in 4 people — use up almost their entire water supply every year.",
+      "full": "WRI’s Aqueduct 4.0 (2023) finds 25 countries, housing a quarter of the world’s population, face extremely high water stress — using more than 80% of their renewable supply each year.",
+      "source": "WRI Aqueduct 4.0",
+      "url": "https://www.wri.org/insights/highest-water-stressed-countries"
+    },
+    {
+      "emoji": "🇮🇳",
+      "hook": "India’s water stress, in one number",
+      "text": "Nearly 600 million Indians face high-to-extreme water stress.",
+      "full": "NITI Aayog’s Composite Water Management Index (2018) found nearly 600 million Indians facing high to extreme water stress.",
+      "source": "NITI Aayog CWMI 2018",
+      "url": "https://www.pib.gov.in/newsite/PrintRelease.aspx?relid=195635"
+    },
+    {
+      "emoji": "🌾",
+      "hook": "Where most water really goes",
+      "text": "Farms use 72% of all the freshwater humans take from rivers and aquifers.",
+      "full": "The FAO puts agriculture at 72% of global freshwater withdrawals, mostly for irrigation — the largest single human use of water.",
+      "source": "FAO",
+      "url": "https://www.fao.org/land-water/water/agricultural-water-management/en"
+    },
+    {
+      "emoji": "🏜️",
+      "hook": "A lake, half gone",
+      "text": "Utah’s Great Salt Lake shrank from ~2,300 sq mi in 1986 to under 1,000 in 2022.",
+      "full": "The Great Salt Lake covered about 2,300 square miles at its 1986 high and fell below 1,000 square miles in 2022, a record low.",
+      "source": "USGS Utah",
+      "url": "https://www.usgs.gov/centers/utah-water-science-center/science/great-salt-lake-elevations-and-areal-extent"
+    }
+  ],
+  "fact_cadence": {
+    "every_prompts": 5,
+    "max_per_day": 2,
+    "on_open": false
+  },
   "range": {
     "low": 0.2,
     "high": 3.9
   },
+  "hidden_rule": [
+    {
+      "active_ms": 1500,
+      "output_tokens": 300,
+      "tier": "standard",
+      "expect_hidden_tokens": 0
+    },
+    {
+      "active_ms": 5000,
+      "output_tokens": 300,
+      "tier": "standard",
+      "expect_hidden_tokens": 15
+    },
+    {
+      "active_ms": 30000,
+      "output_tokens": 300,
+      "tier": "standard",
+      "expect_hidden_tokens": 2265
+    },
+    {
+      "active_ms": 300000,
+      "output_tokens": 600,
+      "tier": "standard",
+      "expect_hidden_tokens": 26265
+    },
+    {
+      "active_ms": 300000,
+      "output_tokens": 600,
+      "tier": "reasoning",
+      "expect_hidden_tokens": 0
+    },
+    {
+      "active_ms": 300000,
+      "output_tokens": 600,
+      "tier": "lightweight",
+      "expect_hidden_tokens": 26265
+    },
+    {
+      "active_ms": 0,
+      "output_tokens": 300,
+      "tier": "standard",
+      "expect_hidden_tokens": 0
+    },
+    {
+      "active_ms": 9000000000,
+      "output_tokens": 300,
+      "tier": "standard",
+      "expect_hidden_tokens": 80700
+    }
+  ],
   "golden": [
     {
       "region": "us_hyperscale",
@@ -289,7 +497,8 @@
       "expect_energy_wh": 0.3,
       "expect_scope1_ml": 0.19305,
       "expect_scope2_ml": 1.102842,
-      "expect_total_ml": 1.295892
+      "expect_total_ml": 1.295892,
+      "expect_input_share": 0.0625
     },
     {
       "region": "india",
@@ -300,7 +509,8 @@
       "expect_energy_wh": 0.3,
       "expect_scope1_ml": 0.858,
       "expect_scope2_ml": 1.47576,
-      "expect_total_ml": 2.33376
+      "expect_total_ml": 2.33376,
+      "expect_input_share": 0.0625
     },
     {
       "region": "us_hyperscale",
@@ -311,7 +521,8 @@
       "expect_energy_wh": 6.5625,
       "expect_scope1_ml": 4.222969,
       "expect_scope2_ml": 24.124669,
-      "expect_total_ml": 28.347638
+      "expect_total_ml": 28.347638,
+      "expect_input_share": 0.142857
     },
     {
       "region": "eu_average",
@@ -322,7 +533,8 @@
       "expect_energy_wh": 0.024375,
       "expect_scope1_ml": 0.000848,
       "expect_scope2_ml": 0.111686,
-      "expect_total_ml": 0.112534
+      "expect_total_ml": 0.112534,
+      "expect_input_share": 0.076923
     },
     {
       "region": "singapore",
@@ -334,7 +546,61 @@
       "expect_energy_wh": 5.8,
       "expect_scope1_ml": 16.3328,
       "expect_scope2_ml": 5.568,
-      "expect_total_ml": 21.9008
+      "expect_total_ml": 21.9008,
+      "expect_input_share": 0
+    },
+    {
+      "region": "us_hyperscale",
+      "tier": "standard",
+      "task": "text",
+      "inputTokens": 100,
+      "outputTokens": 300,
+      "hiddenTokens": 24300,
+      "expect_energy_wh": 23.08125,
+      "expect_scope1_ml": 14.852784,
+      "expect_scope2_ml": 84.849906,
+      "expect_total_ml": 99.702691,
+      "expect_input_share": 0.000812
+    },
+    {
+      "region": "india",
+      "tier": "standard",
+      "task": "text",
+      "inputTokens": 100,
+      "outputTokens": 300,
+      "contextTokens": 30000,
+      "expect_energy_wh": 0.721875,
+      "expect_scope1_ml": 2.064563,
+      "expect_scope2_ml": 3.551048,
+      "expect_total_ml": 5.61561,
+      "expect_input_share": 0.025974
+    },
+    {
+      "region": "us_hyperscale",
+      "tier": "reasoning",
+      "task": "text",
+      "inputTokens": 100,
+      "outputTokens": 300,
+      "hiddenTokens": 0,
+      "expect_energy_wh": 3,
+      "expect_scope1_ml": 1.9305,
+      "expect_scope2_ml": 11.02842,
+      "expect_total_ml": 12.95892,
+      "expect_input_share": 0.0625
+    },
+    {
+      "region": "eu_average",
+      "tier": "lightweight",
+      "task": "code",
+      "inputTokens": 500,
+      "outputTokens": 600,
+      "hiddenTokens": 2250,
+      "contextTokens": 8000,
+      "expect_energy_wh": 0.598125,
+      "expect_scope1_ml": 0.020815,
+      "expect_scope2_ml": 2.740609,
+      "expect_total_ml": 2.761424,
+      "expect_input_share": 0.031348
     }
   ]
 }

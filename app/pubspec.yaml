@@ -25,3 +25,7 @@ flutter:
     # The old models.json (constants v2026-09-14, 2 regions, no output-token weighting) is deleted:
     # leaving a stale constants file on disk is exactly how the three products drifted apart.
     - assets/calc/models.v2.json
+    # GENERATED too — synced from the repo root by tools/build-shared.js. The art is Mouli's and
+    # the prototype reads it from /assets; copying rather than duplicating keeps one source, so
+    # the phone can never show a different picture from the reference design.
+    - assets/characters/
