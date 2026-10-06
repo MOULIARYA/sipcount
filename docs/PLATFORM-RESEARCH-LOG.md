@@ -49,6 +49,53 @@ Not a reading list. Each item is answered with a quote and a URL, or recorded as
 
 ---
 
+## 2026-10-06 — the no-VPN polling experiment, run on a real phone
+
+**Trigger:** I-60. Madhur recorded ~8 minutes on his Android phone across ChatGPT, Claude and
+Gemini, with the probe polling `querySummary` per UID once a second.
+
+**Answer: no. Per-app byte counters cannot resolve an individual prompt.** They can see that a
+session happened and roughly how big it was, which is useful but is not what the product needs.
+
+What the log shows, out of ~430 rows:
+
+- **Three rows exceed 1 kB. Three.** `20:28:37` ChatGPT +358,378 up / +624,173 down; `20:28:41`
+  +1,190 / +361; `20:31:04` Claude +119,723 up / **+2,145,010 down**.
+- **Everything else is jitter of 1–18 bytes, and about half of it is negative.** A byte counter
+  cannot decrease, so those are not traffic: `querySummary` apportions a partially covered bucket
+  by the fraction of it our window spans, and as the window end advances the rounding wobbles.
+- **The counters are flushed in batches, minutes apart.** ChatGPT's `total_up` sat at exactly
+  177,102 for over three minutes of active use, then one second dumped 358 kB. That is the system
+  writing accumulated stats, not the traffic arriving.
+
+**My diagnostic column was worthless and I should say so.** I added `bucket_span_s` expecting it to
+reveal the data's granularity. It ran 3,643 → 4,109, rising by one per second — it was reporting
+*our own query window*, because `querySummary` aggregates over time and returns buckets stamped
+with the range you asked for. The thing that actually answered the question was the shape of the
+deltas, which I had not planned to look at. The experiment worked; the instrument I was proudest of
+did not.
+
+**A second bug the run exposed:** no Gemini rows, although Madhur used Gemini. Gemini lives inside
+the Google app (`com.google.android.googlequicksearchbox`) on most phones — **our own accessibility
+config has said so since September** and I wrote the probe without reading it. Fixed.
+
+**What is genuinely salvageable:** per-app *session* byte totals, with no VPN and no accessibility
+permission. ~358 kB up / 624 kB down for a ChatGPT session, 2.1 MB down for Claude. That is a
+legitimate cross-check against what the accessibility listener measures, and a coarse fallback for
+apps we have no selectors for. It is not a prompt-level sensor and must never be described as one.
+
+**Decisions:**
+- Prompt-level byte accounting on Android requires a `VpnService`. Confirmed empirically, not
+  assumed (I-60, I-55).
+- The accessibility listener stays the primary sensor: it reads the prompt and the answer directly,
+  which is what the extension does and what the number is built from.
+- Keep the polling route only as a session-level cross-check, clearly labelled.
+
+**What would change our mind next pass:** a documented way to force a stats flush, or a per-UID API
+with sub-minute guarantees. Neither exists today.
+
+**Next pass due:** 2026-10-09.
+
 ## 2026-10-05 — Android and iOS sensing, after Madhur challenged the accessibility plan
 
 **Trigger:** Madhur asked whether traffic can be observed without the accessibility service, and

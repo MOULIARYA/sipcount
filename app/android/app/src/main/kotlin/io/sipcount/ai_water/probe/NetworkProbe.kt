@@ -52,11 +52,20 @@ import java.util.Locale
  */
 object NetworkProbe {
 
-    /** The apps worth watching. Anything not installed is skipped rather than failing. */
+    /**
+     * The apps worth watching. Anything not installed is skipped rather than failing.
+     *
+     * Madhur's first run used Gemini and the log showed nothing for it, because on most phones
+     * Gemini is not a separate app — it lives inside the Google app. Our own accessibility config
+     * has listed `googlequicksearchbox` for exactly this reason since September; the probe was
+     * written without looking at it. Both package names map to the same label so a phone with
+     * either (or both) reports as "Gemini".
+     */
     private val WATCH = mapOf(
         "com.openai.chatgpt" to "ChatGPT",
         "com.anthropic.claude" to "Claude",
-        "com.google.android.apps.bard" to "Gemini"
+        "com.google.android.apps.bard" to "Gemini",
+        "com.google.android.googlequicksearchbox" to "Gemini"
     )
 
     private const val INTERVAL_MS = 1_000L
@@ -70,8 +79,8 @@ object NetworkProbe {
     )
 
     private val samples = ArrayList<Sample>()
-    private val lastRx = HashMap<String, Long>()
-    private val lastTx = HashMap<String, Long>()
+    private val lastRx = HashMap<Int, Long>()
+    private val lastTx = HashMap<Int, Long>()
     private var thread: HandlerThread? = null
     private var handler: Handler? = null
     @Volatile private var running = false
@@ -99,8 +108,10 @@ object NetworkProbe {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
+    /// `distinct()` because two packages share the label "Gemini"; without it the screen would
+    /// read "ChatGPT, Claude, Gemini, Gemini".
     fun installedApps(ctx: Context): List<String> =
-        WATCH.filter { uidOf(ctx, it.key) != null }.map { it.value }
+        WATCH.filter { uidOf(ctx, it.key) != null }.map { it.value }.distinct()
 
     private fun uidOf(ctx: Context, pkg: String): Int? = try {
         ctx.packageManager.getApplicationInfo(pkg, 0).uid
@@ -116,9 +127,9 @@ object NetworkProbe {
      * undocumented rather than documented-as-hours. Each call is a binder round-trip that the docs
      * say "may take several seconds", so this never runs on the main thread.
      */
-    private fun readWatched(ctx: Context, wanted: Map<Int, String>): Map<String, Totals> {
+    private fun readWatched(ctx: Context, wanted: Map<Int, String>): Map<Int, Totals> {
         val nsm = ctx.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
-        val out = HashMap<String, Totals>()
+        val out = HashMap<Int, Totals>()
         val now = System.currentTimeMillis()
         @Suppress("DEPRECATION")
         for (type in intArrayOf(ConnectivityManager.TYPE_WIFI, ConnectivityManager.TYPE_MOBILE)) {
@@ -127,8 +138,11 @@ object NetworkProbe {
                 stats = nsm.querySummary(type, null, windowStart, now)
                 val b = NetworkStats.Bucket()
                 while (stats.hasNextBucket() && stats.getNextBucket(b)) {
-                    val name = wanted[b.uid] ?: continue
-                    val t = out.getOrPut(name) { Totals() }
+                    if (!wanted.containsKey(b.uid)) continue
+                    // Keyed by UID, not by label. Two packages now share the label "Gemini" (the
+                    // standalone app and the Google app that hosts it); summing them meant a tick
+                    // where only one appeared in the buckets would look like the total going DOWN.
+                    val t = out.getOrPut(b.uid) { Totals() }
                     t.rx += b.rxBytes
                     t.tx += b.txBytes
                     // the whole point of the experiment: how wide is the bucket the system gave us?
@@ -165,8 +179,9 @@ object NetworkProbe {
             override fun run() {
                 if (!running) return
                 val now = System.currentTimeMillis()
-                for ((name, tot) in readWatched(app, wanted)) {
-                    val pRx = lastRx[name]; val pTx = lastTx[name]
+                for ((uid, tot) in readWatched(app, wanted)) {
+                    val name = wanted[uid] ?: continue
+                    val pRx = lastRx[uid]; val pTx = lastTx[uid]
                     // the first reading only establishes a baseline — a delta needs two points
                     if (pRx != null && pTx != null && (tot.rx != pRx || tot.tx != pTx)) {
                         if (synchronized(samples) { samples.size } < MAX_SAMPLES) {
@@ -176,7 +191,7 @@ object NetworkProbe {
                             }
                         } else capped = true   // say so rather than silently dropping rows
                     }
-                    lastRx[name] = tot.rx; lastTx[name] = tot.tx
+                    lastRx[uid] = tot.rx; lastTx[uid] = tot.tx
                 }
                 h.postDelayed(this, INTERVAL_MS)
             }

@@ -131,8 +131,12 @@ Full reasoning in `ISSUES.md`; this is the index.
 3. **Endpoint security** may block per-process network reads on managed laptops (track B).
 4. **The Dart engine has never been run** by anyone here. Written and checked against the real
    numbers, but CI has to go green before it is trusted.
-5. **Neither test suite sees pixels.** Every visual bug that reached Mouli this month was of a kind
-   they cannot catch.
+5. **No test we have sees pixels or timing, and this is now the largest gap.** 265 assertions were
+   green while the hero drop rendered as a green cone (an inverted arc sweep) and the launch
+   sequence ran as a single static screen with statistics I had invented. Both were found by one
+   screenshot from Madhur's phone. Until something renders a widget and compares it, the phone in
+   someone's hand is the only check on anything visual — so a build is not "done" until it has been
+   looked at. See I-66.
 6. **No test suite compiles Kotlin.** The Dart gets analysed and run in CI; the Android native side
    is only ever checked by `Android APK`, which runs last and takes three minutes. Build #19 failed
    on a brace in `MainActivity.kt` that no reviewer and no suite could have caught — the first

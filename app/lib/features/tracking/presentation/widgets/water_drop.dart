@@ -80,8 +80,12 @@ class _DropPainter extends CustomPainter {
   static Path _silhouette() => Path()
     ..moveTo(50, 4)
     ..cubicTo(50, 4, 12, 52, 12, 82)
-    // `a38 38 0 0 0 76 0` — a half-circle of radius 38 forming the bowl
-    ..arcToPoint(const Offset(88, 82), radius: const Radius.circular(38))
+    /* `a38 38 0 0 0 76 0` — the last 0 before the coordinates is SVG's sweep flag, and it means
+       counter-clockwise. I left Flutter's `clockwise` at its default of true, which swung the
+       semicircle UP instead of down: the bowl became a concave arch and the whole drop rendered as
+       a green cone. Visible in the first screenshot from the phone, and invisible to every test we
+       have, because none of them looks at pixels. */
+    ..arcToPoint(const Offset(88, 82), radius: const Radius.circular(38), clockwise: false)
     ..cubicTo(88, 52, 50, 4, 50, 4)
     ..close();
 
