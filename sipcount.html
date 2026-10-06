@@ -1266,7 +1266,7 @@ function insights(){
   const scope = T.n?'today':'this week'; const days = T.n?[dayKey(new Date())]:keys;
   const D=DAYS(); days.forEach(k=>{ const b=D[k]; if(!b) return; agg.n+=b.n; agg.ml+=b.s1+b.s2; for(const v in (b.vendor||{})){ const a=(agg.vendor[v] ||= {n:0,ml:0,tiers:{}}); a.n+=b.vendor[v].n; a.ml+=b.vendor[v].ml; for(const t in (b.vendor[v].tiers||{})){ const x=(a.tiers[t] ||= {n:0,ml:0}); x.n+=b.vendor[v].tiers[t].n; x.ml+=b.vendor[v].tiers[t].ml; } } for(const t in (b.tier||{})) agg.tiers[t]=(agg.tiers[t]||0)+b.tier[t]; });
   const brands=Object.entries(agg.vendor).sort((a,b)=>b[1].ml-a[1].ml);
-  if(!agg.n || !agg.ml || !brands.length) return { scope, total:agg.ml, text: !agg.n?'Log a prompt and the insights appear here.':!agg.ml?'Nothing measurable yet — those prompts used no tokens.':'Older data has no brand breakdown yet — new prompts will show which AI you used.', brands:[] };
+  if(!agg.n || !agg.ml || !brands.length) return { scope, total:agg.ml, text: !agg.n?'Log a prompt and the insights appear here.':!agg.ml?'Nothing measurable yet — those prompts were too short to register.':'Older data has no brand breakdown yet — new prompts will show which AI you used.', brands:[] };
   const [topV, top]=brands[0]; const topTier=Object.entries(top.tiers||{}).sort((a,b)=>b[1].ml-a[1].ml)[0]?.[0] ?? 'standard';
   const lightN=Object.values(agg.vendor).reduce((s,v)=>s+((v.tiers.lightweight?.n||0)+(v.tiers.standard?.n||0)),0);
   const heaviest = agg.tiers.reasoning?'reasoning':agg.tiers.standard?'standard':'lightweight';
