@@ -161,6 +161,16 @@ const models = {
      handed; the judgement about how many there are — and that a reasoning model has none, because
      it is already priced at ~10× — lives in `hiddenFrom()`. The phone has to apply the same
      judgement, so it is pinned rather than described. */
+  /* Number formatting, pinned. `fmt` looks too trivial to test, which is exactly why it was wrong:
+     the engine passes `minimumFractionDigits: 0`, so `d` is a maximum and a whole number prints
+     bare. The first Dart version padded with `toStringAsFixed`, which would have shown "1.0
+     standard drinking glass" and "2.0 mL" on every screen (I-65). Generated, so the phone is held
+     to what the engine actually prints rather than to anyone's memory of it. */
+  fmt_cases: [
+    [1, 1], [2, 1], [2.5, 1], [1204, 0], [0.5, 2], [1, 2], [9, null], [9.5, null],
+    [0, 1], [12.04, 1], [1234567, 0], [-1204, 0], [-9.5, null], [0.004, 2], [999.95, 1],
+  ].map(([n, d]) => ({ n, d, expect: d === null ? fmt(n) : fmt(n, d) })),
+
   hidden_rule: (() => {
     const cases = [
       { active_ms: 1500,   output_tokens: 300, tier: 'standard'    },   // the floor: nothing yet

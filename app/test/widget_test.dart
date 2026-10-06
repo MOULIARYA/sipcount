@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -95,10 +98,25 @@ void main() {
       expect(scaleVolume(5e6).unit, 'm³');
     });
 
-    test('thousands are grouped without pulling in a localisation package', () {
-      expect(fmt(1204, 0), '1,204');
-      expect(fmt(9.5), '9.5');
-      expect(fmt(-1204, 0), '-1,204');
+    test('numbers print exactly as engine.js prints them', () {
+      // Read from the generated constants, not written here. `fmt` looked too trivial to pin, and
+      // that is precisely why it was wrong: the first version padded whole numbers to "1.0", which
+      // would have reached every screen (I-65).
+      final cases = (jsonDecode(File('assets/calc/models.v2.json').readAsStringSync())
+          as Map<String, dynamic>)['fmt_cases'] as List;
+      expect(cases, isNotEmpty);
+      for (final c in cases.cast<Map<String, dynamic>>()) {
+        final n = c['n'] as num;
+        final d = (c['d'] as num?)?.toInt();
+        expect(d == null ? fmt(n) : fmt(n, d), c['expect'] as String,
+            reason: 'fmt($n, $d)');
+      }
+    });
+
+    test('a whole number of glasses is not written as 1.0', () {
+      // The specific sentence the padding would have broken.
+      expect(fmt(1, 1), '1');
+      expect(fmt(2, 1), '2');
     });
 
     test('nothing tracked says nothing tracked', () {

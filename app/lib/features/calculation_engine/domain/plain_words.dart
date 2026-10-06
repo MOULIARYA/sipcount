@@ -13,9 +13,19 @@ library;
 /// Hand-written rather than pulled from `intl`, which would add a package and its locale data to
 /// an app whose whole pitch is that it is light, to get grouping commas. Fixed separators, not
 /// locale-aware — a deliberate limit, recorded here rather than discovered later.
+///
+/// `d` is a MAXIMUM, not a fixed width: the engine passes `minimumFractionDigits: 0`, so a whole
+/// number prints bare. My first version used `toStringAsFixed` and padded instead, which would
+/// have put "1.0 standard drinking glass" and "2.0 mL" in front of users on every screen. The
+/// plural test caught it; `fmt_cases` in the shared constants now pins it to the engine rather
+/// than to my reading of the engine (I-65).
 String fmt(num n, [int? decimals]) {
   final d = decimals ?? (n.abs() < 10 ? 1 : 0);
-  final fixed = n.toStringAsFixed(d);
+  var fixed = n.toStringAsFixed(d);
+  if (fixed.contains('.')) {
+    fixed = fixed.replaceAll(RegExp(r'0+$'), '');
+    if (fixed.endsWith('.')) fixed = fixed.substring(0, fixed.length - 1);
+  }
   final neg = fixed.startsWith('-');
   final body = neg ? fixed.substring(1) : fixed;
   final dot = body.indexOf('.');

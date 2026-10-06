@@ -60,7 +60,7 @@ console.log('\nTHE EXTENSION LOADS THE WAY CHROME LOADS IT');
 }
 
 /* load both engines the way their own product does */
-const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, scriptOf, hiddenFrom, contextFactor, ZONE_UI};'))();
+const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, fmt, scriptOf, hiddenFrom, contextFactor, ZONE_UI};'))();
 const ext = (new Function('module', load('browser_extension/engine.js') + '\nreturn SIP;'))({ });
 
 console.log('\nTHE SAME PROMPT GIVES THE SAME ANSWER');
@@ -260,6 +260,15 @@ ok('the facts are not reworded on the way',
   ok('every golden case carries the question/answer split', j.golden.every(g => 'expect_input_share' in g));
   /* The rule, not just the arithmetic: estimate() charges whatever hidden work it is handed, so
      the judgement about how much there is has to be pinned separately. */
+  /* `fmt` looked too trivial to pin, which is why it was wrong: the engine passes
+     minimumFractionDigits 0, so `d` is a maximum and a whole number prints bare. The phone's
+     first version padded, and would have shown "1.0 standard drinking glass" and "2.0 mL" on
+     every screen. Caught by a plural test, pinned here so it cannot come back (I-65). */
+  ok('number formatting ships as fixtures', Array.isArray(j.fmt_cases) && j.fmt_cases.length >= 10);
+  ok('and the fixtures reproduce engine.js',
+     (j.fmt_cases || []).every(c => c.expect === (c.d === null ? app.fmt(c.n) : app.fmt(c.n, c.d))));
+  ok('a whole number prints without a trailing .0',
+     (j.fmt_cases || []).filter(c => Number.isInteger(c.n) && c.d > 0).every(c => !c.expect.includes('.')));
   ok('the unseen-work rule ships as fixtures', Array.isArray(j.hidden_rule) && j.hidden_rule.length >= 6);
   ok('and the fixtures reproduce engine.js',
      (j.hidden_rule || []).every(f => f.expect_hidden_tokens ===
