@@ -21,10 +21,20 @@ class TokenWeights {
 
 /// Per-tier energy cost. Units: Wh per 1,000 *weighted* tokens (see [TokenWeights]).
 class TierProfile {
-  const TierProfile({required this.tier, required this.energyWhPer1kWeightedTokens, required this.confidence});
+  const TierProfile({
+    required this.tier,
+    required this.energyWhPer1kWeightedTokens,
+    required this.confidence,
+    required this.label,
+  });
   final ModelTier tier;
   final double energyWhPer1kWeightedTokens;
   final String confidence;
+
+  /// 'Light' / 'Standard' / 'Reasoning' — what the user is shown. It has been in the constants
+  /// file all along; this class simply never carried it, so the phone had no way to name a tier
+  /// without inventing its own word for it.
+  final String label;
 }
 
 /// Per-task-type behaviour. Either token-scaled (text/code/longContext) or fixed per item (image).

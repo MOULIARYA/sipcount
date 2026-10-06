@@ -71,26 +71,29 @@ class _DropPainter extends CustomPainter {
   final double level;
   final Color colour;
 
-  /// The prototype's path, transcribed. 100×130 user units, scaled to fit the box.
-  Path _silhouette(Size size) {
-    final s = (size.width / 100) < (size.height / 130) ? size.width / 100 : size.height / 130;
-    final p = Path()
-      ..moveTo(50, 4)
-      ..cubicTo(50, 4, 12, 52, 12, 82)
-      // `a38 38 0 0 0 76 0` — a half-circle of radius 38 forming the bowl
-      ..arcToPoint(const Offset(88, 82), radius: const Radius.circular(38))
-      ..cubicTo(88, 52, 50, 4, 50, 4)
-      ..close();
-    final m = Matrix4.identity()
-      ..translate((size.width - 100 * s) / 2, (size.height - 130 * s) / 2)
-      ..scale(s, s);
-    return p.transform(m.storage);
-  }
+  /// The prototype's path, transcribed verbatim in its own 100×130 user units.
+  ///
+  /// Drawn through a canvas transform rather than a `Matrix4`: the matrix helpers for translate
+  /// and scale are deprecated, and their replacements take four arguments whose meaning I would
+  /// have been guessing at. `Canvas.translate`/`scale` are stable, do the same job, and keep the
+  /// path readable as the SVG it came from.
+  static Path _silhouette() => Path()
+    ..moveTo(50, 4)
+    ..cubicTo(50, 4, 12, 52, 12, 82)
+    // `a38 38 0 0 0 76 0` — a half-circle of radius 38 forming the bowl
+    ..arcToPoint(const Offset(88, 82), radius: const Radius.circular(38))
+    ..cubicTo(88, 52, 50, 4, 50, 4)
+    ..close();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = _silhouette(size);
+    final s = (size.width / 100) < (size.height / 130) ? size.width / 100 : size.height / 130;
+    final path = _silhouette();
     final bounds = path.getBounds();
+
+    canvas.save();
+    canvas.translate((size.width - 100 * s) / 2, (size.height - 130 * s) / 2);
+    canvas.scale(s, s);
 
     // 1. the empty vessel
     canvas.drawPath(path, Paint()..color = SipColors.surface2);
@@ -102,14 +105,17 @@ class _DropPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTRB(bounds.left, top, bounds.right, bounds.bottom), Paint()..color = colour);
     canvas.restore();
 
-    // 3. the outline on top, so the shape still reads when the vessel is nearly empty
+    // 3. the outline on top, so the shape still reads when the vessel is nearly empty.
+    // Stroke width is in user units and the canvas is scaled, so divide to keep it 1.5 device px.
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
+        ..strokeWidth = 1.5 / s
         ..color = SipColors.line,
     );
+
+    canvas.restore();
   }
 
   @override

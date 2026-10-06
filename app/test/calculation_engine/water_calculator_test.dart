@@ -34,6 +34,7 @@ void main() {
       tier: ModelTier.values.byName(id),
       energyWhPer1kWeightedTokens: (m['energy_wh_per_1k_weighted_tokens'] as num).toDouble(),
       confidence: m['confidence'] as String,
+      label: m['label'] as String,
     );
   }
 

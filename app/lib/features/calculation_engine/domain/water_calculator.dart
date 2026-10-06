@@ -118,7 +118,7 @@ class WaterCalculator {
     );
   }
 
-  /// "Switching this task to <tier> saves X mL" — same inputs, different tier.
+  /// "Switching this task to `<tier>` saves X mL" — same inputs, different tier.
   double savingsIfSwitched({
     required CalculationContext current,
     required TierProfile alternative,

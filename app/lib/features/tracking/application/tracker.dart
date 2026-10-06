@@ -228,8 +228,10 @@ class Tracker extends ChangeNotifier {
     for (final d in days) {
       d.mlByTier.forEach((k, v) => tierMl[k] = (tierMl[k] ?? 0) + v);
     }
-    final topTier = (tierMl.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
-        .firstOrNull?.key ?? 'standard';
+    // Plain dart:core only — `firstOrNull` lives in package:collection, which this app does not
+    // depend on and is not worth a dependency for one line.
+    final byMl = tierMl.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final topTier = byMl.isEmpty ? 'standard' : byMl.first.key;
     final tierWord = _constants.tier(ModelTier.values.firstWhere((t) => t.name == topTier,
         orElse: () => ModelTier.standard)).label.toLowerCase();
     out.add('You leaned on ${top.$1} $insightScope — mostly its $tierWord model '
