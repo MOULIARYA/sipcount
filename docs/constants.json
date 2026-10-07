@@ -1,7 +1,7 @@
 {
   "schema": "sipcount-constants/1",
   "version": "2026-09-30",
-  "published_at": "2026-10-06",
+  "published_at": "2026-10-07",
   "note": "GENERATED from engine.js. Numbers only — never code. Every value is re-checked against a physical band by applyConstants() before it is used; anything out of range rejects the whole file and the app keeps what it shipped with.",
   "outputPerInput": 5,
   "charsPerToken": 4,

@@ -148,3 +148,12 @@ Full reasoning in `ISSUES.md`; this is the index.
    other apps since Android 7. Ten minutes of reading would have replaced a day of building. The
    cost of the mistake was not the failed builds; it was nearly handing Madhur a flat log to read
    as a fact about phones. See I-55.
+
+8. **I cannot verify Flutter API facts without the analyzer, and `const` is where that bites.**
+   `ConstrainedBox` is not a const constructor — it asserts `constraints.debugAssertIsValid()`, and
+   a method call in an assert is not a constant expression. Nothing about the call site suggests
+   that. Four compile rounds on this port came from facts of exactly this shape: a missing field, a
+   deprecated matrix helper, a method that needs `package:collection`, and this.
+   **The posture that follows: do not write `const` on a widget whose const-ness is uncertain.**
+   `const` is an optimisation, not a requirement; `prefer_const_constructors` will suggest it where
+   it is valid, and the analyzer is the only thing that actually knows. Guessing it costs a push.

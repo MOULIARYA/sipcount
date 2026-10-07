@@ -259,9 +259,12 @@ class _AgeScreenState extends State<_AgeScreen> {
                     style: Theme.of(context).textTheme.headlineMedium
                         ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -.5)),
                 const SizedBox(height: 10),
-                const ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 300),
-                  child: Text(
+                // Not `const`: ConstrainedBox asserts `constraints.debugAssertIsValid()`, and a
+                // method call in an assert is not a constant expression, so the constructor is not
+                // a const one. The child below still is.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: const Text(
                     'One question, then straight in. We keep only the mode it picks — never the '
                     'number. Nothing you type is ever stored, here or anywhere.',
                     textAlign: TextAlign.center,
