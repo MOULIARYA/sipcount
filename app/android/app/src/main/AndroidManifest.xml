@@ -1,29 +1,19 @@
 <manifest xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Deliberately NO android.permission.INTERNET: the app cannot send anything anywhere. -->
 
-    <!-- The permission list IS the privacy claim, so it stays as short as the product allows.
-         Everything below marked "spike" exists only to answer I-60 and comes out with the probe,
-         before anything is submitted to Play. -->
+    <!-- The permission list IS the privacy claim, so it stays as short as the product allows. The
+         probe's four permissions came out again on 2026-10-07 once its question was answered
+         (I-60). What remains is the accessibility service and nothing else.
+         Note: removing them does NOT stop the Play Protect sideload warning — that fires on
+         ACCESSIBILITY, which we keep (I-57). -->
 
-    <!-- spike (I-60): read per-app byte totals. A special permission the user grants in Settings;
-         it reveals byte counts, never content. -->
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
-    <!-- spike (I-60): the probe must keep counting while the person is inside ChatGPT, i.e. while
-         Sipcount is backgrounded and would otherwise be frozen. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- One <queries> element only: a second one in the same manifest is a merge error.
-         Android 11+ hides other packages unless declared; we ask these three for their UID and
-         nothing else. -->
+         The four <package> entries went with the probe. They existed so it could look up each AI
+         app's UID; nothing calls PackageManager any more, and the accessibility service gets its
+         scope from `android:packageNames` in its own config, which needs no declaration here.
+         Declaring package visibility we do not use would weaken the privacy claim for nothing. -->
     <queries>
-        <package android:name="com.openai.chatgpt" />
-        <package android:name="com.anthropic.claude" />
-        <package android:name="com.google.android.apps.bard" />
-        <!-- Gemini lives inside the Google app on most phones; the accessibility config has said
-             so since September and the probe was written without checking it. -->
-        <package android:name="com.google.android.googlequicksearchbox" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
@@ -69,12 +59,6 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
-        <!-- spike (I-60). Comes out with the probe. -->
-        <service
-            android:name=".probe.ProbeService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <meta-data
             android:name="flutterEmbedding"

@@ -4,7 +4,7 @@
 requirement. Updated at the end of every build — a requirement with no test in the last column is
 **not done**, whatever anyone said in a chat.*
 
-Last updated 2026-10-06.
+Last updated 2026-10-07.
 
 **Why this exists:** on 2026-09-29 the extension was reported as "working" after it counted two real
 prompts. Against its own written specification (`TOKEN-ECONOMICS.md` §4, I-18) it was doing about a

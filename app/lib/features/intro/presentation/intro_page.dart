@@ -50,8 +50,32 @@ class IntroPage extends StatefulWidget {
 }
 
 class _IntroPageState extends State<IntroPage> {
-  int _stage = 0;
   bool _asking = false;
+
+  @override
+  Widget build(BuildContext context) => _asking
+      ? _AgeScreen(tracker: widget.tracker)
+      : LaunchSequence(onDone: () => setState(() => _asking = true));
+}
+
+/// The three-card opening, on its own and knowing nothing about the tracker.
+///
+/// Separated deliberately so it can be tested: a widget test can pump it, advance the clock and
+/// assert that the figures actually change. The version before this one was a single static screen
+/// and no test we had could tell — it took a screenshot from Madhur's phone.
+class LaunchSequence extends StatefulWidget {
+  const LaunchSequence({super.key, required this.onDone});
+  final VoidCallback onDone;
+
+  /// How long each card holds. Exposed so a test can advance exactly this far.
+  static const List<int> durationsMs = _durationsMs;
+
+  @override
+  State<LaunchSequence> createState() => _LaunchSequenceState();
+}
+
+class _LaunchSequenceState extends State<LaunchSequence> {
+  int _stage = 0;
   Timer? _timer;
 
   @override
@@ -71,7 +95,7 @@ class _IntroPageState extends State<IntroPage> {
     _timer = Timer(Duration(milliseconds: _durationsMs[_stage]), () {
       if (!mounted) return;
       if (_stage >= _durationsMs.length - 1) {
-        setState(() => _asking = true);
+        widget.onDone();
       } else {
         setState(() => _stage++);
         _schedule();
@@ -81,12 +105,11 @@ class _IntroPageState extends State<IntroPage> {
 
   void _skip() {
     _timer?.cancel();
-    setState(() => _asking = true);
+    widget.onDone();
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _asking ? _AgeScreen(tracker: widget.tracker) : _Launch(stage: _stage, onSkip: _skip);
+  Widget build(BuildContext context) => _Launch(stage: _stage, onSkip: _skip);
 }
 
 class _Launch extends StatelessWidget {

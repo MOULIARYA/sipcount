@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
-import '../../probe/probe_page.dart';
 import '../../tracking/domain/character.dart';
 import '../../tracking/application/tracker.dart';
 
 /// Same gate as the demo controls: CI sets it for the sideloaded test APK, a store build never
-/// does, so the spike cannot reach a user by being forgotten.
-const bool _showProbe = bool.fromEnvironment('SIPCOUNT_DEMO');
+/// does, so review tools cannot reach a user by being forgotten.
+const bool _showTestTools = bool.fromEnvironment('SIPCOUNT_DEMO');
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.tracker});
@@ -56,15 +55,15 @@ class SettingsPage extends StatelessWidget {
               ]),
               const SizedBox(height: 12),
               // Test builds only, same gate as the demo row: this never reaches a user.
-              if (_showProbe) ...[
-                _Section(title: 'Sensor probe (test build)', children: [
-                  const Text('Can this phone tell one prompt from the next without routing traffic '
-                      'through anything? Reads byte counts only.',
+              if (_showTestTools) ...[
+                _Section(title: 'Review (test build)', children: [
+                  const Text('An app update keeps your settings, so the opening never shows again '
+                      'once the age is answered. This plays it back without deleting anything.',
                       style: TextStyle(color: SipColors.muted, fontSize: 12)),
                   const SizedBox(height: 8),
                   OutlinedButton(
-                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProbePage())),
-                    child: const Text('Open probe'),
+                    onPressed: tracker.replayIntro,
+                    child: const Text('Replay the launch sequence'),
                   ),
                 ]),
                 const SizedBox(height: 12),
@@ -150,7 +149,9 @@ class SettingsPage extends StatelessWidget {
                       context: context,
                       builder: (c) => AlertDialog(
                         title: const Text('Delete all totals?'),
-                        content: const Text('This removes every daily total stored on this phone. It cannot be undone.'),
+                        content: const Text(
+                            'This removes every daily total stored on this phone. It cannot be undone.\n\n'
+                            'Your character, your budget and your region stay as they are.'),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
                           FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),

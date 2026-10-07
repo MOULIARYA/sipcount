@@ -66,6 +66,12 @@ class _WaterDropState extends State<WaterDrop> {
   }
 }
 
+/// The drop's silhouette in its own 100×130 units, exposed for tests.
+///
+/// An inverted arc sweep turned this shape into a cone on a real phone and nothing we had could
+/// see it. `Path.contains` can — cheaper and more precise than comparing screenshots.
+Path dropSilhouette() => _DropPainter.silhouette();
+
 class _DropPainter extends CustomPainter {
   _DropPainter({required this.level, required this.colour});
   final double level;
@@ -73,11 +79,15 @@ class _DropPainter extends CustomPainter {
 
   /// The prototype's path, transcribed verbatim in its own 100×130 user units.
   ///
+  /// Public via [WaterDrop.silhouette] so a test can check the geometry. An inverted arc sweep
+  /// turned this into a cone on a real phone and nothing we had could see it — `Path.contains`
+  /// can, which is cheaper and more precise than a screenshot comparison.
+  ///
   /// Drawn through a canvas transform rather than a `Matrix4`: the matrix helpers for translate
   /// and scale are deprecated, and their replacements take four arguments whose meaning I would
   /// have been guessing at. `Canvas.translate`/`scale` are stable, do the same job, and keep the
   /// path readable as the SVG it came from.
-  static Path _silhouette() => Path()
+  static Path silhouette() => Path()
     ..moveTo(50, 4)
     ..cubicTo(50, 4, 12, 52, 12, 82)
     /* `a38 38 0 0 0 76 0` — the last 0 before the coordinates is SVG's sweep flag, and it means
@@ -92,7 +102,7 @@ class _DropPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final s = (size.width / 100) < (size.height / 130) ? size.width / 100 : size.height / 130;
-    final path = _silhouette();
+    final path = silhouette();
     final bounds = path.getBounds();
 
     canvas.save();

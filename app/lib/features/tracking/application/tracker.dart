@@ -135,7 +135,20 @@ class Tracker extends ChangeNotifier {
   // Only the derived tier is stored, never the number that was typed.
 
   int? get ageTier => _store.ageTier;
-  bool get introSeen => _store.ageTier != null;
+
+  /// Set by [replayIntro] so the opening can be reviewed without destroying anything. An app
+  /// update keeps stored preferences, so once the age is answered the intro never shows again —
+  /// which left no way to look at it short of clearing all app data.
+  bool _replayIntro = false;
+
+  bool get introSeen => !_replayIntro && _store.ageTier != null;
+
+  /// Test builds only. Shows the opening again; the stored tier is untouched until the age screen
+  /// is answered, so nothing is lost by looking.
+  void replayIntro() {
+    _replayIntro = true;
+    notifyListeners();
+  }
   bool get canShare => (_store.ageTier ?? 0) >= 13;
   bool get isAdult => (_store.ageTier ?? 0) >= 18;
   int get worstStage => canShare ? 4 : 3;
@@ -144,6 +157,7 @@ class Tracker extends ChangeNotifier {
     // 13 and 18 are the only thresholds that matter, so they are the only thing kept.
     await _store.setAgeTier(age >= 18 ? 18 : (age >= 13 ? 13 : 12));
     await _store.setInstalledAtIfUnset(DateTime.now());
+    _replayIntro = false;
     notifyListeners();
   }
 
