@@ -64,6 +64,12 @@ jobs:
       # decisions in ISSUES.md or the agreed research cadence.
       - name: The traceability matrix checks itself
         run: node docs/test/traceability.js
+      # The part of the analyzer that can run where the analyzer cannot. `storage.googleapis.com`
+      # is blocked in the authoring sandbox, so Dart and Flutter cannot be installed there and
+      # every Dart fact waits for CI. Five round trips in two days came from that; four of the five
+      # were readable in the source. This reads it, in under a second, before the Dart job starts.
+      - name: Dart faults that do not need a Dart toolchain
+        run: node tools/check-dart.js
 
   dart:
     name: Phone app engine

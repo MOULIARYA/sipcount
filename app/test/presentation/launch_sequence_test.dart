@@ -20,10 +20,27 @@ void main() {
   group('three cards, in order, on a timer', () {
     testWidgets('it opens on the first figure', (tester) async {
       await show(tester, onDone: () {});
-      expect(find.textContaining('700,000'), findsOneWidget);
+
+      // The label is static, so it is there on the first frame.
       expect(find.textContaining('to train one AI model'), findsOneWidget);
-      // the second card must not be on screen yet
+      // The second card must not be on screen yet.
       expect(find.textContaining('data centres'), findsNothing);
+
+      // The figure COUNTS UP from zero, so on the first frame it reads "0". Asserting the final
+      // value immediately is what failed in CI — my own test ignored the animation I had written.
+      // Advance past the 1,200 ms count-up, while staying inside this card's 3,000 ms.
+      await tester.pump(const Duration(milliseconds: 1500));
+      expect(find.textContaining('700,000'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('the figure starts at zero and climbs — a number that is simply there is skipped',
+        (tester) async {
+      await show(tester, onDone: () {});
+      expect(find.text('700,000'), findsNothing, reason: 'it appeared fully formed, without counting');
+      await tester.pump(const Duration(milliseconds: 1500));
+      expect(find.text('700,000'), findsOneWidget, reason: 'it never reached the real figure');
       await tester.pumpAndSettle();
     });
 

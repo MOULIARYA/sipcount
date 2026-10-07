@@ -101,6 +101,7 @@ node docs/test/extension.js    #  40 — counting, correction, calibration, midn
 node docs/test/simulate.js     #  17 — a whole conversation: streaming, pauses, agentic turns
 node docs/test/constants.js    #  22 — a published coefficient reaches apps; a bad file cannot
 node docs/test/fit.js          #  10 — the calibration fitter recovers a rate it was never told
+node tools/check-dart.js       #   7 — Dart faults readable without a Dart toolchain
 node docs/test/traceability.js #  17 — this matrix and docs/RELEASES.md: rows, proofs, suite
                                #     coverage, and whether either has fallen behind ISSUES.md
                                #     or the three-day research cadence
