@@ -15,10 +15,11 @@ import '../../calculation_engine/domain/plain_words.dart';
 import '../../calculation_engine/domain/water_estimate.dart';
 import '../domain/character.dart';
 import '../../prompt_listener/data/listener_channel.dart';
+import '../../prompt_listener/data/usage_channel.dart';
 import '../../prompt_listener/domain/prompt_event.dart';
 
 class Tracker extends ChangeNotifier {
-  Tracker._(this._constants, this._store, this._channel)
+  Tracker._(this._constants, this._store, this._channel, this._usage)
       : _tokens = TokenEstimator(charsPerToken: _constants.charsPerToken),
         equivalence = EquivalenceFormatter(_constants.equivalentsMl),
         // the token weights come from the constants file, not from code, so the app and engine.js
@@ -28,13 +29,22 @@ class Tracker extends ChangeNotifier {
   final ConstantsRepository _constants;
   final AggregateStore _store;
   final ListenerChannel _channel;
+  final UsageChannel _usage;
   final TokenEstimator _tokens;
   final EquivalenceFormatter equivalence;
   final WaterCalculator _calc;
 
-  StreamSubscription<PromptEvent>? _sub;
+  StreamSubscription<ListenerMessage>? _sub;
+
+  /// Turns whose answer may still be measured: enough to re-price them, nothing more — no text.
+  /// In memory only and dropped after an hour, as the extension's `s.open` is. If the app is killed
+  /// between a prompt and its answer, the assumed reply simply stands.
+  final Map<String, _OpenTurn> _open = {};
   Map<String, DayTotals> _days = {};
   bool listenerEnabled = false;
+
+  /// Estimate mode (I-73): Usage Access granted, so minutes in each AI app can be read.
+  bool usageEnabled = false;
   WaterEstimate? lastEstimate;
   String? lastNudge;
 
@@ -42,23 +52,100 @@ class Tracker extends ChangeNotifier {
   String? lastVendor;
   DateTime? lastEventAt;
 
-  static Future<Tracker> start({ListenerChannel? channel}) async {
+  static Future<Tracker> start({ListenerChannel? channel, UsageChannel? usage}) async {
     final constants = await ConstantsRepository.load();
     final store = await AggregateStore.open(
       defaultBudgetMl: constants.defaultBudgetMl,
       defaultRegionId: constants.defaultRegionId,
       knownRegionIds: constants.regionIds.toSet(),
     );
-    final t = Tracker._(constants, store, channel ?? ListenerChannel());
+    final t = Tracker._(constants, store, channel ?? ListenerChannel(), usage ?? UsageChannel());
     t._days = t._store.readAll();
     await store.setInstalledAtIfUnset(DateTime.now());
-    await t.refreshListenerState();
-    for (final e in await t._channel.drainPending()) {
-      await t._record(e);
+    for (final m in await t._channel.drainPending()) {
+      await t._onMessage(m);
     }
-    t._sub = t._channel.events().listen(t._record, onError: (_) {});
+    await t.refreshListenerState(); // also harvests usage, then checks unlocks
+    t._sub = t._channel.events().listen(t._onMessage, onError: (_) {});
     return t;
   }
+
+  // ---- estimate mode (I-73) ---------------------------------------------------------------
+
+  /// Reads how long each AI app was open since the last read and adds the estimate, day by day
+  /// and vendor by vendor. Idempotent: the window starts where the last one ended, sessions are
+  /// clipped to it, and a vendor-day that has a measured prompt is left alone (measured wins).
+  /// Nothing is stored finer than the calendar day except the one "last read" timestamp.
+  Future<void>? _harvesting;
+
+  /// One harvest at a time: the app can be resumed twice in quick succession, and two overlapping
+  /// reads of the same window would add the same sessions twice.
+  Future<void> harvestUsage() => _harvesting ??= _harvest().whenComplete(() => _harvesting = null);
+
+  Future<void> _harvest() async {
+    if (!usageEnabled) return;
+    final now = DateTime.now();
+    var since = _store.lastUsageHarvest;
+    if (since == null || since.isAfter(now)) {
+      // first run (or the clock went backwards): look back three days — the system keeps only a
+      // few — but never before the day the app was installed, so nobody starts with a streak
+      since = now.subtract(const Duration(days: 3));
+      final installed = _store.installedAt;
+      if (installed != null) {
+        final floor = DateTime.parse('${installed}T00:00:00');
+        if (floor.isAfter(since)) since = floor;
+      }
+    }
+    if (!now.isAfter(since)) return;
+    final sessions = await _usage.sessions(since, now);
+    if (sessions == null) return; // the read failed: leave the cursor so the window is read next time
+    final seconds = secondsByDayAndVendor(sessions, since, now);
+    final estimates = <(String, String), (double, SessionEstimate)>{};
+    for (final entry in seconds.entries) {
+      estimates[entry.key] = (entry.value, _calc.estimateSession(
+        ctx: _context(ModelTier.standard, TaskType.text),
+        seconds: entry.value,
+        promptsPerMinute: _constants.promptsPerMinute,
+        referenceInputTokens: _constants.referenceInputTokens,
+        referenceOutputTokens: _constants.referenceOutputTokens,
+      ));
+    }
+    // one write for all of it, then the cursor — so being killed half-way can lose a window
+    // but never double one
+    await _store.addEstimates(estimates);
+    await _store.setLastUsageHarvest(now);
+    _days = _store.readAll();
+  }
+
+  /// Clips each session to [since, until), splits it at local midnight, and sums seconds per
+  /// (day key, vendor). Pure, so a test can pin it. A session that crosses midnight is charged to
+  /// both days by the time spent in each.
+  static Map<(String, String), double> secondsByDayAndVendor(
+      Iterable<UsageSession> sessions, DateTime since, DateTime until) {
+    final out = <(String, String), double>{};
+    for (final s in sessions) {
+      var start = s.start.isBefore(since) ? since : s.start;
+      final end = s.end.isAfter(until) ? until : s.end;
+      while (start.isBefore(end)) {
+        final local = start.toLocal();
+        final nextMidnight = DateTime(local.year, local.month, local.day + 1);
+        final stop = end.isBefore(nextMidnight) ? end : nextMidnight;
+        final key = (AggregateStore.dayKey(start), s.vendor);
+        out.update(key, (v) => v + stop.difference(start).inMilliseconds / 1000,
+            ifAbsent: () => stop.difference(start).inMilliseconds / 1000);
+        start = stop;
+      }
+    }
+    return out;
+  }
+
+  Future<void> openUsageSettings() => _usage.openSettings();
+
+  /// Today's number includes an estimate (so the screen says so).
+  bool get todayHasEstimate => today.estimatedMl > 0;
+
+  /// Neither sensor is available, so nothing is being counted at all.
+  bool get nothingCounts => !listenerEnabled && !usageEnabled;
 
   // ---- read side -----------------------------------------------------------
 
@@ -119,16 +206,44 @@ class Tracker extends ChangeNotifier {
     return n;
   }
 
-  /// Consecutive days *before today* with real use and under budget. Unlocks use this rather than
-  /// [aliveDays] so nobody earns a character by not using the app.
-  int get streakDays {
+  /// Days *before today* with real use and under budget, counted back until the first day that
+  /// reached the budget. Unlocks use this rather than [aliveDays] so nobody earns a character by
+  /// not using the app.
+  ///
+  /// **A day with no counted prompts is skipped — it neither adds nor breaks** (Madhur,
+  /// 2026-10-19). It used to break the streak, so a weekend off, a day the listener missed, or a
+  /// day Accessibility was switched off for a banking app reset fifteen good days to zero.
+  int get streakDays => streakFrom(_days, budgetMl, DateTime.now());
+
+  /// The rule itself, pure so a test can pin it without a phone (same rule as the prototype's
+  /// `streakDays()`, pinned there by `regression.js`).
+  static int streakFrom(Map<String, DayTotals> days, int budgetMl, DateTime now) {
     var n = 0;
     for (var i = 1; i <= 90; i++) {
-      final d = _days[AggregateStore.dayKey(DateTime.now().subtract(Duration(days: i)))];
-      if (d == null || d.promptCount == 0 || d.totalMl >= budgetMl) break;
+      final d = days[AggregateStore.dayKey(now.subtract(Duration(days: i)))];
+      // estimated use is real use: half an estimated prompt is about a minute in an AI app
+      if (d == null || (d.promptCount == 0 && d.estimatedPrompts < 0.5)) continue;
+      if (d.totalMl >= budgetMl) break;
       n++;
     }
     return n;
+  }
+
+  /// The best streak ever reached. Unlocks are earned against this, so they are never taken back.
+  int get bestStreak => streakDays > _store.bestStreak ? streakDays : _store.bestStreak;
+
+  /// Records any newly earned characters. Called on start and after every counted prompt — the
+  /// prototype's `checkUnlocks()`. Returns the ids unlocked by this call.
+  Future<List<String>> checkUnlocks() async {
+    final best = bestStreak;
+    if (best > _store.bestStreak) await _store.setBestStreak(best);
+    final have = {..._store.unlockedIds, 'plant'};
+    final fresh = [
+      for (final c in kCharacters)
+        if (c.unlockDays <= best && !have.contains(c.id)) c.id
+    ];
+    if (fresh.isNotEmpty) await _store.setUnlockedIds([...have, ...fresh]);
+    return fresh;
   }
 
   // ---- age tier ----------------------------------------------------------------------------
@@ -172,12 +287,18 @@ class Tracker extends ChangeNotifier {
   /// Same, but for the state row, where the species reads better than 'Your plant'.
   String get mascotLabel => _store.mascotNames[mascot.id] ?? mascot.label;
 
-  List<String> get unlockedCharacters =>
-      [for (final c in kCharacters) if (c.unlockDays <= streakDays) c.id];
+  /// Stored unlocks plus anything the best streak already covers, so the list is right even in
+  /// the moment before [checkUnlocks] has written it.
+  List<String> get unlockedCharacters {
+    final have = _store.unlockedIds.toSet();
+    final best = bestStreak;
+    return [for (final c in kCharacters) if (c.unlockDays == 0 || have.contains(c.id) || c.unlockDays <= best) c.id];
+  }
 
   Character? get nextLockedCharacter {
+    final have = unlockedCharacters;
     for (final c in kCharacters) {
-      if (c.unlockDays > streakDays) return c;
+      if (!have.contains(c.id)) return c;
     }
     return null;
   }
@@ -203,9 +324,10 @@ class Tracker extends ChangeNotifier {
 
   /// Today if today has prompts, otherwise the week — so the card is never blank on a quiet
   /// morning when there is a whole week to talk about.
-  String get insightScope => today.promptCount > 0 ? 'today' : 'this week';
+  bool get _todayHasUse => today.promptCount > 0 || today.estimatedMl > 0;
+  String get insightScope => _todayHasUse ? 'today' : 'this week';
 
-  List<DayTotals> get _insightDays => today.promptCount > 0 ? [today] : lastDays(7);
+  List<DayTotals> get _insightDays => _todayHasUse ? [today] : lastDays(7);
 
   /// mL per brand over the insight window, heaviest first.
   List<(String, double, int)> get brandBars {
@@ -214,6 +336,9 @@ class Tracker extends ChangeNotifier {
     for (final d in _insightDays) {
       d.mlByVendor.forEach((k, v) => ml[k] = (ml[k] ?? 0) + v);
       d.promptsByVendor.forEach((k, v) => n[k] = (n[k] ?? 0) + v);
+      // estimated use shows in the brand bars too; a vendor-day is never both (I-73)
+      d.estMlByVendor.forEach((k, v) => ml[k] = (ml[k] ?? 0) + v);
+      d.estPromptsByVendor.forEach((k, v) => n[k] = (n[k] ?? 0) + v.round());
     }
     final rows = [
       for (final e in ml.entries)
@@ -226,7 +351,7 @@ class Tracker extends ChangeNotifier {
   /// widget does the emphasis instead of embedding markup here.
   List<String> get insightLines {
     final days = _insightDays;
-    final n = days.fold(0, (a, d) => a + d.promptCount);
+    final n = days.fold(0, (a, d) => a + d.promptCount + d.estimatedPrompts.round());
     final ml = days.fold(0.0, (a, d) => a + d.totalMl);
     if (n == 0) return const ['Log a prompt and the insights appear here.'];
     if (ml <= 0) return const ['Nothing measurable yet — those prompts were too short to register.'];
@@ -378,8 +503,13 @@ class Tracker extends ChangeNotifier {
 
   // ---- write side ----------------------------------------------------------
 
+  /// Called on start and whenever the app comes back to the foreground: re-reads both
+  /// permissions, pulls in any time spent in AI apps since last time, and re-checks unlocks.
   Future<void> refreshListenerState() async {
     listenerEnabled = await _channel.isEnabled();
+    usageEnabled = await _usage.hasPermission();
+    await harvestUsage();
+    await checkUnlocks();
     notifyListeners();
   }
 
@@ -397,6 +527,7 @@ class Tracker extends ChangeNotifier {
 
   Future<void> wipe() async {
     await _store.wipe();
+    _open.clear(); // an answer arriving after a wipe must not correct a day that no longer exists
     _days = {};
     lastEstimate = null;
     lastNudge = null;
@@ -415,16 +546,82 @@ class Tracker extends ChangeNotifier {
         timestamp: DateTime.now().toUtc(),
       ));
 
+  Future<void> _onMessage(ListenerMessage m) async {
+    if (m is PromptEvent) {
+      await _record(m);
+    } else if (m is ReplyEvent) {
+      await _applyReply(m);
+    }
+  }
+
+  /// The answer has been measured, so replace the assumed reply with the real one — the same
+  /// correction the extension's `handleReply()` makes (I-70). Idempotent: reports arrive
+  /// repeatedly as the answer grows, and each applies only the difference from the last.
+  Future<void> _applyReply(ReplyEvent r) async {
+    final o = _open[r.turnId];
+    if (o == null) return; // unknown or expired turn: leave what we have
+    final outTokens = _tokens.estimate(r.replyChars);
+    final hidden = WaterCalculator.hiddenTokens(
+      active: Duration(milliseconds: r.activeMs),
+      outputTokens: outTokens,
+      tier: o.tier,
+      tokensPerSec: _constants.thinkingTokensPerSec,
+      floorSec: _constants.thinkingFloorSec,
+      maxSec: _constants.thinkingMaxSec,
+    );
+    final fresh = _calc.estimate(
+      ctx: _context(o.tier, o.task),
+      inputTokens: o.inputTokens,
+      outputTokens: outTokens,
+      hidden: hidden,
+      contextTokens: o.contextTokens,
+      contextPerThousand: _constants.contextPerThousand,
+      contextMax: _constants.contextMax,
+    );
+    await _store.adjust(o.day, o.last, fresh, o.tier, o.task, vendor: o.vendor);
+    // the "last counted" line follows the turn it shows, and no other
+    if (identical(lastEstimate, o.last)) lastEstimate = fresh;
+    o.last = fresh;
+    _days = _store.readAll();
+    await checkUnlocks();
+    notifyListeners();
+  }
+
   Future<void> _record(PromptEvent e) async {
     final tier = _constants.resolveTier(e.vendor, e.modelHint);
+    final inputTokens = _tokens.estimate(e.charCount);
+    // The conversation the model must re-read, counted the same way at first estimate and at
+    // correction (as the extension does), so the number only moves because of the answer.
+    final contextTokens = e.turnId == null ? 0 : _tokens.estimate(e.contextChars + e.charCount);
     final est = _calc.estimate(
       ctx: _context(tier, e.task),
-      inputTokens: _tokens.estimate(e.charCount),
+      inputTokens: inputTokens,
       itemCount: e.task == TaskType.image ? (e.attachmentCount > 0 ? e.attachmentCount : 1) : 1,
+      contextTokens: contextTokens,
+      contextPerThousand: _constants.contextPerThousand,
+      contextMax: _constants.contextMax,
     );
+    // Registered before the first await, so an answer that arrives while the day is being
+    // written still finds its turn.
+    final id = e.turnId;
+    if (id != null && e.task != TaskType.image) {
+      final now = DateTime.now();
+      _open.removeWhere((_, t) => now.difference(t.at) > const Duration(hours: 1));
+      _open[id] = _OpenTurn(
+        day: AggregateStore.dayKey(e.timestamp),
+        tier: tier,
+        task: e.task,
+        vendor: e.vendor,
+        inputTokens: inputTokens,
+        contextTokens: contextTokens,
+        last: est,
+        at: now,
+      );
+    }
     await _store.add(e.timestamp, est, tier, e.task, vendor: e.vendor);
     await _countPromptForFacts();
     _days = _store.readAll();
+    await checkUnlocks();
     lastEstimate = est;
     lastNudge = _nudgeFor(tier, e);
     lastVendor = switch (e.vendor) { 'openai' => 'ChatGPT', 'anthropic' => 'Claude', 'google' => 'Gemini', _ => e.vendor };
@@ -454,4 +651,27 @@ class Tracker extends ChangeNotifier {
     _sub?.cancel();
     super.dispose();
   }
+}
+
+/// One counted turn whose answer may still arrive. Counts only.
+class _OpenTurn {
+  _OpenTurn({
+    required this.day,
+    required this.tier,
+    required this.task,
+    required this.vendor,
+    required this.inputTokens,
+    required this.contextTokens,
+    required this.last,
+    required this.at,
+  });
+
+  final String day;
+  final ModelTier tier;
+  final TaskType task;
+  final String vendor;
+  final int inputTokens;
+  final int contextTokens;
+  WaterEstimate last; // what is currently recorded for this turn
+  final DateTime at;
 }

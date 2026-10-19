@@ -1,6 +1,16 @@
 /// Result of one water estimate. All water values in millilitres, energy in Wh.
 library;
 
+/// What a stretch of time in an AI app is estimated to have cost (I-73). Prompts are fractional.
+class SessionEstimate {
+  const SessionEstimate({required this.prompts, required this.energyWh, required this.scope1Ml, required this.scope2Ml});
+  final double prompts;
+  final double energyWh;
+  final double scope1Ml;
+  final double scope2Ml;
+  double get totalMl => scope1Ml + scope2Ml;
+}
+
 class WaterEstimate {
   const WaterEstimate({
     required this.energyWh,

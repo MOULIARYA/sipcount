@@ -36,6 +36,9 @@ class ConstantsRepository {
     return ConstantsRepository._(json);
   }
 
+  /// For tests that already hold the decoded file.
+  factory ConstantsRepository.fromJson(Map<String, dynamic> json) => ConstantsRepository._(json);
+
   String get constantsVersion => _raw['constants_version'] as String;
 
   /// The agreed daily budget, from the shared constants rather than a number invented here.
@@ -92,6 +95,12 @@ class ConstantsRepository {
   double get thinkingMaxSec => (_raw['thinking']['max_sec'] as num).toDouble();
   double get contextPerThousand => (_raw['context']['per_thousand'] as num).toDouble();
   double get contextMax => (_raw['context']['max'] as num).toDouble();
+
+  /// Estimate mode (I-73): prompts per minute an AI app is open, and the reference prompt each
+  /// estimated prompt is priced as. Published placeholders, not literals here.
+  double get promptsPerMinute => (_raw['estimation']['prompts_per_minute'] as num).toDouble();
+  int get referenceInputTokens => (_raw['estimation']['reference_input_tokens'] as num).toInt();
+  int get referenceOutputTokens => (_raw['estimation']['reference_output_tokens'] as num).toInt();
 
   /// Which zone a fraction of the budget falls in. Same thresholds as the prototype's `zone()`.
   String zoneOf(double pct) {

@@ -3,9 +3,14 @@
 
     <!-- The permission list IS the privacy claim, so it stays as short as the product allows. The
          probe's four permissions came out again on 2026-10-07 once its question was answered
-         (I-60). What remains is the accessibility service and nothing else.
-         Note: removing them does NOT stop the Play Protect sideload warning — that fires on
-         ACCESSIBILITY, which we keep (I-57). -->
+         (I-60). Two things remain: the accessibility service, and — since 2026-10-19 (I-73) —
+         Usage Access, which reads how long each AI app was open and nothing else. It is the
+         sensor that works next to banking apps (I-72). It is a "signature|appop" permission:
+         declaring it does nothing until the user grants it in Settings.
+         Note: none of this changes the Play Protect sideload warning — that fires on
+         ACCESSIBILITY, which we keep as the optional precise mode (I-57). -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
 
     <!-- One <queries> element only: a second one in the same manifest is a merge error.

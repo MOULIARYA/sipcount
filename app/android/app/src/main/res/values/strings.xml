@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="a11y_label">Sipcount prompt counter</string>
-    <string name="a11y_description">Sipcount notices when you tap Send in ChatGPT, Claude, Gemini or Chrome, counts how many characters you typed, and immediately discards the text. It never reads, stores or transmits what you write. Only daily millilitre totals are kept, on this phone.</string>
+    <!-- Optional "exact counting" mode since Rel 1.4 (I-73); the default is Usage Access, which needs no service. -->
+    <string name="a11y_description">Sipcount notices when you tap Send in ChatGPT, Claude, Gemini or Chrome, counts how many characters you typed and how long the answer turns out to be, and immediately discards the text. It never stores or transmits what you write or what the AI replies. Only daily millilitre totals are kept, on this phone.</string>
 </resources>

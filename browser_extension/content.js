@@ -34,7 +34,9 @@
 
   // A model name looks like a model name. Without this, a generic fallback happily reports
   // "Settings" or "More" and we silently price a reasoning prompt as a standard one.
-  const MODEL_OK = /\b(gpt|chatgpt|claude|gemini|opus|sonnet|haiku|flash|lite|pro|mini|nano|turbo|thinking|deep\s?think|reasoning|extended|o[1345]\b|\d\.\d)/i;
+  // Thinking levels (I-69) are model labels too: ChatGPT's "GPT-6 High" and Gemini's "Argon · Medium"
+  // must pass, or the health check reports the model as unreadable.
+  const MODEL_OK = /\b(gpt|chatgpt|claude|gemini|argon|opus|sonnet|haiku|flash|lite|pro|mini|nano|turbo|thinking|deep\s?think|reasoning|extended|instant|medium|high|low|o[1345]\b|\d\.\d)/i;
 
   const IMAGE_WORDS = /\b(generate|create|make|draw|design|render)\b[^.?!]{0,40}\b(image|picture|photo|illustration|logo|poster|icon|artwork|drawing)s?\b(?!-)|\b(image of|picture of|photo of)\b/i;
   const CODE_WORDS = /```|\b(function|class|def |import |const |let |var |SELECT |public static|#include|=>)\b|\b(write|fix|debug|refactor)\b[^.?!]{0,30}\b(code|script|function|bug|regex|sql|python|javascript|typescript|java|c#|kotlin|swift)\b/i;

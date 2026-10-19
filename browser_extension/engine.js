@@ -66,6 +66,15 @@ const SIPCOUNT_CONFIG = {
      We take the middle. Capped, because the factor must not run away on a very long thread.
      **Confidence: LOW** — the third placeholder, and the same calibration replaces it. */
   context: { perThousand: 0.05, max: 4 },
+  /* ESTIMATE MODE (I-73, 2026-10-19). When a phone can only see how long an AI app was open — not
+     the prompts themselves — minutes become prompts at this rate, and each prompt is priced as the
+     calibrated reference prompt (100 in / 300 out, standard tier, 0.30 Wh). 0.5 a minute is a
+     PLACEHOLDER like the 5× multiplier: one turn every two minutes, roughly a minute typing and a
+     minute reading a 300-token answer. Nothing measured yet supports or contradicts it. It is
+     published and re-fittable, and the desktop extension's calibration record (N11) is what will
+     replace it: it already knows turns per minute of foreground use. The number carries the
+     uncertainty, the UI carries the word "estimated". */
+  estimation: { promptsPerMinute: 0.5 },
   outputPerInput: OUTPUT_PER_INPUT,
   referencePrompt: REFERENCE_PROMPT,
   weightNormalisation: WEIGHT_NORM,
@@ -107,10 +116,15 @@ const SIPCOUNT_CONFIG = {
   /* Reading a tier out of the model name shown on screen. Shared, not per-product: the extension,
      the phone apps and the desktop build must all classify "Gemini Flash-Lite" the same way or the
      same prompt gets two different answers. Longest match wins, so 'flash-lite' beats 'flash'. */
+  /* Thinking LEVELS (I-69, interim rule from Madhur 2026-10-19, pending Mouli): ChatGPT offers
+     Instant / Medium / High / Extra High / Pro and Gemini Low / Medium / High beside the model name.
+     "High" and above price as reasoning; "Medium", "Low" and "Instant" stay standard. Those three
+     are listed explicitly so the extension's model check recognises the label rather than warning
+     about an unknown model. The live picker labels have not yet been read on either site. */
   vendorMap: {
-    openai:    { def:'standard', p:{ 'o1':'reasoning','o3':'reasoning','o4':'reasoning','thinking':'reasoning','pro':'reasoning','mini':'lightweight','nano':'lightweight' } },
+    openai:    { def:'standard', p:{ 'o1':'reasoning','o3':'reasoning','o4':'reasoning','thinking':'reasoning','pro':'reasoning','high':'reasoning','extra high':'reasoning','medium':'standard','instant':'standard','mini':'lightweight','nano':'lightweight' } },
     anthropic: { def:'standard', p:{ 'extended':'reasoning','haiku':'lightweight' } },
-    google:    { def:'standard', p:{ 'thinking':'reasoning','deep think':'reasoning','flash':'lightweight','flash-lite':'lightweight' } },
+    google:    { def:'standard', p:{ 'thinking':'reasoning','deep think':'reasoning','high':'reasoning','medium':'standard','low':'standard','flash':'lightweight','flash-lite':'lightweight' } },
     unknown:   { def:'standard', p:{} }
   },
   /* Real-world opportunity cost (I-27, volumes assumed): daily hydration 2,000 mL (common guidance, varies), glass 250 mL, house plant 250 mL, toilet flush 6 L, shower 9 L/min */
@@ -159,7 +173,7 @@ function recalibrate(outputPerInput){
 const BANDS = {
   outputPerInput:[1,20], charsPerToken:[1,10], 'thinking.tokensPerSec':[10,500],
   'tier.base':[0.001,200], 'region.pue':[1,3], 'region.wueSite':[0,20], 'region.ewif':[0,40],
-  'context.perThousand':[0,1], 'context.max':[1,20]
+  'context.perThousand':[0,1], 'context.max':[1,20], 'estimation.promptsPerMinute':[0.02,10]
 };
 const inBand=(k,v)=>typeof v==='number' && isFinite(v) && v>=BANDS[k][0] && v<=BANDS[k][1];
 function applyConstants(raw){
@@ -172,6 +186,7 @@ function applyConstants(raw){
   if(raw.thinking && !inBand('thinking.tokensPerSec',raw.thinking.tokensPerSec)) return {ok:false, reason:'thinking rate out of range'};
   if('charsPerToken' in raw && !inBand('charsPerToken',raw.charsPerToken)) return {ok:false, reason:'charsPerToken out of range'};
   if(raw.context && (!inBand('context.perThousand',raw.context.perThousand) || !inBand('context.max',raw.context.max))) return {ok:false, reason:'context factor out of range'};
+  if(raw.estimation && !inBand('estimation.promptsPerMinute',raw.estimation.promptsPerMinute)) return {ok:false, reason:'estimation rate out of range'};
   for(const [id,t] of Object.entries(raw.tiers||{})){
     if(!C.tiers[id]) return {ok:false, reason:'unknown tier '+id};
     if(!inBand('tier.base',t.base)) return {ok:false, reason:'tier '+id+' out of range'};
@@ -188,6 +203,7 @@ function applyConstants(raw){
     if(k in C.charsPerTokenByScript && inBand('charsPerToken',v)){ C.charsPerTokenByScript[k]=v; applied.push('script:'+k); }
   if(raw.thinking){ C.thinking.tokensPerSec=raw.thinking.tokensPerSec; applied.push('thinking'); }
   if(raw.context){ C.context.perThousand=raw.context.perThousand; C.context.max=raw.context.max; applied.push('context'); }
+  if(raw.estimation){ C.estimation.promptsPerMinute=raw.estimation.promptsPerMinute; applied.push('estimation'); }
   for(const [id,t] of Object.entries(raw.tiers||{})){ C.tiers[id].base=t.base; applied.push('tier:'+id); }
   for(const [id,r] of Object.entries(raw.regions||{})){
     Object.assign(C.regions[id],{pue:r.pue,wueSite:r.wueSite,ewif:{incl:r.ewif.incl,excl:r.ewif.excl}}); applied.push('region:'+id); }
@@ -214,6 +230,15 @@ function regionParams(regionId, coolingId, hydro){ const R=C.regions[regionId]; 
    An ordinary chat turn lands near zero — 10 s at 90 tok/s is 900 tokens, and a 900-token answer
    accounts for all of it. Returns 0 for a reasoning tier, whose 10× multiplier already stands in
    for hidden work; counting both would charge the same thinking twice. */
+/* The model label shown on screen → a tier. Longest matching pattern wins, so 'flash-lite' beats
+   'flash' and 'extra high' beats 'high'. Lives here, not in the extension adapter, because the
+   phone applies the same rule from the published map and `tier_cases` pins both to it (I-69). */
+function resolveTier(vendor, hint){
+  const v = C.vendorMap[vendor] || C.vendorMap.unknown, h = (hint||'').toLowerCase();
+  let best = null;
+  for(const p in v.p) if(h.includes(p) && (!best || p.length > best.length)) best = p;
+  return best ? v.p[best] : v.def;
+}
 function hiddenFrom({activeMs, outputTokens=0, tier}={}){
   if(tier==='reasoning' || !(activeMs>0)) return 0;
   const secs=Math.min(C.thinking.maxSec, Math.max(0, activeMs/1000 - C.thinking.floorSec));
@@ -238,6 +263,14 @@ function estimate({tier,task,inputTokens=0,outputTokens=null,hiddenTokens=0,cont
   /* an image task spends no text tokens — report both sides as 0 so day totals stay honest */
   return { energyWh:energy, s1:f*P.site, s2:f*P.grid, total:f*(P.site+P.grid), inputTokens:K.fixed!=null?0:inputTokens, outputTokens:K.fixed!=null?0:outTok, hiddenTokens:K.fixed!=null?0:hiddenTokens, weightedTokens:weighted,
            inputShare: weighted? (inputTokens*W.input)/weighted : 0 };
+}
+/* Estimate mode: time an AI app was open → estimated prompts → water, priced as the reference
+   prompt (I-73). Fractional prompts are kept as fractions: 90 seconds is 0.75 of a prompt, and
+   rounding per session would make many short sessions count for nothing or for double. */
+function estimateSession({seconds=0, params}){
+  const prompts = Math.max(0, seconds)/60 * C.estimation.promptsPerMinute;
+  const one = estimate({ tier:'standard', task:'text', inputTokens:C.referencePrompt.inputTokens, outputTokens:C.referencePrompt.outputTokens, params });
+  return { prompts, energyWh: one.energyWh*prompts, s1: one.s1*prompts, s2: one.s2*prompts, total: one.total*prompts };
 }
 /* `script` is a label produced by the sensor from text it never keeps: 'latin', 'devanagari',
    'hinglish', 'cjk', 'code' or 'mixed'. Unknown or absent falls back to English. */
@@ -399,12 +432,7 @@ function weeklyAnalysis(store){
     const cool = C.cooling[cooling] ? cooling : (C.regions[id].defaultCooling || 'reported');
     return regionParams(id, cool, hydro !== false);
   };
-  function resolveTier(vendor, hint){
-    const v = C.vendorMap[vendor] || C.vendorMap.unknown, h = (hint||'').toLowerCase();
-    let best = null;
-    for(const p in v.p) if(h.includes(p) && (!best || p.length > best.length)) best = p;
-    return best ? v.p[best] : v.def;
-  }
+  /* resolveTier comes from engine.js itself since 2026-10-19 (I-69) — one rule, pinned by fixtures */
   /* same call shape the extension always used; outputTokens stays optional, so when the
      page gives us no answer length the task default applies, exactly as in the app */
   function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, contextTokens = 0, items = 1, cooling, hydro }){
@@ -429,7 +457,11 @@ function weeklyAnalysis(store){
     for(const [l,v] of EQ) if(ml >= v) return `${fmt(ml/v,1)} ${l}${ml/v >= 1.95 ? 's' : ''}`;
     return `${fmt(ml/15,1)} of a sip`;
   }
-  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
+  /* estimate mode (I-73): seconds an AI app was open → estimated prompts and water */
+  function estSession({ seconds, region, cooling, hydro }){
+    return estimateSession({ seconds, params: paramsFor(region, cooling, hydro) });
+  }
+  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, estimateSession: estSession, savingsIfLighter, equiv, DEFAULT_REGION };
 
 })();
 if (typeof module !== 'undefined') module.exports = SIP;

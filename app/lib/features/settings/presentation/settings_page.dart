@@ -86,7 +86,7 @@ class SettingsPage extends StatelessWidget {
                   Text(
                     '${tracker.nextLockedCharacter!.label} arrives after '
                     '${tracker.nextLockedCharacter!.unlockDays} days under budget in a row. '
-                    'You are on ${tracker.streakDays}.',
+                    'You are on ${tracker.streakDays}. Days without AI don’t break the run.',
                     style: const TextStyle(color: SipColors.muted, fontSize: 12, height: 1.4),
                   ),
                 ],
@@ -115,14 +115,29 @@ class SettingsPage extends StatelessWidget {
                     style: const TextStyle(color: SipColors.muted, fontSize: 12)),
               ]),
               const SizedBox(height: 12),
-              _Section(title: 'Counting', children: [
+              _Section(title: 'How Sipcount counts', children: [
+                // Estimate mode first (I-73): the sensor that works next to banking apps.
+                Row(children: [
+                  Icon(tracker.usageEnabled ? Icons.check_circle : Icons.pause_circle_outline, color: tracker.usageEnabled ? SipColors.good : SipColors.muted),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(tracker.usageEnabled ? 'Estimate from time in AI apps: on' : 'Estimate from time in AI apps: off')),
+                  TextButton(onPressed: tracker.openUsageSettings, child: const Text('Change')),
+                ]),
+                const Text('Recommended. Uses the Usage Access permission to see how long ChatGPT, Claude and Gemini were open, and estimates your prompts from that. '
+                    'Sees no text, no models, no replies. Works alongside banking apps.',
+                    style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                const SizedBox(height: 12),
                 Row(children: [
                   Icon(tracker.listenerEnabled ? Icons.check_circle : Icons.pause_circle_outline, color: tracker.listenerEnabled ? SipColors.good : SipColors.muted),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(tracker.listenerEnabled ? 'Accessibility service is on' : 'Accessibility service is off')),
+                  Expanded(child: Text(tracker.listenerEnabled ? 'Exact counting (Accessibility): on' : 'Exact counting (Accessibility): off')),
                   TextButton(onPressed: tracker.openEnableSettings, child: const Text('Change')),
                 ]),
-                const Text('Watches ChatGPT, Claude, Gemini and Chrome for a Send tap. Reads the length of what you typed, then forgets it.',
+                const Text('Optional. Notices each Send tap and measures the length of your prompt and the reply, then forgets the text. '
+                    'Banking apps refuse to run while any Accessibility service is on, so switch this off before banking — your estimate keeps counting.',
+                    style: TextStyle(color: SipColors.muted, fontSize: 12)),
+                const SizedBox(height: 8),
+                const Text('When both are on, a day with exact counts for an AI uses those and not the estimate.',
                     style: TextStyle(color: SipColors.muted, fontSize: 12)),
               ]),
               const SizedBox(height: 12),

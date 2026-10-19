@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_water/features/calculation_engine/data/constants_repository.dart';
 import 'package:ai_water/features/calculation_engine/domain/model_profile.dart';
 import 'package:ai_water/features/calculation_engine/domain/water_calculator.dart';
 
@@ -155,6 +156,46 @@ void main() {
      is — and that a reasoning model has none, because it is already priced at roughly ten times
      a standard one — lives in the rule, so the rule is pinned from generated fixtures rather
      than described in a comment. */
+  /* ---- model label → tier (I-69) -----------------------------------------------------------
+     "High" and above on ChatGPT and Gemini are reasoning; Medium, Low and Instant are standard.
+     Madhur's interim rule of 2026-10-19, pending Mouli. Pinned from the generated fixtures so the
+     phone can never classify a label differently from the extension. */
+  group('model labels resolve to the same tier as engine.js', () {
+    final constants = ConstantsRepository.fromJson(raw);
+    final fixtures = (raw['tier_cases'] as List).cast<Map<String, dynamic>>();
+    test('there are fixtures to check', () => expect(fixtures.length, greaterThanOrEqualTo(15)));
+    for (final f in fixtures) {
+      test('${f['vendor']} "${f['hint']}" → ${f['expect_tier']}', () {
+        expect(constants.resolveTier(f['vendor'] as String, f['hint'] as String?).name, f['expect_tier']);
+      });
+    }
+  });
+
+  /* ---- estimate mode (I-73) ------------------------------------------------------------------
+     Minutes in an AI app → prompts at the published rate → the reference prompt's water. */
+  group('estimate mode reproduces engine.js', () {
+    final cases = (raw['session_cases'] as List).cast<Map<String, dynamic>>();
+    final est = raw['estimation'] as Map<String, dynamic>;
+    test('there are fixtures to check', () => expect(cases.length, greaterThanOrEqualTo(5)));
+    for (final c in cases) {
+      test('${c['seconds']} s in ${c['region']}', () {
+        final e = calc.estimateSession(
+          ctx: CalculationContext(
+              tier: tierOf('standard'), task: taskOf('text'), region: regionOf(c['region'] as String), constantsVersion: version),
+          seconds: (c['seconds'] as num).toDouble(),
+          promptsPerMinute: (est['prompts_per_minute'] as num).toDouble(),
+          referenceInputTokens: (est['reference_input_tokens'] as num).toInt(),
+          referenceOutputTokens: (est['reference_output_tokens'] as num).toInt(),
+        );
+        expect(e.prompts, closeTo((c['expect_prompts'] as num).toDouble(), 1e-6));
+        expect(e.energyWh, closeTo((c['expect_energy_wh'] as num).toDouble(), 1e-6));
+        expect(e.scope1Ml, closeTo((c['expect_scope1_ml'] as num).toDouble(), 1e-6));
+        expect(e.scope2Ml, closeTo((c['expect_scope2_ml'] as num).toDouble(), 1e-6));
+        expect(e.totalMl, closeTo((c['expect_total_ml'] as num).toDouble(), 1e-6));
+      });
+    }
+  });
+
   group('unseen work follows the same rule as the extension', () {
     final fixtures = (raw['hidden_rule'] as List).cast<Map<String, dynamic>>();
     final th = raw['thinking'] as Map<String, dynamic>;

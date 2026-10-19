@@ -16,9 +16,16 @@ class ListenerChannel {
   static const _events = EventChannel('ai_water/prompt_events');
   static const _control = MethodChannel('ai_water/listener_control');
 
-  Stream<PromptEvent> events() => _events
-      .receiveBroadcastStream()
-      .map((raw) => PromptEvent.fromJson(jsonDecode(raw as String) as Map<String, dynamic>));
+  /// Prompts and the measured length of their answers, in the order the phone saw them. A
+  /// malformed or text-bearing payload is dropped here rather than surfacing as a stream error.
+  Stream<ListenerMessage> events() => _events.receiveBroadcastStream().expand((raw) {
+        try {
+          return [ListenerMessage.fromJson(jsonDecode(raw as String) as Map<String, dynamic>)];
+        } catch (_) {
+          // malformed (a FormatException, or a TypeError on a missing field): drop it
+          return const <ListenerMessage>[];
+        }
+      });
 
   Future<bool> isEnabled() async {
     try {
@@ -32,15 +39,17 @@ class ListenerChannel {
   Future<void> openEnableSettings() => _control.invokeMethod('openSettings');
 
   /// Events captured while the app was not running. Cleared on the native side once returned.
-  Future<List<PromptEvent>> drainPending() async {
+  Future<List<ListenerMessage>> drainPending() async {
     try {
       final raw = await _control.invokeListMethod<String>('drainPending') ?? const [];
-      final out = <PromptEvent>[];
+      final out = <ListenerMessage>[];
       for (final line in raw) {
         try {
-          out.add(PromptEvent.fromJson(jsonDecode(line) as Map<String, dynamic>));
-        } on FormatException {
-          // Malformed or text-bearing payloads are dropped, never surfaced.
+          out.add(ListenerMessage.fromJson(jsonDecode(line) as Map<String, dynamic>));
+        } catch (_) {
+          // Malformed or text-bearing payloads are dropped, never surfaced — including a line
+          // with a missing field, which throws a TypeError and would otherwise stop the app
+          // from starting.
         }
       }
       return out;

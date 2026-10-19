@@ -118,6 +118,27 @@ class WaterCalculator {
     );
   }
 
+  /// Estimate mode (I-73). Mirrors `estimateSession()` in engine.js: seconds an AI app was open
+  /// become prompts at [promptsPerMinute], each priced as the reference prompt on the standard
+  /// tier. Fractions are kept — 90 s is 0.75 of a prompt — so many short sessions neither vanish
+  /// nor double. [ctx] must carry the standard tier and the text task.
+  SessionEstimate estimateSession({
+    required CalculationContext ctx,
+    required double seconds,
+    required double promptsPerMinute,
+    required int referenceInputTokens,
+    required int referenceOutputTokens,
+  }) {
+    final prompts = (seconds < 0 ? 0 : seconds) / 60 * promptsPerMinute;
+    final one = estimate(ctx: ctx, inputTokens: referenceInputTokens, outputTokens: referenceOutputTokens);
+    return SessionEstimate(
+      prompts: prompts,
+      energyWh: one.energyWh * prompts,
+      scope1Ml: one.scope1Ml * prompts,
+      scope2Ml: one.scope2Ml * prompts,
+    );
+  }
+
   /// "Switching this task to `<tier>` saves X mL" — same inputs, different tier.
   double savingsIfSwitched({
     required CalculationContext current,

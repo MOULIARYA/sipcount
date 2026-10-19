@@ -1,7 +1,10 @@
 # Sipcount — state of play
 
 *The one page to read before starting work, and to update before finishing. If something important
-is only in a chat, it does not exist. Last updated 2026-09-27.*
+is only in a chat, it does not exist. Last updated 2026-09-27; risk 9 and the release line below added 2026-10-19.*
+
+**Released as of 2026-10-19:** Android APK **#29** (2026-10-07, commit `b9fa1f7`); Chrome extension
+**0.3.0**, unpacked only (last change 2026-10-06). Detail in `docs/RELEASES.md`.
 
 ---
 
@@ -115,6 +118,8 @@ Full reasoning in `ISSUES.md`; this is the index.
 | Sign-in | Google/Apple is Phase 2, recovery only — `docs/SYNC-AND-ACCOUNTS.md` |
 | Desktop | Counter not viewer; Windows and macOS both (D-30) |
 | Output tokens | 5× input is a **placeholder** until measured (D-22). One constant, everything derives from it, proven safe to swap at 3× / 5× / 8× / 10×. |
+| Estimate mode | 0.5 prompts per minute in an AI app is a **placeholder** (I-73), published and re-fittable. Measured beats estimated for the same AI on the same day. The screen always says "estimate". |
+| Thinking levels | Interim (I-69): High and above = reasoning; Medium / Low / Instant = standard. Mouli's to change, one line. |
 | Simulate | Never writes to today's total |
 | Age | Under 18 no sync; under 13 no sharing and the character never reaches its worst state |
 
@@ -157,3 +162,11 @@ Full reasoning in `ISSUES.md`; this is the index.
    **The posture that follows: do not write `const` on a widget whose const-ness is uncertain.**
    `const` is an optimisation, not a requirement; `prefer_const_constructors` will suggest it where
    it is valid, and the analyzer is the only thing that actually knows. Guessing it costs a push.
+
+9. **An always-on Accessibility service and banking apps cannot coexist (I-72).** Banks, and
+   Google's own Play Integrity check, flag any Accessibility service that isn't a disability tool,
+   so users switch ours off and counting stops. **Rel 1.4 answers it with estimate mode (I-73):**
+   Usage Access, minutes in each AI app, an estimated prompt count that says it is one. The rate
+   is a placeholder (0.5 prompts/min) until the desktop calibration replaces it. The one-tap
+   pause, the in-app browser and export import remain decisions for Mouli:
+   `docs/SENSING-DECISION-2026-10.md`.

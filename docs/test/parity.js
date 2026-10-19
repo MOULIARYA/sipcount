@@ -60,7 +60,7 @@ console.log('\nTHE EXTENSION LOADS THE WAY CHROME LOADS IT');
 }
 
 /* load both engines the way their own product does */
-const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, fmt, scriptOf, hiddenFrom, contextFactor, ZONE_UI};'))();
+const app = (new Function(load('engine.js') + '\nreturn {C, estimate, regionParams, tok, fmt, scriptOf, hiddenFrom, contextFactor, ZONE_UI, resolveTier, estimateSession};'))();
 const ext = (new Function('module', load('browser_extension/engine.js') + '\nreturn SIP;'))({ });
 
 console.log('\nTHE SAME PROMPT GIVES THE SAME ANSWER');
@@ -275,6 +275,29 @@ ok('the facts are not reworded on the way',
         app.hiddenFrom({ activeMs: f.active_ms, outputTokens: f.output_tokens, tier: f.tier })));
   ok('a reasoning turn is never charged twice for thinking',
      (j.hidden_rule || []).filter(f => f.tier === 'reasoning').every(f => f.expect_hidden_tokens === 0));
+  /* I-69: the thinking levels. "High" and above price as reasoning on ChatGPT and Gemini, Medium /
+     Low / Instant as standard (Madhur's interim rule, 2026-10-19). The fixtures are generated from
+     engine.js and the phone test reads the same file, so no sensor can disagree. */
+  ok('model → tier ships as fixtures', Array.isArray(j.tier_cases) && j.tier_cases.length >= 15);
+  ok('and the fixtures reproduce engine.js',
+     (j.tier_cases || []).every(c => c.expect_tier === app.resolveTier(c.vendor, c.hint)));
+  const tierOf = (v, h) => (j.tier_cases || []).find(c => c.vendor === v && c.hint === h)?.expect_tier;
+  ok('ChatGPT High and Extra High are reasoning', tierOf('openai', 'gpt-6 high') === 'reasoning' && tierOf('openai', 'gpt-6 extra high') === 'reasoning');
+  ok('ChatGPT Medium and Instant are standard', tierOf('openai', 'gpt-6 medium') === 'standard' && tierOf('openai', 'gpt-6 instant') === 'standard');
+  ok('Gemini Argon on High is reasoning, on Low is standard',
+     tierOf('google', 'gemini 4 argon · high') === 'reasoning' && tierOf('google', 'gemini 4 argon · low') === 'standard');
+  ok('Gemini Flash-Lite still beats Flash (longest match)', tierOf('google', 'gemini flash-lite') === 'lightweight');
+  /* I-73: estimate mode. Minutes in an AI app → prompts at the published rate → the reference
+     prompt's water. Fractions kept; zero seconds is zero. */
+  ok('estimate mode ships as fixtures', Array.isArray(j.session_cases) && j.session_cases.length >= 5);
+  ok('and the fixtures reproduce engine.js', (j.session_cases || []).every(c => {
+    const e = ext.estimateSession({ seconds: c.seconds, region: c.region });
+    return Math.abs(e.total - c.expect_total_ml) < 1e-6 && Math.abs(e.prompts - c.expect_prompts) < 1e-6; }));
+  ok('the rate is published for re-fitting', typeof j.estimation?.prompts_per_minute === 'number'
+     && JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'constants.json'), 'utf8')).estimation?.promptsPerMinute === j.estimation.prompts_per_minute);
+  ok('ten minutes of chat is priced as five reference prompts',
+     Math.abs(ext.estimateSession({ seconds: 600, region: 'us_hyperscale' }).total
+              - 5 * ext.estimate({ tier: 'standard', task: 'text', region: 'us_hyperscale', inputTokens: 100, outputTokens: 300 }).total) < 1e-9);
 }
 {
   /* The crash this is here to prevent: a fresh install read `us_default`, the constants had no such

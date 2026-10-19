@@ -173,6 +173,25 @@ async function run(){
   ok('unlock all works', w.eval('S.unlocked.length')===4 && d.querySelectorAll('.pick[data-locked]').length===0);
   click([...d.querySelectorAll('.pick')].find(c=>c.dataset.m==='glacier'));
   ok('can switch character', w.eval("S.mascot")==='glacier');
+  /* 2026-10-19 (Madhur): a day with no prompts is skipped — it neither adds to nor breaks the unlock
+     streak. Before this, one quiet day (or a day the phone listener was off for a banking app) reset
+     a fifteen-day run to zero. An over-budget day still breaks it. */
+  {
+    const saved = w.eval('JSON.stringify(store.S.days)');
+    const setDays = spec => w.eval(`(()=>{ const D={}; const sp=${JSON.stringify(spec)};
+        sp.forEach(([ago,n,ml])=>{ const d=new Date(); d.setDate(d.getDate()-ago);
+          D[dayKey(d)]={n, img:0, s1:ml, s2:0, tin:0, tout:0, tier:{}, task:{}, vendor:{}}; });
+        store.S.days=D; store.dirty(); return streakDays(); })()`);
+    const under = Math.round(w.eval('S.budget') * 0.2), over = w.eval('S.budget') + 1;
+    ok('streak: 15 under-budget days with a gap of quiet days still counts 15',
+       setDays([...Array(17)].map((_, i) => [i + 1, (i === 4 || i === 9) ? 0 : 1, (i === 4 || i === 9) ? 0 : under])) === 15);
+    ok('streak: a day with no record at all is skipped, not a break',
+       setDays([[1,1,under],[2,1,under],[5,1,under]]) === 3);
+    ok('streak: an over-budget day still ends it',
+       setDays([[1,1,under],[2,1,over],[3,1,under],[4,1,under]]) === 1);
+    ok('streak: nobody earns by not using AI', setDays([]) === 0);
+    w.eval(`store.S.days=${saved}; store.dirty();`);
+  }
   ok('session toggle renamed', /Remind me during long sessions/.test($('s-settings').textContent));
   let dl=null; w.HTMLAnchorElement.prototype.click=function(){dl=this.download;};
   w.URL.createObjectURL=()=>'blob:x'; w.URL.revokeObjectURL=()=>{};

@@ -14,6 +14,8 @@ data class PromptEvent(
     val charCount: Int,
     val attachmentCount: Int,
     val tsSeconds: Long,
+    val turnId: String? = null,  // pairs this prompt with the ReplyEvent(s) that measure its answer
+    val contextChars: Int = 0,   // visible conversation length at send — a LENGTH, like charCount
 ) {
     fun toJson(): String = JSONObject().apply {
         put("v", 1)
@@ -23,6 +25,30 @@ data class PromptEvent(
         put("task", task)
         put("char_count", charCount)
         put("attachment_count", attachmentCount)
+        put("ts", tsSeconds)
+        if (turnId != null) put("turn_id", turnId)
+        put("context_chars", contextChars)
+    }.toString()
+}
+
+/**
+ * How long the answer to [turnId] turned out to be (2026-10-19, I-70). Same rule as the browser
+ * extension's `prompt_reply`: cumulative and repeatable — Dart applies the difference from what it
+ * last recorded, so an early report is corrected by the next one. Counts and milliseconds only.
+ */
+data class ReplyEvent(
+    val turnId: String,
+    val replyChars: Int,
+    val activeMs: Long,
+    val tsSeconds: Long,
+) {
+    fun toJson(): String = JSONObject().apply {
+        put("v", 1)
+        put("kind", "reply")
+        put("source", "android_a11y")
+        put("turn_id", turnId)
+        put("reply_chars", replyChars)
+        put("active_ms", activeMs)
         put("ts", tsSeconds)
     }.toString()
 }

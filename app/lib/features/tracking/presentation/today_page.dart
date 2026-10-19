@@ -72,8 +72,8 @@ class _TodayPageState extends State<TodayPage> {
               ]),
               const SizedBox(height: 14),
 
-              if (!t.listenerEnabled) ...[
-                _EnableCard(onTap: t.openEnableSettings),
+              if (t.nothingCounts) ...[
+                _EnableCard(onTap: t.openUsageSettings, onPrecise: t.openEnableSettings),
                 const SizedBox(height: 14),
               ],
 
@@ -86,7 +86,9 @@ class _TodayPageState extends State<TodayPage> {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const _Eyebrow('Today · this device'),
+                        // the word "estimated" is the honesty of estimate mode (I-73): part of
+                        // today's number came from time in an AI app, not counted prompts
+                        _Eyebrow(t.todayHasEstimate ? 'Today · this device · includes an estimate' : 'Today · this device'),
                         const SizedBox(height: 2),
                         Row(crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic, children: [
@@ -245,9 +247,12 @@ class _StripePainter extends CustomPainter {
   bool shouldRepaint(_StripePainter old) => old.colour != colour || old.degrees != degrees;
 }
 
+/// Shown while nothing is counting. Usage Access first (I-73): it works next to banking apps and
+/// needs no Accessibility permission. Precise counting is the second, optional route.
 class _EnableCard extends StatelessWidget {
-  const _EnableCard({required this.onTap});
+  const _EnableCard({required this.onTap, required this.onPrecise});
   final VoidCallback onTap;
+  final VoidCallback onPrecise;
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
@@ -257,12 +262,15 @@ class _EnableCard extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
             const Text(
-              'Sipcount needs the Accessibility permission to notice when you tap Send in ChatGPT, '
-              'Claude, Gemini or Chrome. It counts characters and throws the text away instantly.',
+              'Sipcount estimates your water from how long ChatGPT, Claude and Gemini are open. '
+              'It needs the Usage Access permission, which many screen-time apps use. It never sees '
+              'what you type or what the AI replies, and it works alongside banking apps.',
               style: TextStyle(color: SipColors.muted, fontSize: 13, height: 1.45),
             ),
             const SizedBox(height: 14),
-            FilledButton(onPressed: onTap, child: const Text('Open Accessibility settings')),
+            FilledButton(onPressed: onTap, child: const Text('Open Usage Access settings')),
+            const SizedBox(height: 6),
+            TextButton(onPressed: onPrecise, child: const Text('Prefer exact counting? Use Accessibility instead')),
           ]),
         ),
       );
@@ -475,8 +483,9 @@ class _AnalyticsCard extends StatelessWidget {
 
     // Where it goes, over the week rather than today, so one heavy prompt does not define it.
     final days = tracker.lastDays(7);
-    final s1 = days.fold(0.0, (a, d) => a + d.scope1Ml);
-    final s2 = days.fold(0.0, (a, d) => a + d.scope2Ml);
+    // measured and estimated both split the same way (I-73), so include both
+    final s1 = days.fold(0.0, (a, d) => a + d.scope1Ml + d.estScope1Ml);
+    final s2 = days.fold(0.0, (a, d) => a + d.scope2Ml + d.estScope2Ml);
     final p1 = (s1 + s2) > 0 ? s1 / (s1 + s2) : 0.15;
     final a = (p1 * 100).round();
 
@@ -489,7 +498,12 @@ class _AnalyticsCard extends StatelessWidget {
           title: const _Eyebrow('Detailed analytics'),
           children: [
             Row(children: [
-              Expanded(child: _Metric(value: '${tracker.today.promptCount}', label: 'Prompts today')),
+              // estimated prompts show with a ≈, counted ones without (I-73)
+              Expanded(child: _Metric(
+                  value: tracker.today.estimatedPrompts > 0
+                      ? '≈${tracker.today.promptCount + tracker.today.estimatedPrompts.round()}'
+                      : '${tracker.today.promptCount}',
+                  label: 'Prompts today')),
               const SizedBox(width: 12),
               Expanded(child: _Metric(value: fmt(week), label: 'mL last 7 days')),
             ]),

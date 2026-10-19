@@ -22,8 +22,8 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const engineSrc = fs.readFileSync(path.join(ROOT, 'engine.js'), 'utf8');
-const { C, estimate, regionParams, tok, fmt, ZONE_UI, opportunityCost, hiddenFrom } =
-  (new Function(engineSrc + '\nreturn {C, estimate, regionParams, tok, fmt, ZONE_UI, opportunityCost, hiddenFrom};'))();
+const { C, estimate, regionParams, tok, fmt, ZONE_UI, opportunityCost, hiddenFrom, resolveTier: SIP_resolveTier, estimateSession } =
+  (new Function(engineSrc + '\nreturn {C, estimate, regionParams, tok, fmt, ZONE_UI, opportunityCost, hiddenFrom, resolveTier, estimateSession};'))();
 
 /* ---------- 1. the browser extension ---------------------------------------------------
    Everything below the engine is presentation or detection that only the extension needs:
@@ -46,12 +46,7 @@ const ADAPTER = `
     const cool = C.cooling[cooling] ? cooling : (C.regions[id].defaultCooling || 'reported');
     return regionParams(id, cool, hydro !== false);
   };
-  function resolveTier(vendor, hint){
-    const v = C.vendorMap[vendor] || C.vendorMap.unknown, h = (hint||'').toLowerCase();
-    let best = null;
-    for(const p in v.p) if(h.includes(p) && (!best || p.length > best.length)) best = p;
-    return best ? v.p[best] : v.def;
-  }
+  /* resolveTier comes from engine.js itself since 2026-10-19 (I-69) — one rule, pinned by fixtures */
   /* same call shape the extension always used; outputTokens stays optional, so when the
      page gives us no answer length the task default applies, exactly as in the app */
   function est({ tier, task, region, inputTokens = 0, outputTokens = null, hiddenTokens = 0, contextTokens = 0, items = 1, cooling, hydro }){
@@ -76,7 +71,11 @@ const ADAPTER = `
     for(const [l,v] of EQ) if(ml >= v) return \`\${fmt(ml/v,1)} \${l}\${ml/v >= 1.95 ? 's' : ''}\`;
     return \`\${fmt(ml/15,1)} of a sip\`;
   }
-  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, savingsIfLighter, equiv, DEFAULT_REGION };
+  /* estimate mode (I-73): seconds an AI app was open → estimated prompts and water */
+  function estSession({ seconds, region, cooling, hydro }){
+    return estimateSession({ seconds, params: paramsFor(region, cooling, hydro) });
+  }
+  return { C, tok, fmt, scriptOf, hiddenFrom, contextFactor, zone, ZONE_UI, opportunityCost, applyConstants, resolveTier, estimate: est, estimateSession: estSession, savingsIfLighter, equiv, DEFAULT_REGION };
 `;
 
 const banner = `/* GENERATED FILE — do not edit.
@@ -117,6 +116,11 @@ const models = {
      golden cases only ever exercised the inputs both sides happened to support. */
   thinking: { tokens_per_sec: C.thinking.tokensPerSec, floor_sec: C.thinking.floorSec, max_sec: C.thinking.maxSec },
   context: { per_thousand: C.context.perThousand, max: C.context.max },
+  /* Estimate mode (I-73): a phone that can only see minutes in an AI app prices them at this rate,
+     each estimated prompt being the reference prompt. A placeholder, published so it can be
+     re-fitted without a release. */
+  estimation: { prompts_per_minute: C.estimation.promptsPerMinute,
+                reference_input_tokens: C.referencePrompt.inputTokens, reference_output_tokens: C.referencePrompt.outputTokens },
   token_weights: C.tokenWeights,
   task_profiles: Object.fromEntries(Object.entries(C.tasks).map(([id, t]) => [id,
     t.fixed != null ? { fixed_energy_wh_per_item: t.fixed, label: t.label }
@@ -170,6 +174,35 @@ const models = {
     [1, 1], [2, 1], [2.5, 1], [1204, 0], [0.5, 2], [1, 2], [9, null], [9.5, null],
     [0, 1], [12.04, 1], [1234567, 0], [-1204, 0], [-9.5, null], [0.004, 2], [999.95, 1],
   ].map(([n, d]) => ({ n, d, expect: d === null ? fmt(n) : fmt(n, d) })),
+
+  /* Model label → tier, as fixtures (I-69). The labels are what the pickers show, lower-cased, as
+     the sensors hand them over. "High" and above on ChatGPT and Gemini price as reasoning, Medium /
+     Low / Instant as standard — Madhur's interim rule of 2026-10-19, pending Mouli. Pinned so the
+     phone and the extension can never classify the same label differently. */
+  tier_cases: [
+    ['openai', 'gpt-6 high'], ['openai', 'gpt-6 extra high'], ['openai', 'gpt-6 medium'],
+    ['openai', 'gpt-6 instant'], ['openai', 'gpt-6 pro'], ['openai', 'gpt-6'], ['openai', 'gpt-5 thinking'],
+    ['openai', 'gpt-4o mini'], ['openai', null],
+    ['google', 'gemini 4 argon · high'], ['google', 'gemini 4 argon · medium'], ['google', 'gemini 4 argon · low'],
+    ['google', 'gemini pro high'], ['google', 'gemini pro'], ['google', 'gemini flash'], ['google', 'gemini flash-lite'],
+    ['google', 'gemini 2.5 pro (deep think)'],
+    ['anthropic', 'claude opus 5.5'], ['anthropic', 'claude haiku 5.5'], ['anthropic', 'sonnet · extended thinking'],
+    ['unknown', 'anything'],
+  ].map(([vendor, hint]) => ({ vendor, hint, expect_tier: SIP_resolveTier(vendor, hint) })),
+
+  /* Estimate mode, as fixtures: seconds in an AI app → estimated prompts and millilitres, per
+     region. Fractions are kept (90 s = 0.75 prompts). Pinned so the phone's estimate is exactly
+     the engine's. */
+  session_cases: [
+    { region: 'us_hyperscale', seconds: 0 }, { region: 'us_hyperscale', seconds: 90 },
+    { region: 'us_hyperscale', seconds: 600 }, { region: 'india', seconds: 600 },
+    { region: 'eu_average', seconds: 3600 }, { region: 'india', seconds: 7 },
+  ].map(c => {
+    const p = regionParams(c.region, C.regions[c.region].defaultCooling || 'reported', true);
+    const e = estimateSession({ seconds: c.seconds, params: p });
+    return { ...c, expect_prompts: +e.prompts.toFixed(6), expect_energy_wh: +e.energyWh.toFixed(6),
+             expect_scope1_ml: +e.s1.toFixed(6), expect_scope2_ml: +e.s2.toFixed(6), expect_total_ml: +e.total.toFixed(6) };
+  }),
 
   hidden_rule: (() => {
     const cases = [
@@ -254,6 +287,7 @@ const published = {
   charsPerTokenByScript: C.charsPerTokenByScript,
   thinking: { tokensPerSec: C.thinking.tokensPerSec },
   context: { perThousand: C.context.perThousand, max: C.context.max },
+  estimation: { promptsPerMinute: C.estimation.promptsPerMinute },
   tiers: Object.fromEntries(Object.entries(C.tiers).map(([id, t]) => [id, { base: t.base }])),
   regions: Object.fromEntries(Object.entries(C.regions).map(([id, r]) => [id, { pue: r.pue, wueSite: r.wueSite, ewif: r.ewif }]))
 };

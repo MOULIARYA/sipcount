@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sipcount — AI water footprint",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Shows how much water your AI prompts use. Counts only — never reads, stores or sends what you type. No network permission.",
   "permissions": [
     "storage"

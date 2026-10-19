@@ -21,6 +21,11 @@
     "per_thousand": 0.05,
     "max": 4
   },
+  "estimation": {
+    "prompts_per_minute": 0.5,
+    "reference_input_tokens": 100,
+    "reference_output_tokens": 300
+  },
   "token_weights": {
     "input": 0.2,
     "output": 1
@@ -252,6 +257,10 @@
         "o4": "reasoning",
         "thinking": "reasoning",
         "pro": "reasoning",
+        "high": "reasoning",
+        "extra high": "reasoning",
+        "medium": "standard",
+        "instant": "standard",
         "mini": "lightweight",
         "nano": "lightweight"
       }
@@ -268,6 +277,9 @@
       "patterns": {
         "thinking": "reasoning",
         "deep think": "reasoning",
+        "high": "reasoning",
+        "medium": "standard",
+        "low": "standard",
         "flash": "lightweight",
         "flash-lite": "lightweight"
       }
@@ -512,6 +524,169 @@
       "n": 999.95,
       "d": 1,
       "expect": "1,000"
+    }
+  ],
+  "tier_cases": [
+    {
+      "vendor": "openai",
+      "hint": "gpt-6 high",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-6 extra high",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-6 medium",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-6 instant",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-6 pro",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-6",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-5 thinking",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "openai",
+      "hint": "gpt-4o mini",
+      "expect_tier": "lightweight"
+    },
+    {
+      "vendor": "openai",
+      "hint": null,
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini 4 argon · high",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini 4 argon · medium",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini 4 argon · low",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini pro high",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini pro",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini flash",
+      "expect_tier": "lightweight"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini flash-lite",
+      "expect_tier": "lightweight"
+    },
+    {
+      "vendor": "google",
+      "hint": "gemini 2.5 pro (deep think)",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "anthropic",
+      "hint": "claude opus 5.5",
+      "expect_tier": "standard"
+    },
+    {
+      "vendor": "anthropic",
+      "hint": "claude haiku 5.5",
+      "expect_tier": "lightweight"
+    },
+    {
+      "vendor": "anthropic",
+      "hint": "sonnet · extended thinking",
+      "expect_tier": "reasoning"
+    },
+    {
+      "vendor": "unknown",
+      "hint": "anything",
+      "expect_tier": "standard"
+    }
+  ],
+  "session_cases": [
+    {
+      "region": "us_hyperscale",
+      "seconds": 0,
+      "expect_prompts": 0,
+      "expect_energy_wh": 0,
+      "expect_scope1_ml": 0,
+      "expect_scope2_ml": 0,
+      "expect_total_ml": 0
+    },
+    {
+      "region": "us_hyperscale",
+      "seconds": 90,
+      "expect_prompts": 0.75,
+      "expect_energy_wh": 0.225,
+      "expect_scope1_ml": 0.144788,
+      "expect_scope2_ml": 0.827131,
+      "expect_total_ml": 0.971919
+    },
+    {
+      "region": "us_hyperscale",
+      "seconds": 600,
+      "expect_prompts": 5,
+      "expect_energy_wh": 1.5,
+      "expect_scope1_ml": 0.96525,
+      "expect_scope2_ml": 5.51421,
+      "expect_total_ml": 6.47946
+    },
+    {
+      "region": "india",
+      "seconds": 600,
+      "expect_prompts": 5,
+      "expect_energy_wh": 1.5,
+      "expect_scope1_ml": 4.29,
+      "expect_scope2_ml": 7.3788,
+      "expect_total_ml": 11.6688
+    },
+    {
+      "region": "eu_average",
+      "seconds": 3600,
+      "expect_prompts": 30,
+      "expect_energy_wh": 9,
+      "expect_scope1_ml": 0.3132,
+      "expect_scope2_ml": 41.238,
+      "expect_total_ml": 41.5512
+    },
+    {
+      "region": "india",
+      "seconds": 7,
+      "expect_prompts": 0.058333,
+      "expect_energy_wh": 0.0175,
+      "expect_scope1_ml": 0.05005,
+      "expect_scope2_ml": 0.086086,
+      "expect_total_ml": 0.136136
     }
   ],
   "hidden_rule": [

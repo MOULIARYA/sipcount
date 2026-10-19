@@ -1,6 +1,8 @@
 package io.sipcount.ai_water.listener
 
 import android.accessibilityservice.AccessibilityService
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.util.ArrayDeque
@@ -22,8 +24,28 @@ class PromptAccessibilityService : AccessibilityService() {
     private var lastPollMs = 0L
     private var lastWindowStateMs = 0L
 
+    // ---- measuring the answer (I-70, 2026-10-19) ----------------------------------------------
+    // Until now the phone priced every reply as a fixed 300 tokens, while the extension measured
+    // it. The reply is most of the water, so this mirrors content.js `watchReply()`: watch how
+    // much text the conversation gains after a send — LENGTHS ONLY, nothing kept — and report it
+    // cumulatively. Positive changes are summed rather than taking (now − then), because a chat
+    // screen only holds what is visible: old messages scroll out of the tree as the answer grows.
+    private class ReplyWatch(val pkg: String, val turnId: String, val promptChars: Int, val tSend: Long, var last: Int) {
+        var grew = 0
+        var lastActive = tSend
+        var reported = -1
+    }
+    private var watch: ReplyWatch? = null
+    private var lastReplyPollMs = 0L
+    private var turnSeq = 0
+    private val main = Handler(Looper.getMainLooper())
+    private val settle = Runnable { onSettle() }
+    private val idle = Runnable { finishWatch() }
+    private val cap = Runnable { finishWatch() }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pkg = event.packageName?.toString() ?: return
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) pollReply(pkg)
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 // Screen navigation (chat → settings, new chat…). Used to suppress the
@@ -56,7 +78,105 @@ class PromptAccessibilityService : AccessibilityService() {
         }
     }
 
-    override fun onInterrupt() = Unit
+    override fun onInterrupt() = finishWatch()
+
+    override fun onDestroy() {
+        finishWatch()
+        super.onDestroy()
+    }
+
+    // ---- the answer ---------------------------------------------------------------------------
+
+    private fun startWatch(pkg: String, turnId: String, promptChars: Int, now: Long, convo: Int) {
+        finishWatch() // a new send closes the previous turn with whatever it measured
+        watch = ReplyWatch(pkg, turnId, promptChars, now, convo)
+        main.postDelayed(idle, IDLE_MS)
+        main.postDelayed(cap, CAP_MS)
+    }
+
+    private fun pollReply(pkg: String) {
+        val w = watch ?: return
+        if (pkg != w.pkg) return
+        val now = System.currentTimeMillis()
+        if (now - lastReplyPollMs < REPLY_POLL_MS) return
+        lastReplyPollMs = now
+        val root = rootInActiveWindow ?: return
+        val cur = try { convoChars(root) } finally { safeRecycle(root) }
+        val delta = cur - w.last
+        w.last = cur
+        if (delta > 0) w.grew += delta
+        if (delta != 0) w.lastActive = now
+        main.removeCallbacks(settle); main.postDelayed(settle, SETTLE_MS)
+        main.removeCallbacks(idle); main.postDelayed(idle, IDLE_MS)
+    }
+
+    /** The page went quiet. If the stop control is still up the model is thinking, not done. */
+    private fun onSettle() {
+        val w = watch ?: return
+        val root = rootInActiveWindow
+        val samePkg = root?.packageName?.toString() == w.pkg
+        val generating = samePkg && root != null && stopVisible(root)
+        safeRecycle(root)
+        if (!samePkg) { finishWatch(); return } // left the app mid-answer: keep what we measured
+        if (generating) {
+            w.lastActive = System.currentTimeMillis()
+            main.postDelayed(settle, SETTLE_MS)
+        } else {
+            report(w)
+        }
+    }
+
+    private fun report(w: ReplyWatch) {
+        // the echoed prompt bubble is not the answer
+        val reply = maxOf(0, w.grew - w.promptChars)
+        // Nothing measured yet (e.g. the user left before the answer appeared): say nothing, so
+        // the assumed reply stands instead of being replaced by zero.
+        if (reply == 0 && w.reported < 0) return
+        if (reply == w.reported) return
+        w.reported = reply
+        val json = ReplyEvent(w.turnId, reply, maxOf(0L, w.lastActive - w.tSend), System.currentTimeMillis() / 1000).toJson()
+        if (!ListenerStreamHandler.tryEmit(json)) PendingQueue.append(applicationContext, json)
+    }
+
+    private fun finishWatch() {
+        val w = watch ?: return
+        watch = null
+        main.removeCallbacks(settle); main.removeCallbacks(idle); main.removeCallbacks(cap)
+        report(w)
+    }
+
+    /** Total text length on screen outside the text box. A length — the text is never kept. */
+    private fun convoChars(root: AccessibilityNodeInfo): Int {
+        var total = 0
+        var visited = 0
+        val q = ArrayDeque<AccessibilityNodeInfo>().apply { add(root) }
+        while (q.isNotEmpty() && visited < MAX_REPLY_NODES) {
+            val n = q.poll() ?: break
+            visited++
+            if (!n.isEditable) total += n.text?.length ?: 0
+            for (i in 0 until n.childCount) n.getChild(i)?.let { q.add(it) }
+            if (n !== root) safeRecycle(n)
+        }
+        while (q.isNotEmpty()) safeRecycle(q.poll())
+        return total
+    }
+
+    /** A "Stop" control is on screen exactly while the model is generating (as in content.js). */
+    private fun stopVisible(root: AccessibilityNodeInfo): Boolean {
+        var visited = 0
+        var found = false
+        val q = ArrayDeque<AccessibilityNodeInfo>().apply { add(root) }
+        while (q.isNotEmpty() && visited < MAX_NODES && !found) {
+            val n = q.poll() ?: break
+            visited++
+            val label = shortLabel(n)
+            if (label != null && (label.startsWith("stop") || label.contains("stop generating") || label.contains("stop response"))) found = true
+            for (i in 0 until n.childCount) n.getChild(i)?.let { q.add(it) }
+            if (n !== root) safeRecycle(n)
+        }
+        while (q.isNotEmpty()) safeRecycle(q.poll())
+        return found
+    }
 
     // ------------------------------------------------------------------------------------------
 
@@ -124,6 +244,7 @@ class PromptAccessibilityService : AccessibilityService() {
         val vendor = vendorFor(pkg, root) ?: run { safeRecycle(root); return }
 
         val scan = if (root != null) scanWindow(root, vendor) else WindowScan(null, 0, null)
+        val convo = if (root != null) convoChars(root) else 0
         safeRecycle(root)
 
         // The Google app is also Search/Discover; only its Gemini screen counts.
@@ -132,6 +253,8 @@ class PromptAccessibilityService : AccessibilityService() {
         val chars = if (knownChars > 0) knownChars else scan.editLength ?: lastEditLength[pkg] ?: 0
         if (chars == 0 && scan.attachments == 0) return
 
+        // timestamp + counter + random tail, as in content.js: two turns must never share an id
+        val turnId = "$now-${++turnSeq}-${(1000..9999).random()}"
         val ev = PromptEvent(
             vendor = vendor,
             modelHint = scan.modelHint,
@@ -139,12 +262,17 @@ class PromptAccessibilityService : AccessibilityService() {
             charCount = chars,
             attachmentCount = scan.attachments,
             tsSeconds = now / 1000,
+            turnId = turnId,
+            contextChars = convo,
         )
         lastEmitMs = now
         lastEditLength.remove(pkg)
 
         val json = ev.toJson()
+        // Count at once on the assumed reply, then correct it when the answer lands — a user who
+        // leaves mid-answer keeps the estimate rather than losing the turn.
         if (!ListenerStreamHandler.tryEmit(json)) PendingQueue.append(applicationContext, json)
+        startWatch(pkg, turnId, chars, now, convo)
     }
 
     private fun looksLikeSend(n: AccessibilityNodeInfo): Boolean {
@@ -201,7 +329,9 @@ class PromptAccessibilityService : AccessibilityService() {
                 if (len > 0) editLength = len
             } else {
                 shortLabel(n)?.let { label ->
-                    for (k in keywords) if (label.contains(k) && (best == null || k.length > best!!.length)) best = k
+                    // whole words only: "Profile" must not read as "pro", nor "Highlights" as "high"
+                    // — both would price the turn as reasoning, ten times over (I-69 review)
+                    for (k in keywords) if (hasWord(label, k) && (best == null || k.length > best!!.length)) best = k
                     if (label.contains("remove") && (label.contains("attach") || label.contains("file") || label.contains("image"))) attachments++
                     if (label.contains("gemini")) sawGemini = true
                 }
@@ -211,6 +341,20 @@ class PromptAccessibilityService : AccessibilityService() {
         }
         while (q.isNotEmpty()) safeRecycle(q.poll())
         return WindowScan(best, attachments, editLength, sawGemini)
+    }
+
+    /** [keyword] appears in [label] as a whole word (or whole words), not inside another word. */
+    private fun hasWord(label: String, keyword: String): Boolean {
+        var from = 0
+        while (true) {
+            val i = label.indexOf(keyword, from)
+            if (i < 0) return false
+            val before = if (i == 0) ' ' else label[i - 1]
+            val afterIdx = i + keyword.length
+            val after = if (afterIdx >= label.length) ' ' else label[afterIdx]
+            if (!before.isLetterOrDigit() && !after.isLetterOrDigit()) return true
+            from = i + 1
+        }
     }
 
     /** contentDescription or text, lowercased, only if short enough to be a UI label. */
@@ -240,11 +384,19 @@ class PromptAccessibilityService : AccessibilityService() {
         private const val MAX_NODES = 300
         private const val MAX_LABEL_CHARS = 40
 
+        // the answer watch — the same timings content.js uses, so phone and browser agree
+        private const val REPLY_POLL_MS = 600L
+        private const val SETTLE_MS = 2500L
+        private const val IDLE_MS = 25_000L
+        private const val CAP_MS = 300_000L
+        private const val MAX_REPLY_NODES = 500
+
         // Lowercase substrings that appear in model-picker labels. Longest match wins in Dart too.
         private val MODEL_KEYWORDS: Map<String, List<String>> = mapOf(
-            "openai" to listOf("o1", "o3", "o4", "thinking", "mini", "nano", "gpt-4o", "gpt-4.1", "gpt-5"),
+            // thinking levels (I-69): the engine prices "high"/"extra high" as reasoning
+            "openai" to listOf("o1", "o3", "o4", "thinking", "pro", "extra high", "high", "medium", "instant", "mini", "nano", "gpt-4o", "gpt-4.1", "gpt-5", "gpt-6"),
             "anthropic" to listOf("opus", "sonnet", "haiku", "extended"),
-            "google" to listOf("flash-lite", "flash", "pro", "thinking"),
+            "google" to listOf("flash-lite", "flash", "pro", "argon", "thinking", "deep think", "high", "medium", "low"),
         )
     }
 }
