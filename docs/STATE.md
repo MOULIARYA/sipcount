@@ -16,7 +16,8 @@ anyone remembering:
 1. **Start** by reading this file and `ISSUES.md`. **Finish** by updating both.
 2. **Anything two tracks share needs a test that fails when they drift.** `engine.js` has one
    (`docs/test/parity.js`). Copy that pattern for the next shared thing; do not rely on care.
-3. **Before any push, on every track:** `node docs/test/regression.js` and `node docs/test/parity.js`.
+3. **Before any push, on every track:** `node docs/test/regression.js`, `node docs/test/parity.js`
+   and — for anything touching `app/`, `pubspec.yaml` or `.github/` — `node docs/test/ci.js`.
    Report the counts. Neither has a layout engine, so neither replaces opening the thing on a device.
 4. **Generated files are never hand-edited** — `browser_extension/engine.js` and
    `app/assets/calc/models.v2.json` come from `node tools/build-shared.js`.

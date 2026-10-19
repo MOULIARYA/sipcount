@@ -22,7 +22,7 @@ concurrency:
 jobs:
   javascript:
     name: Prototype, engine and extension
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
@@ -64,6 +64,10 @@ jobs:
       # decisions in ISSUES.md or the agreed research cadence.
       - name: The traceability matrix checks itself
         run: node docs/test/traceability.js
+      # Three builds in one day failed for reasons that were readable in the repository before
+      # the push: an unpinned dependency, and a CI step the emulator action runs line by line.
+      - name: The release pipeline is what we meant to write
+        run: node docs/test/ci.js
       # The part of the analyzer that can run where the analyzer cannot. `storage.googleapis.com`
       # is blocked in the authoring sandbox, so Dart and Flutter cannot be installed there and
       # every Dart fact waits for CI. Five round trips in two days came from that; four of the five
@@ -73,7 +77,7 @@ jobs:
 
   dart:
     name: Phone app engine
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app

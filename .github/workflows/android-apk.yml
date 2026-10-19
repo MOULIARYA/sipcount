@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app
@@ -139,9 +139,11 @@ jobs:
   # or a dead process, fails the build — and nothing is published.
   boot-check:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v5
         with:
           name: sipcount-android-apk
@@ -163,33 +165,14 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            set -euo pipefail
-            adb install -r apk/sipcount-android.apk
-            adb logcat -c
-            adb shell am start -W -n io.sipcount.ai_water/.MainActivity
-            marker=""
-            for i in $(seq 1 45); do
-              sleep 2
-              if ! adb shell pidof io.sipcount.ai_water >/dev/null 2>&1; then
-                echo "::error::Sipcount's process died after launch"; adb logcat -d | tail -200; exit 1
-              fi
-              marker="$(adb logcat -d | grep -E 'SIPCOUNT_BOOT (ok|failed)' | head -1 || true)"
-              [ -n "$marker" ] && break
-            done
-            echo "boot marker: ${marker:-<none>}"
-            if echo "$marker" | grep -q 'SIPCOUNT_BOOT ok'; then
-              echo "The app reached its first screen."
-            else
-              echo "::error::The app did not reach its first screen: ${marker:-no boot marker within 90 s (frozen on the launch logo?)}"
-              adb logcat -d | grep -E 'flutter|AndroidRuntime|sipcount' | tail -200 || true
-              exit 1
-            fi
+          # ONE line. This action runs each line of `script` separately with `sh`, so the logic
+          # lives in a bash file (I-76). docs/test/ci.js enforces this.
+          script: bash .github/scripts/boot-check.sh apk/sipcount-android.apk 90
 
   publish:
     needs: boot-check
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
