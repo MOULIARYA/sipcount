@@ -62,13 +62,33 @@ class Tracker extends ChangeNotifier {
     final t = Tracker._(constants, store, channel ?? ListenerChannel(), usage ?? UsageChannel());
     t._days = t._store.readAll();
     await store.setInstalledAtIfUnset(DateTime.now());
-    for (final m in await t._channel.drainPending()) {
-      await t._onMessage(m);
+    /* THE RULE OF START-UP (I-74): nothing below this line may stop the app from drawing its
+       first screen. Build 30 froze on the launch logo because a permission check through a new
+       Android channel failed before `runApp` was ever reached. So every optional step is wrapped,
+       and anything that talks to Android happens after the screen exists (see main.dart). */
+    try {
+      for (final m in await t._channel.drainPending()) {
+        await t._onMessage(m);
+      }
+    } catch (e) {
+      t.startupNotes.add('pending events: $e');
     }
-    await t.refreshListenerState(); // also harvests usage, then checks unlocks
-    t._sub = t._channel.events().listen(t._onMessage, onError: (_) {});
+    try {
+      await t.checkUnlocks();
+    } catch (e) {
+      t.startupNotes.add('unlocks: $e');
+    }
+    try {
+      t._sub = t._channel.events().listen(t._onMessage, onError: (_) {});
+    } catch (e) {
+      t.startupNotes.add('listener stream: $e');
+    }
     return t;
   }
+
+  /// What went wrong during start-up, if anything — shown on the Today screen in a test build
+  /// rather than stopping the app. Empty on a healthy start.
+  final List<String> startupNotes = [];
 
   // ---- estimate mode (I-73) ---------------------------------------------------------------
 
@@ -505,11 +525,32 @@ class Tracker extends ChangeNotifier {
 
   /// Called on start and whenever the app comes back to the foreground: re-reads both
   /// permissions, pulls in any time spent in AI apps since last time, and re-checks unlocks.
+  ///
+  /// Every step is guarded on its own: a failing Android call must never take the others, or the
+  /// screen, down with it (I-74).
   Future<void> refreshListenerState() async {
-    listenerEnabled = await _channel.isEnabled();
-    usageEnabled = await _usage.hasPermission();
-    await harvestUsage();
-    await checkUnlocks();
+    try {
+      listenerEnabled = await _channel.isEnabled();
+    } catch (e) {
+      listenerEnabled = false;
+      startupNotes.add('accessibility check: $e');
+    }
+    try {
+      usageEnabled = await _usage.hasPermission();
+    } catch (e) {
+      usageEnabled = false;
+      startupNotes.add('usage access check: $e');
+    }
+    try {
+      await harvestUsage();
+    } catch (e) {
+      startupNotes.add('usage harvest: $e');
+    }
+    try {
+      await checkUnlocks();
+    } catch (e) {
+      startupNotes.add('unlocks: $e');
+    }
     notifyListeners();
   }
 

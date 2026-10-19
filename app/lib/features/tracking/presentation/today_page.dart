@@ -72,6 +72,18 @@ class _TodayPageState extends State<TodayPage> {
               ]),
               const SizedBox(height: 14),
 
+              // Test builds only: anything that went wrong on the way up, instead of a frozen
+              // logo (I-74). A healthy start shows nothing here.
+              if (_showDemo && t.startupNotes.isNotEmpty) ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Text('Start-up notes:\n${t.startupNotes.join('\n')}',
+                        style: const TextStyle(color: SipColors.warn, fontSize: 12, height: 1.4)),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               if (t.nothingCounts) ...[
                 _EnableCard(onTap: t.openUsageSettings, onPrecise: t.openEnableSettings),
                 const SizedBox(height: 14),

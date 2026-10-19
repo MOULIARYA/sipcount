@@ -22,14 +22,18 @@ class MainActivity : FlutterActivity() {
         EventChannel(messenger, "ai_water/prompt_events").setStreamHandler(ListenerStreamHandler)
 
         MethodChannel(messenger, "ai_water/listener_control").setMethodCallHandler { call, result ->
-            when (call.method) {
-                "isEnabled" -> result.success(isServiceEnabled())
-                "openSettings" -> {
-                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    result.success(null)
+            try {
+                when (call.method) {
+                    "isEnabled" -> result.success(isServiceEnabled())
+                    "openSettings" -> {
+                        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        result.success(null)
+                    }
+                    "drainPending" -> result.success(PendingQueue.drain(applicationContext))
+                    else -> result.notImplemented()
                 }
-                "drainPending" -> result.success(PendingQueue.drain(applicationContext))
-                else -> result.notImplemented()
+            } catch (t: Throwable) {
+                result.error("listener", t.javaClass.simpleName + ": " + (t.message ?: ""), null)
             }
         }
 
@@ -37,19 +41,25 @@ class MainActivity : FlutterActivity() {
            Accessibility permission, so it coexists with banking apps (I-72). The Dart side asks
            for a window and clips what comes back, so it is idempotent. */
         MethodChannel(messenger, "ai_water/usage").setMethodCallHandler { call, result ->
-            when (call.method) {
-                "hasPermission" -> result.success(UsageHarvester.hasPermission(applicationContext))
-                "openSettings" -> {
-                    startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    result.success(null)
+            // Nothing here may throw into Dart: a failed check answers "no", a failed read answers
+            // with an error the Dart side treats as "window not read" (I-74).
+            try {
+                when (call.method) {
+                    "hasPermission" -> result.success(UsageHarvester.hasPermission(applicationContext))
+                    "openSettings" -> {
+                        startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        result.success(null)
+                    }
+                    "sessions" -> {
+                        val since = call.argument<Number>("since_ms")?.toLong()
+                        val until = call.argument<Number>("until_ms")?.toLong()
+                        if (since == null || until == null) result.error("args", "since_ms and until_ms required", null)
+                        else result.success(UsageHarvester.sessionsJson(applicationContext, since, until))
+                    }
+                    else -> result.notImplemented()
                 }
-                "sessions" -> {
-                    val since = call.argument<Number>("since_ms")?.toLong()
-                    val until = call.argument<Number>("until_ms")?.toLong()
-                    if (since == null || until == null) result.error("args", "since_ms and until_ms required", null)
-                    else result.success(UsageHarvester.sessionsJson(applicationContext, since, until))
-                }
-                else -> result.notImplemented()
+            } catch (t: Throwable) {
+                result.error("usage", t.javaClass.simpleName + ": " + (t.message ?: ""), null)
             }
         }
 

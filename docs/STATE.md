@@ -163,6 +163,13 @@ Full reasoning in `ISSUES.md`; this is the index.
    `const` is an optimisation, not a requirement; `prefer_const_constructors` will suggest it where
    it is valid, and the analyzer is the only thing that actually knows. Guessing it costs a push.
 
+10. **Nothing started the whole app the way a phone does, and build 30 froze on the logo (I-74).**
+   Every start-up step was awaited before the first frame, so one failing Android call meant a
+   frozen launch screen and no message. Now the screen comes first, Android is asked afterwards,
+   a failure shows its error, and `startup_test.dart` boots the real tracker in CI with the
+   bridge healthy, missing and broken. **The rule: nothing may stand between `main()` and the
+   first frame that can fail or wait on Android.**
+
 9. **An always-on Accessibility service and banking apps cannot coexist (I-72).** Banks, and
    Google's own Play Integrity check, flag any Accessibility service that isn't a disability tool,
    so users switch ours off and counting stops. **Rel 1.4 answers it with estimate mode (I-73):**

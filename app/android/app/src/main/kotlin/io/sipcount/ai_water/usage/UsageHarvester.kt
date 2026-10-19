@@ -44,8 +44,16 @@ object UsageHarvester {
      *  night's sleep as chat. */
     private const val MAX_SESSION_MS = 2 * 60 * 60 * 1000L
 
+    /** False on any failure — a permission check must never be able to stop the app (I-74). */
     @Suppress("DEPRECATION")
-    fun hasPermission(ctx: Context): Boolean {
+    fun hasPermission(ctx: Context): Boolean = try {
+        checkOp(ctx)
+    } catch (_: Throwable) {
+        false
+    }
+
+    @Suppress("DEPRECATION")
+    private fun checkOp(ctx: Context): Boolean {
         val ops = ctx.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), ctx.packageName)

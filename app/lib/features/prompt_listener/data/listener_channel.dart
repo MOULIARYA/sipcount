@@ -32,11 +32,19 @@ class ListenerChannel {
       return (await _control.invokeMethod<bool>('isEnabled')) ?? false;
     } on MissingPluginException {
       return false; // e.g. running tests / unsupported platform
+    } on PlatformException {
+      return false; // a failing check must never stop the app (I-74)
     }
   }
 
   /// Opens the OS settings page (Accessibility on Android, Keyboards on iOS).
-  Future<void> openEnableSettings() => _control.invokeMethod('openSettings');
+  Future<void> openEnableSettings() async {
+    try {
+      await _control.invokeMethod('openSettings');
+    } on PlatformException {
+      // the user can reach the page through Settings by hand
+    }
+  }
 
   /// Events captured while the app was not running. Cleared on the native side once returned.
   Future<List<ListenerMessage>> drainPending() async {
@@ -55,6 +63,8 @@ class ListenerChannel {
       return out;
     } on MissingPluginException {
       return const [];
+    } on PlatformException {
+      return const []; // the queue is a convenience; failing to read it must not stop the app
     }
   }
 }

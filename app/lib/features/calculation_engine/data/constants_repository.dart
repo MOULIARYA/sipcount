@@ -32,7 +32,11 @@ class ConstantsRepository {
   final Map<String, dynamic> _raw;
 
   static Future<ConstantsRepository> load({String asset = 'assets/calc/models.v2.json'}) async {
-    final json = jsonDecode(await rootBundle.loadString(asset)) as Map<String, dynamic>;
+    // `load` + decode here rather than `loadString`: above 50 KB loadString hands the decode to a
+    // background isolate, which cannot complete inside a widget test's fake clock — and this file
+    // grows with every fixture. The file is tens of KB, so decoding inline costs nothing (I-74).
+    final bytes = await rootBundle.load(asset);
+    final json = jsonDecode(utf8.decode(bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes))) as Map<String, dynamic>;
     return ConstantsRepository._(json);
   }
 

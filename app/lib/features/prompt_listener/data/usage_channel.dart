@@ -21,16 +21,25 @@ class UsageSession {
 class UsageChannel {
   static const _channel = MethodChannel('ai_water/usage');
 
+  /// False on any failure: a permission check must never be able to stop the app (I-74).
   Future<bool> hasPermission() async {
     try {
       return (await _channel.invokeMethod<bool>('hasPermission')) ?? false;
     } on MissingPluginException {
       return false; // tests, unsupported platform
+    } on PlatformException {
+      return false;
     }
   }
 
   /// Opens the system's Usage Access settings page.
-  Future<void> openSettings() => _channel.invokeMethod('openSettings');
+  Future<void> openSettings() async {
+    try {
+      await _channel.invokeMethod('openSettings');
+    } on PlatformException {
+      // nothing to do: the user can reach the page through Settings by hand
+    }
+  }
 
   /// AI-app sessions overlapping [since, until). Returned whole; the caller clips them.
   /// **Null means the read failed** (permission revoked mid-way, platform error), which the
