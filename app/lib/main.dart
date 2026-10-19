@@ -51,10 +51,16 @@ class _SipcountBootState extends State<SipcountBoot> {
       final t = await (widget.start ?? Tracker.start)().timeout(widget.startupTimeout);
       if (!mounted) return;
       setState(() => _tracker = t);
+      // The marker CI's emulator boot check greps for in logcat (I-75). `print`, not
+      // debugPrint: it must appear in a release build, which is the only build that failed.
+      // ignore: avoid_print
+      print('SIPCOUNT_BOOT ok${t.startupNotes.isEmpty ? '' : ' (notes: ${t.startupNotes.join('; ')})'}');
       // Android-side checks only once something is on screen. Each is guarded inside.
       unawaited(t.refreshListenerState());
     } catch (e) {
       if (!mounted) return;
+      // ignore: avoid_print
+      print('SIPCOUNT_BOOT failed: $e');
       setState(() => _error = e);
     }
   }

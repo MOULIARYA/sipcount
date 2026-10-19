@@ -96,6 +96,18 @@ jobs:
           echo "Release signing configured."
 
       - run: flutter pub get
+
+      # What this build is made of, in the log and in the release notes. Build 30 broke because a
+      # dependency moved and nobody could tell which one from the outside (I-75).
+      - name: Record toolchain and dependencies
+        run: |
+          flutter --version
+          flutter pub deps --style=compact > build-deps.txt
+          cat build-deps.txt
+          # the pins in pubspec.yaml must be what actually resolved
+          grep -E '^- shared_preferences_android 2\.4\.28( |$)' build-deps.txt \
+            || { echo "::error::shared_preferences_android did not resolve to the pinned 2.4.28 — see pubspec.yaml (I-75)"; exit 1; }
+
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
 
@@ -119,15 +131,79 @@ jobs:
           path: app/build/app/outputs/flutter-apk/sipcount-android.apk
           if-no-files-found: error
 
+  # THE APP OPENS (I-74 / I-75). Build 30 passed analyze, 300+ tests and the build, and froze on
+  # the launch logo on the phone: a release-only fault in a native plugin that no unit test can
+  # reach. So the exact APK we are about to publish is installed on an Android emulator and
+  # launched. The app prints `SIPCOUNT_BOOT ok` once its first screen is up, or
+  # `SIPCOUNT_BOOT failed: <reason>` from its error screen (main.dart). No marker within 90 s,
+  # or a dead process, fails the build — and nothing is published.
+  boot-check:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: sipcount-android-apk
+          path: apk
+
+      # Hardware acceleration for the emulator on GitHub's Linux runners
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install, launch and watch the app start
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          target: default
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            set -euo pipefail
+            adb install -r apk/sipcount-android.apk
+            adb logcat -c
+            adb shell am start -W -n io.sipcount.ai_water/.MainActivity
+            marker=""
+            for i in $(seq 1 45); do
+              sleep 2
+              if ! adb shell pidof io.sipcount.ai_water >/dev/null 2>&1; then
+                echo "::error::Sipcount's process died after launch"; adb logcat -d | tail -200; exit 1
+              fi
+              marker="$(adb logcat -d | grep -E 'SIPCOUNT_BOOT (ok|failed)' | head -1 || true)"
+              [ -n "$marker" ] && break
+            done
+            echo "boot marker: ${marker:-<none>}"
+            if echo "$marker" | grep -q 'SIPCOUNT_BOOT ok'; then
+              echo "The app reached its first screen."
+            else
+              echo "::error::The app did not reach its first screen: ${marker:-no boot marker within 90 s (frozen on the launch logo?)}"
+              adb logcat -d | grep -E 'flutter|AndroidRuntime|sipcount' | tail -200 || true
+              exit 1
+            fi
+
+  publish:
+    needs: boot-check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: sipcount-android-apk
+          path: apk
+
       - name: Move android-latest tag to this commit
-        if: github.event_name == 'push'
-        working-directory: .
         run: |
           git tag -f android-latest
           git push -f origin android-latest
 
       - name: Publish pre-release
-        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
@@ -135,6 +211,7 @@ jobs:
           prerelease: true
           body: |
             Build ${{ github.run_number }} from commit ${{ github.sha }}.
+            Boot-checked: this exact APK was installed and launched on an Android 13 emulator and reached its first screen.
             In the app: Settings → bottom line shows "build ${{ github.run_number }}".
             Install guide: https://github.com/${{ github.repository }}/blob/main/app/ANDROID-INSTALL.md
-          files: app/build/app/outputs/flutter-apk/sipcount-android.apk
+          files: apk/sipcount-android.apk

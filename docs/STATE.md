@@ -163,6 +163,12 @@ Full reasoning in `ISSUES.md`; this is the index.
    `const` is an optimisation, not a requirement; `prefer_const_constructors` will suggest it where
    it is valid, and the analyzer is the only thing that actually knows. Guessing it costs a push.
 
+11. **Nothing was pinned, so a dependency moved under us on release day (I-75).** CI resolved the
+   newest storage plugin every morning; on 17 Oct it changed its native implementation, and builds
+   30 and 31 could not read their own data. Now: exact pins in `pubspec.yaml`, a CI guard on the
+   resolved version, the toolchain printed per build, and **the published APK is launched on an
+   emulator first**. Moving a pin is a deliberate change with a phone test behind it.
+
 10. **Nothing started the whole app the way a phone does, and build 30 froze on the logo (I-74).**
    Every start-up step was awaited before the first frame, so one failing Android call meant a
    frozen launch screen and no message. Now the screen comes first, Android is asked afterwards,
