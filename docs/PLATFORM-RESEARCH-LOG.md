@@ -49,6 +49,537 @@ Not a reading list. Each item is answered with a quote and a URL, or recorded as
 
 ---
 
+## 2026-10-28 — scheduled three-day pass (all five areas)
+
+**Trigger:** the standing cadence (automated run). Brief from 10-25: (1) the live chatgpt.com and
+gemini.google.com pickers (I-69); (2) Mouli's answer on reasoning levels; (3) an on-device
+VpnService exemption, or `PACKAGE_USAGE_STATS` named in a declaration requirement; (4) India in a
+developer-verification wave; (5) an Android 18 preview page, or a QPR2 behaviour change touching
+usage stats or accessibility; (6) iOS 27.2 final or a 27.3 beta touching NetworkExtension or Screen
+Time; (7) a production input-vs-output token energy split; (8) a working direct fetch for my own
+verification.
+
+**Answer: nothing moved that affects our plan.** Every Android, Chrome-policy and desktop item is
+unchanged. **iOS 27.2 shipped final on 26 Oct** (brief 6). Its release notes have nothing on
+NetworkExtension, Screen Time or Safari extensions. ChatGPT added a model, GPT-6.1 Terra, on 26
+Oct, but it is for Work and Codex and *"not available in Chat"*, so our picker reading is not
+affected. `ISSUES.md` and the matrix are untouched, because nothing shipped is invalidated.
+**One record is still unresolved:** whether Greenpixie 2609.33965 has a v2 (see The numbers). It
+decides nothing.
+
+**Method note.** Three parallel sub-sweeps (Android; iOS; extension + desktop + numbers), all with a
+cache-busting query string. The OpenAI help pages, the gitiles `ConnectivityManager.java`, the
+Android 18 status and the arXiv pages were read in a browser tab, because the fetcher returned empty
+or truncated pages. **Brief 8: partly working.** I re-read the decisive iOS items myself: the
+releases RSS feed and the 27.2 release-notes JSON. Both are quoted below. My arXiv re-read hit the
+fetcher's rate limit (HTTP 429) three times and returned one empty page. **Not done:** the live
+chatgpt.com and gemini.google.com pickers. They need a signed-in browser, which an unattended run
+does not have. Brief 2 (Mouli's answer) is not in `ISSUES.md`; I-69 is unchanged since 10-19.
+
+**Android** — *(sub-sweep)*, all unchanged
+
+- **VpnService policy: unchanged, and still no on-device exemption (brief 3: no).** *"Only apps that use the
+  VpnService and have VPN as their core functionality can create a secure device-level tunnel to a
+  remote server."* "App usage tracking" is still listed. *"must encrypt the data from the device to
+  the VPN tunnel endpoint"* is still there, and both videos are still *"(90 seconds or shorter)"*. The page
+  has no wording about local, on-device or loopback VPNs. —
+  https://support.google.com/googleplay/android-developer/answer/12564964. Policy Center: *"Must
+  encrypt the data from the device to VPN tunnel end point"*. The "Changes are coming" banner still
+  lists only Location and Contacts, effective 27 Jan 2027. —
+  https://support.google.com/googleplay/android-developer/answer/16558241
+- **Accessibility policy: unchanged.** *"Other examples of apps that are not accessibility tools
+  are: antivirus software, automation tools, assistants, monitoring apps, cleaners, password
+  managers, and launchers."* — https://support.google.com/googleplay/android-developer/answer/10964491
+- **Play Protect: unchanged** ("Last updated 2026-08-18"). *"Note: This protection is active in
+  select markets."* The blocked permissions are the same four, including ACCESSIBILITY. —
+  https://developers.google.com/android/play-protect/warning-dev-guidance
+- **Developer verification: unchanged, and India is still not named (brief 4: no).** *"Protections begin for
+  all users who install apps from participating stores in Brazil, Indonesia, Singapore, and Thailand
+  on certified devices running Android 7+."* and *"Verification capability will be expanded globally
+  for all apps on certified Android devices in 2027."* The FAQ is still "Last updated 2026-09-30". The
+  Guides page ("Last updated 2026-08-18") names the same four countries. —
+  https://developer.android.com/developer-verification,
+  https://developer.android.com/developer-verification/guides/faq
+- **`getConnectionOwnerUid`: unchanged.** *"@throws SecurityException if the caller is not the active
+  VpnService for the current user."* —
+  https://android.googlesource.com/platform/packages/modules/Connectivity/+/refs/heads/main/framework/src/android/net/ConnectivityManager.java
+- **`NetworkStatsManager` / `TrafficStats`: unchanged** (from AOSP source). *"Since bucket length is
+  in the order of hours, this method cannot be used to measure data usage on a fine grained time
+  scale."* and *"Starting in {@link android.os.Build.VERSION_CODES#N} this will only report traffic
+  statistics for the calling UID."* — …/framework-t/src/android/app/usage/NetworkStatsManager.java,
+  …/framework-t/src/android/net/TrafficStats.java
+- **`UsageStatsManager`: unchanged.** *"Query for events in the given time range. Events are only
+  kept by the system for a few days."* —
+  https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/app/usage/UsageStatsManager.java
+- **`PACKAGE_USAGE_STATS` on Play: still not named (brief 3: no).** *"If your app requests the use of
+  high-risk or sensitive permissions (for example, SMS or Call Log), you may be required to complete
+  the Permissions Declaration Form"*. The Policy Center has no match for it either. —
+  https://support.google.com/googleplay/android-developer/answer/9214102. This is an absence, not a
+  quote. Re-check before the P10 declaration.
+- **Newest API level: unchanged; no Android 18 page (brief 5: no).** The Android 17 page is still
+  "Last updated 2026-10-23", and its only network line is still *"Beginning with Android 17,
+  cross-profile loopback traffic is no longer permitted by default."* /about/versions/18 returns HTTP
+  404. **New to this log:** the QPR2 release notes (Beta 7.1, "Last updated 2026-10-16") say *"This
+  incremental update has no planned behavior changes, minimizing the need for compatibility
+  testing."* Their only accessibility item is a bug fix in `AccessibilityNodeInfo.toString()`. —
+  https://developer.android.com/about/versions/17/behavior-changes-all,
+  https://developer.android.com/about/versions/17/qpr2/release-notes
+- **Play target API: unchanged** ("Last updated 2026-10-16"). *"Starting August 31 2026: New apps
+  and app updates must target Android 16 (API level 36) or higher to be submitted to Google Play"*.
+  There is no API 37 deadline yet. — https://developer.android.com/google/play/requirements/target-sdk
+
+**iOS** — *(sub-sweep; release feed and release notes re-read by me)*
+
+- **iOS 27.2 is final, and nothing in it is for us (brief 6: answered, no).** Feed, read by me:
+  *"iOS 27.2 (24B119)"* and *"iOS 27.2 (24B91020)"*, both *"Mon, 26 Oct 2026 10:00:00 PDT"*, with
+  lastBuildDate *"Mon, 26 Oct 2026 10:00:00 PDT"*. There is no 27.3 beta, and Xcode is still at
+  *"Xcode 27.2 RC (27B48)"*. — https://developer.apple.com/news/releases/rss/releases.rss. The
+  release notes, read by me, have the same sections as at RC: App Tracking Transparency, Health,
+  Nearby Interaction, Quest Lab Appointments, Shortcuts, Simulator, StoreKit Testing in Xcode,
+  UIKit. Nothing is on NetworkExtension, Screen Time or Safari extensions. The page still says *"The
+  redesigned Health app is not included in this beta"*, so it may not yet be revised for final. —
+  https://developer.apple.com/documentation/ios-ipados-release-notes/ios-ipados-27_2-release-notes
+- **TN3134: unchanged.** The latest revision is still 2025-08-19, the packet tunnel row still says
+  *"per-app mode requires managed device"*, and there are no new provider types. —
+  https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment
+- **Per-app VPN: unchanged.** *"To use per-app VPN in iOS, iPadOS, watchOS 10, and visionOS 1.1, a
+  device management service needs to manage the app."* — https://support.apple.com/guide/deployment/vpn-overview-depae3d361d0/web
+- **App Review Guidelines: unchanged** ("Last Updated: October 16, 2026"). 5.4: *"Apps offering VPN
+  services must utilize the NEVPNManager API and may only be offered by developers enrolled as an
+  organization."* 5.5: *"Such apps may only be offered by commercial enterprises, educational
+  institutions, or government agencies, and in limited cases, companies using MDM for parental
+  control services or device security."* — https://developer.apple.com/app-store/review/guidelines/
+- **DeviceActivityReport: unchanged.** *"This sandbox prevents your extension from making network
+  requests or moving sensitive content outside the extension's address space."* —
+  https://developer.apple.com/documentation/deviceactivity/deviceactivityreport
+- **Safari Web Extensions: unchanged.** *"In iOS, you must make your background page
+  nonpersistent."* — https://developer.apple.com/documentation/safariservices/optimizing-your-web-extension-for-safari
+- **Reading another app's content: still nothing.** *"If a third-party app needs to access
+  information other than its own, it does so only by using services explicitly provided by iOS,
+  iPadOS, and visionOS."* — https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+- **Developer news: nothing after 22 Oct.** The newest item is still "Offer your subscriptions to
+  businesses and schools". — https://developer.apple.com/news/rss/news.rss
+
+**Browser extension** — *(sub-sweep)*
+
+- **MV3: unchanged.** The newest "What's new" entry is still Chrome 153 (25 Aug). *"After 30 seconds
+  of inactivity. Receiving an event or calling an extension API resets this timer."* —
+  https://developer.chrome.com/docs/extensions/whats-new,
+  https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle
+- **Web Store policy: unchanged** ("Last updated 2025-05-22"). *"Request access to the narrowest
+  permissions necessary to implement your Product's features or services."* —
+  https://developer.chrome.com/docs/webstore/program-policies/policies
+- **ChatGPT: three new entries, none in Chat (brief 1 still open).** 21 Oct "MoMo payments in
+  Vietnam" (billing); 26 Oct "GPT-6.1 Terra"; 27 Oct "iCloud Mail and Calendar plugins" (connectors).
+  The models article now says *"GPT-6.1 Terra is a model option for ChatGPT Work and Codex. It is not
+  available in Chat."* The Terra note also mentions a level called "Light" in Work's Power presets,
+  which is not one of the Chat names. The Chat level names are unchanged: *"When **GPT-6** is
+  selected, **GPT-6 Sol** powers **Instant**, **Medium**, **High**, and **Extra High**; **Pro** uses
+  GPT-6 Pro, powered by **GPT-6 Astra**."* The article still does not say where the chosen level is
+  shown. **Reading:** we read the Chat surface, so Terra and "Light" do not reach our tier table.
+  If Terra later comes to Chat, the vendor map will not know its name. —
+  https://help.openai.com/en/articles/6825453-chatgpt-release-notes,
+  https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt
+- **Gemini: unchanged.** The newest release note is still 2026.10.13 (Argon). The models page still has
+  *"Low, Medium, High"* and *"If you don't select a thinking level, it will default to Low."* —
+  https://gemini.google/release-notes/, https://support.google.com/gemini/answer/18648722
+- **Claude: unchanged.** The newest release note is still 21 Oct (Claude Duet). —
+  https://support.claude.com/en/articles/12138966-release-notes
+
+**Desktop** — *(sub-sweep)*, all unchanged
+
+- *"The SetPerTcpConnectionEStats function can only be called by a user logged on as a member of the
+  Administrators group."* — https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getpertcpconnectionestats
+- *"EV certificates no longer bypass SmartScreen."* — https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation.
+  Artifact Signing: *"Individual developers must be located in the United States or Canada."* The
+  Public Trust list still excludes India. — https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart
+- *"Beginning in macOS 10.15, all software built after June 1, 2019, and distributed with Developer
+  ID must be notarized."* — https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution
+
+**The numbers** — *(sub-sweep)*
+
+- **Brief 7: no production input/output split, and no new vendor or peer-reviewed per-query energy or
+  water figure after 25 Oct.**
+- **Greenpixie 2609.33965: unresolved.** Read in a browser tab, the sub-sweep saw *"[v2] Tue, 29 Sep
+  2026 16:02:14 UTC (339 KB)"*. It also reported that the fetcher served an older copy that showed
+  only v1. That would explain why the 10-22 and 10-25 entries said "only v1" against the 10-19 entry.
+  My own re-read failed (HTTP 429 three times, one empty page). The two versions are the same size,
+  and the abstract is reported unchanged. **It decides nothing**, because we do not use its figure. The
+  next pass should settle it in a browser tab. — https://arxiv.org/abs/2609.33965
+- 2508.15734 is still v1, 2509.20241 is still v2 (Joule), and 2610.19819 is still v1.
+- **Not in earlier entries (dated 20 Oct):** arXiv 2610.28576, "The Token-Energy Law of LLM Decode".
+  It is a lab benchmark on Hopper and Blackwell GPUs that measures decode (output) tokens only, so it
+  gives no input/output split. *"Using fixed coefficients and observed decode time, held-out
+  condition-mean energy estimates differ from measurements by at most 3.73%."* —
+  https://arxiv.org/abs/2610.28576. It does not bear on D-22.
+
+**Decisions:**
+- **No change anywhere.** D-22 stays at 5×, and the I-69 interim rule stands. Usage Access stays the
+  default estimate and accessibility stays the exact Android sensor. The tunnel stays parked behind
+  the endpoint-encryption clause, and the iPhone plan is unchanged. `ISSUES.md` and
+  `TRACEABILITY.md` are untouched.
+- The two Android follow-ups from 10-22 are still with the Android track. This pass did not touch code.
+
+**What would change our mind next pass:** (1) the live chatgpt.com and gemini.google.com pickers
+(I-69), which need an attended, signed-in session; (2) Mouli's answer on which levels count as
+reasoning; (3) GPT-6.1 Terra, or the "Light" level, reaching Chat; (4) Play adding an on-device
+VpnService exemption, or naming `PACKAGE_USAGE_STATS` in a declaration requirement; (5) India in a
+developer-verification wave; (6) an Android 18 preview page, or a QPR3 beta with behaviour changes;
+(7) a 27.3 beta, or a revised 27.2 release-notes page, touching NetworkExtension or Screen Time;
+(8) any production (batched) input-vs-output token energy split; (9) settling the 2609.33965 v2
+question in a browser tab.
+
+**Next pass due:** 2026-10-31.
+
+## 2026-10-25 — scheduled three-day pass (all five areas)
+
+**Trigger:** the standing cadence (automated run). Brief from 10-22: (1) the live chatgpt.com and
+gemini.google.com pickers (I-69); (2) Mouli's answer on reasoning levels; (3) an on-device
+VpnService exemption, or `PACKAGE_USAGE_STATS` named in a declaration requirement; (4) India in a
+developer-verification wave; (5) an Android 18 preview page; (6) iOS 27.2 final or a 27.3 beta
+touching NetworkExtension or Screen Time; (7) a production input-vs-output token energy split;
+(8) a re-read of `getConnectionOwnerUid`.
+
+**Answer: nothing moved that affects our plan.** Every item in all five areas is unchanged. The only
+movement is two page edits with no relevant content: Android 17's behaviour-changes page has a new
+"Last updated" date, and OpenAI's GPT-6 models article was edited on the day of this pass without
+changing the level names or saying where the level is shown. Brief item 8 is now closed:
+`getConnectionOwnerUid` was read in full for the first time since 10-19. `ISSUES.md` and the matrix
+are untouched, because nothing shipped is invalidated.
+
+**Method note.** Three parallel sub-sweeps (Android; iOS; extension + desktop + numbers), all with a
+cache-busting query string. Apple pages were read through their JSON/.md data endpoints. The
+`ConnectivityManager.java` source was decoded in full in a browser tab, as the 10-22 brief
+suggested. **My own verification fetches all failed this pass** ("operation was aborted", three
+attempts on developer.android.com and one on support.google.com). So I verified differently: I
+grepped this log for the two sentences the sub-sweeps flagged as possibly new, and both were already
+on record (accessibility "autonomously initiate…" at 10-07 and 10-19; "Starting in Android 18…" at
+10-13). No decision rests on the two items I could not re-read myself. Both are date or edit stamps,
+not content. **Not done:** the live chatgpt.com and gemini.google.com pickers. They need a signed-in
+browser, which an unattended run does not have.
+
+**Android** — *(sub-sweep)*
+
+- **VpnService policy: unchanged, and still no on-device exemption (brief 3: no).** *"Only apps that use the
+  VpnService and have VPN as their core functionality can create a secure device-level tunnel to a
+  remote server."* "App usage tracking" is still listed. *"must encrypt the data from the device to
+  the VPN tunnel endpoint"* is still there, and both videos are still *"(90 seconds or shorter)"*. The only "on-device" match on the page is
+  about Health Connect. — https://support.google.com/googleplay/android-developer/answer/12564964.
+  Policy Center: *"Must encrypt the data from the device to VPN tunnel end point"*. Its "Changes are
+  coming" banner still lists only Location and Contacts, effective 27 Jan 2027. —
+  https://support.google.com/googleplay/android-developer/answer/16558241
+- **Accessibility policy: unchanged.** *"Other examples of apps that are not accessibility tools
+  are: antivirus software, automation tools, assistants, monitoring apps, cleaners, password
+  managers, and launchers."* — https://support.google.com/googleplay/android-developer/answer/10964491
+- **Play Protect: unchanged** ("Last updated 2026-08-18"). *"Note: This protection is active in
+  select markets."* The blocked permissions are still RECEIVE_SMS, READ_SMS, NOTIFICATION_LISTENER and
+  ACCESSIBILITY. — https://developers.google.com/android/play-protect/warning-dev-guidance
+- **Developer verification: unchanged, and India is still not named (brief 4: no).** *"Protections begin for
+  all users who install apps from participating stores in Brazil, Indonesia, Singapore, and Thailand
+  on certified devices running Android 7+."* and *"Verification capability will be expanded globally
+  for all apps on certified Android devices in 2027."* The FAQ is still "Last updated 2026-09-30". —
+  https://developer.android.com/developer-verification,
+  https://developer.android.com/developer-verification/guides/faq
+- **`getConnectionOwnerUid`: re-read in full, unchanged in meaning (brief 8: closed).** *"@throws
+  SecurityException if the caller is not the active VpnService for the current user."* and *"@return
+  {@code uid} if the connection is found and the app has permission to observe it (e.g., if it is
+  associated with the calling VPN app's VpnService tunnel) or {@link
+  android.os.Process#INVALID_UID} if the connection is not found."* —
+  https://android.googlesource.com/platform/packages/modules/Connectivity/+/refs/heads/main/framework/src/android/net/ConnectivityManager.java.
+  It is still usable only from inside our own tunnel, so it adds nothing outside the parked tunnel
+  design.
+- **`NetworkStatsManager` / `TrafficStats`: unchanged** (from AOSP source). *"Since bucket length
+  is in the order of hours, this method cannot be used to measure data usage on a fine grained time
+  scale."*; *"Starting in {@link android.os.Build.VERSION_CODES#N} this will only report traffic
+  statistics for the calling UID. It will return {@link #UNSUPPORTED} for all other UIDs for privacy
+  reasons."* —
+  https://android.googlesource.com/platform/packages/modules/Connectivity/+/refs/heads/main/framework-t/src/android/app/usage/NetworkStatsManager.java,
+  …/framework-t/src/android/net/TrafficStats.java
+- **`UsageStatsManager` (estimate mode, I-73): unchanged.** *"Query for events in the given time
+  range. Events are only kept by the system for a few days."* —
+  https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/app/usage/UsageStatsManager.java
+- **`PACKAGE_USAGE_STATS` on Play: still not named (brief 3: no).** The only examples on the Permissions
+  Declaration page are in *"high-risk or sensitive permissions (for example, SMS or Call Log)"*. —
+  https://support.google.com/googleplay/android-developer/answer/9214102. As on 10-22, this is an
+  absence, not a quote. Re-check before the P10 declaration.
+- **Newest API level: content unchanged, date bumped.** The Android 17 page is now "Last updated
+  2026-10-23" (it was 2026-10-16). Its only network line is unchanged: *"Beginning with Android 17,
+  cross-profile loopback traffic is no longer permitted by default."* It adds no VPN, traffic-stats
+  or usage-stats item. The sidebar now lists QPR2 Beta (API 37.2). /about/versions/18 returns 404
+  (brief 5: no). — https://developer.android.com/about/versions/17/behavior-changes-all
+- **Play target API: unchanged.** *"Starting August 31 2026: New apps and app updates must target
+  Android 16 (API level 36) or higher to be submitted to Google Play"*. There is no API 37 deadline yet. —
+  https://developer.android.com/google/play/requirements/target-sdk
+
+**iOS** — *(sub-sweep)*, all unchanged
+
+- **TN3134:** the latest revision is still 2025-08-19. The packet tunnel row still says *"per-app mode
+  requires managed device"*, and there are no new provider types. —
+  https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment
+- **Per-app VPN:** *"To use per-app VPN in iOS, iPadOS, watchOS 10, and visionOS 1.1, a device
+  management service needs to manage the app."* — https://support.apple.com/guide/deployment/vpn-overview-depae3d361d0/web
+- **App Review Guidelines:** still "Last Updated: October 16, 2026". 5.4: *"Apps offering VPN services must
+  utilize the NEVPNManager API and may only be offered by developers enrolled as an organization."*
+  5.5 is unchanged (MDM limited to *"commercial enterprises, educational institutions, or government
+  agencies"*). — https://developer.apple.com/app-store/review/guidelines/
+- **DeviceActivityReport:** *"This sandbox prevents your extension from making network requests or
+  moving sensitive content outside the extension's address space."* —
+  https://developer.apple.com/documentation/deviceactivity/deviceactivityreport
+- **Safari Web Extensions:** *"In iOS, you must make your background page nonpersistent."* —
+  https://developer.apple.com/documentation/safariservices/optimizing-your-web-extension-for-safari
+- **Reading another app's content: still nothing.** *"If a third-party app needs to access
+  information other than its own, it does so only by using services explicitly provided by iOS,
+  iPadOS, and visionOS."* — https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+- **iOS 27.2: still at RC (brief 6: no).** The newest iOS item in the feed is still *"iOS 27.2 RC
+  (24B115)"*, dated 19 Oct. The feed was last built *"Thu, 22 Oct 2026 14:00:00 PDT"*, and the only
+  newer items are TestFlight 4.4.1 and an App Store Connect update. The release-notes index has no
+  page for 27.2 final or 27.3. — https://developer.apple.com/news/releases/rss/releases.rss
+- **Developer news:** the only item after 16 Oct is "Offer your subscriptions to businesses and
+  schools" (22 Oct, about multiseat subscriptions). It is not relevant to us. —
+  https://developer.apple.com/news/rss/news.rss
+
+**Browser extension** — *(sub-sweep)*
+
+- **MV3: unchanged.** The newest "What's new" entry is still Chrome 153 (25 Aug). The service-worker
+  lifecycle page still says *"After 30 seconds of inactivity. Receiving an event or calling an
+  extension API resets this timer."* —
+  https://developer.chrome.com/docs/extensions/whats-new,
+  https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle
+- **Web Store policy: unchanged** ("Last updated 2025-05-22"). *"Request access to the narrowest
+  permissions necessary to implement your Product's features or services."* —
+  https://developer.chrome.com/docs/webstore/program-policies/policies
+- **ChatGPT: no new release-note entry since 20 Oct, and the models article was edited (brief 1 still
+  open).** The article was "Updated: 23 minutes ago" when fetched. The level names are unchanged: *"When **GPT-6** is
+  selected, **GPT-6 Sol** powers **Instant**, **Medium**, **High**, and **Extra High**; **Pro** uses
+  GPT-6 Pro, powered by **GPT-6 Astra**."* It still reads *"Use the **Thinking** slider to choose
+  your effort"*. The FAQ adds *"Use the model picker to choose how much ChatGPT thinks."* None of
+  this says which element shows the chosen level, and what the edit changed is unknown. Our interim rule maps
+  every one of these names, so nothing breaks. —
+  https://help.openai.com/en/articles/6825453-chatgpt-release-notes,
+  https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt
+- **Gemini: unchanged.** The newest release note is still 2026.10.13 (Argon). The models page still has
+  *"Low, Medium, High"* and *"Tip: If you don't select a thinking level, it will default to Low."* —
+  https://gemini.google/release-notes/, https://support.google.com/gemini/answer/18648722
+- **Claude: unchanged.** The newest release note is still 21 Oct (Claude Duet), and nothing touches
+  the composer or the picker. — https://support.claude.com/en/articles/12138966-release-notes
+
+**Desktop** — *(sub-sweep)*, all unchanged
+
+- *"The SetPerTcpConnectionEStats function can only be called by a user logged on as a member of the
+  Administrators group."* — https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getpertcpconnectionestats
+- *"EV certificates no longer bypass SmartScreen."* — https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation.
+  Artifact Signing: *"Individual developers must be located in the United States or Canada."* The
+  Public Trust country list is unchanged, and India is still excluded. — https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart
+- *"Beginning in macOS 10.15, all software built after June 1, 2019, and distributed with Developer
+  ID must be notarized."* — https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution
+
+**The numbers** — *(sub-sweep)*, unchanged
+
+- No paper on our list has a new version. 2609.33965 still shows only *"[v1] Sun, 27 Sep 2026 22:10:47 UTC (339 KB)"*.
+  2508.15734 is still v1, 2509.20241 still v2 (Joule) and 2610.19819 still v1. — https://arxiv.org/abs/2609.33965
+  and siblings.
+- **Brief 7: no production input/output split, and no new vendor or peer-reviewed per-query energy or
+  water figure since 19 Oct.** The nearest work is still 2610.19819, which is a lab measurement on
+  A100s, not production. The search index may lag a few days.
+
+**Decisions:**
+- **No change anywhere.** D-22 stays at 5×, and the I-69 interim rule stands. Usage Access stays the
+  default estimate and accessibility stays the exact Android sensor. The tunnel stays parked behind
+  the endpoint-encryption clause, and the iPhone plan is unchanged. `ISSUES.md` and `TRACEABILITY.md`
+  are untouched.
+- The two Android follow-ups from 10-22 (estimate-mode copy about the "few days" limit, and pairing
+  resume/pause per package) are still with the Android track. This pass did not touch code.
+
+**What would change our mind next pass:** (1) the live chatgpt.com and gemini.google.com pickers,
+and which element shows the thinking level (I-69). This needs a signed-in browser, so it is a job for
+an attended session, not this cadence. (2) Mouli's answer on which levels count as reasoning. (3) Play adding an
+on-device VpnService exemption, or naming `PACKAGE_USAGE_STATS` in a declaration requirement.
+(4) India in a developer-verification wave. (5) An Android 18 preview page, or a QPR2 behaviour change
+touching usage stats or accessibility. (6) iOS 27.2 final or a 27.3 beta touching NetworkExtension or
+Screen Time. (7) Any production (batched) input-vs-output token energy split. (8) A working direct
+fetch for my own verification, since this pass's failed.
+
+**Next pass due:** 2026-10-28.
+
+## 2026-10-22 — scheduled three-day pass (all five areas)
+
+**Trigger:** the standing cadence (automated run). Brief from 10-19: (1) the live chatgpt.com and
+gemini.google.com pickers (I-69); (2) Mouli's answer on which levels are reasoning; (3) an on-device
+VpnService exemption; (4) India in a developer-verification wave; (5) an Android 18 preview page;
+(6) iOS 27.2 RC notes touching NetworkExtension or Screen Time; (7) a production (batched)
+output-vs-input token energy measurement. **Added this pass:** Rel 1.4's estimate mode (I-73) now
+depends on `UsageStatsManager` and `PACKAGE_USAGE_STATS`, so both join the Android checklist.
+
+**Answer: nothing moved that affects our plan.** Every Android, iOS, Chrome-policy and desktop item
+is unchanged. Two new vendor release-note entries (ChatGPT locked chats, 20 Oct; Claude Duet, 21
+Oct) do not touch any picker or composer. **Two corrections to the 10-19 entry**, both verified by
+me: iOS 27.2 was already at RC on 19 Oct (not Beta 4), and Greenpixie 2609.33965 has **no v2** —
+the 10-19 "correction" was itself wrong. `ISSUES.md` and the matrix are untouched: nothing shipped
+is invalidated.
+
+**Method note.** Three parallel sub-sweeps (Android; iOS; extension + desktop + numbers), all with a
+cache-busting query string. I re-read the two items that differ from the last entry myself: the
+arXiv abstract page for 2609.33965 and Apple's releases RSS feed. The developer.android.com
+reference pages returned navigation only, so the Android API quotes this pass come from the AOSP
+source on android.googlesource.com (same Javadoc). **Not done:** `getConnectionOwnerUid` (truncated
+in both places — **not checked**, not "unchanged"); the live chatgpt.com and gemini.google.com
+pickers (need a signed-in browser; not done on an unattended run).
+
+**Android** — *(sub-sweep)*
+
+- **VpnService policy — unchanged; no on-device exemption (brief 3: no).** *"Only apps that use the
+  VpnService and have VPN as their core functionality can create a secure device-level tunnel to a
+  remote server."*; "App usage tracking" still listed; *"must encrypt the data from the device to the
+  VPN tunnel endpoint"*; both videos *"(90 seconds or shorter)"*. —
+  https://support.google.com/googleplay/android-developer/answer/12564964; Policy Center same
+  (*"Must encrypt the data from the device to VPN tunnel end point"*) —
+  https://support.google.com/googleplay/android-developer/answer/16558241. "Changes are coming"
+  banner unchanged (Location, Contacts; 27 Jan 2027).
+- **Accessibility policy — unchanged.** *"Google Play permits the use of the AccessibilityService
+  API for a wide range of applications."*; *"Other examples of apps that are not accessibility tools
+  are: antivirus software, automation tools, assistants, monitoring apps, cleaners, password
+  managers, and launchers."* — https://support.google.com/googleplay/android-developer/answer/10964491
+- **Play Protect — unchanged** ("Last updated 2026-08-18"). *"Note: This protection is active in
+  select markets."* — https://developers.google.com/android/play-protect/warning-dev-guidance
+- **Developer verification — unchanged; India not named (brief 4: no).** *"Protections begin for
+  all users who install apps from participating stores in Brazil, Indonesia, Singapore, and Thailand
+  on certified devices running Android 7+."*; FAQ ("Last updated 2026-09-30") *"if users sideload
+  your app directly, these new verification requirements won't apply to your app yet."* —
+  https://developer.android.com/developer-verification,
+  https://developer.android.com/developer-verification/guides/faq
+- **`getConnectionOwnerUid` — NOT CHECKED this pass** (reference page and AOSP file both truncated
+  before the method). Last verified 10-19.
+- **`NetworkStatsManager` / `TrafficStats` — unchanged** (from AOSP source). *"Since bucket length
+  is in the order of hours, this method cannot be used to measure data usage on a fine grained time
+  scale."*; *"Starting in {@link android.os.Build.VERSION_CODES#N} this will only report traffic
+  statistics for the calling UID."* —
+  https://android.googlesource.com/platform/packages/modules/Connectivity/+/refs/heads/main/framework-t/src/android/app/usage/NetworkStatsManager.java,
+  …/framework-t/src/android/net/TrafficStats.java
+- **`UsageStatsManager` (estimate mode, I-73) — first entry here; consistent with what we built.**
+  *"Query for events in the given time range. Events are only kept by the system for a few days."*
+  and *"Starting from {@link android.os.Build.VERSION_CODES#R Android R}, if the user's device is not
+  in an unlocked state … then {@code null} will be returned."* —
+  https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/app/usage/UsageStatsManager.java.
+  `ACTIVITY_RESUMED` / `ACTIVITY_PAUSED` are *"reported for each activity that moves to foreground"*
+  (`onResume()` / `onPause()`) — …/core/java/android/app/usage/UsageEvents.java. **Reading:** we
+  harvest when the app is opened, so the device is unlocked (the `null` case does not arise); but
+  "a few days" means **minutes in AI apps are lost if Sipcount is not opened for several days** —
+  an under-count, never an over-count, and already implicit in I-73's design. Worth one line in the
+  estimate-mode copy, not a change. Multiple activities per package each fire events, so the
+  harvest must pair per package, not per event — to confirm in `UsageHarvest` on the next Android
+  session (not checked here; no code was read for this).
+- **`PACKAGE_USAGE_STATS` on Play — no declaration requirement found.** The Permissions Declaration
+  page names only *"high-risk or sensitive permissions (for example, SMS or Call Log)"* —
+  https://support.google.com/googleplay/android-developer/answer/9214102; the Policy Center page has
+  no match for "usage access" or "UsageStats". Absence of a match is weaker than a quote: re-check
+  before the P10 declaration. Consistent with I-73's "not on Play's sensitive-permissions list".
+- **Newest API level — unchanged** (Android 17 page "Last updated 2026-10-16", same as 10-19); no
+  Android 18 page (brief 5: no, empty body). Only network line still *"Beginning with Android 17,
+  cross-profile loopback traffic is no longer permitted by default."* —
+  https://developer.android.com/about/versions/17/behavior-changes-all
+- **Play target API — unchanged.** *"Starting August 31 2026: New apps and app updates must target
+  Android 16 (API level 36) or higher to be submitted to Google Play"*; no API 37 deadline yet. —
+  https://developer.android.com/google/play/requirements/target-sdk
+
+**iOS** — *(sub-sweep; release feed re-read by me)*
+
+- **TN3134 — unchanged.** Latest revision still 2025-08-19; *"per-app mode requires managed
+  device"*; no new provider types. —
+  https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment
+- **Per-app VPN — unchanged.** *"To use per-app VPN in iOS, iPadOS, watchOS 10, and visionOS 1.1, a
+  device management service needs to manage the app."* — https://support.apple.com/guide/deployment/vpn-overview-depae3d361d0/web
+- **App Review Guidelines — unchanged since 16 Oct** ("Last Updated: October 16, 2026"). 5.4 *"Apps
+  offering VPN services must utilize the NEVPNManager API and may only be offered by developers
+  enrolled as an organization."*; 2.5.19 as recorded. — https://developer.apple.com/app-store/review/guidelines/
+- **Family Controls / DeviceActivity — unchanged.** *"This sandbox prevents your extension from
+  making network requests or moving sensitive content outside the extension's address space."* —
+  https://developer.apple.com/documentation/deviceactivity/deviceactivityreport
+- **Safari Web Extensions — unchanged.** *"In iOS, you must make your background page
+  nonpersistent."* — https://developer.apple.com/documentation/safariservices/optimizing-your-web-extension-for-safari
+- **Reading another app's content — still nothing.** *"If a third-party app needs to access
+  information other than its own, it does so only by using services explicitly provided by iOS,
+  iPadOS, and visionOS."* — https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+- **iOS 27.2 — at RC, nothing for us (brief 6: answered, no).** Feed, read by me: *"iOS 27.2 RC
+  (24B115)"*, pubDate *"Mon, 19 Oct 2026 10:00:00 PDT"* — https://developer.apple.com/news/releases/rss/releases.rss.
+  **Correction to 10-19**, which said "still Beta 4". RC release notes sections *(sub-sweep)*: App
+  Tracking Transparency, Health, Nearby Interaction, Quest Lab Appointments, Shortcuts, Simulator,
+  StoreKit Testing, UIKit — nothing on NetworkExtension, Screen Time or Safari extensions. —
+  https://developer.apple.com/documentation/ios-ipados-release-notes/ios-ipados-27_2-release-notes
+- **Developer news — nothing after 16 Oct** relevant to us (newest relevant: guideline update and
+  2.5.19 post, both 16 Oct). — https://developer.apple.com/news/
+
+**Browser extension** — *(sub-sweep)*
+
+- **MV3 — unchanged.** Newest "What's new" still Chrome 153 (25 Aug). *"After 30 seconds of
+  inactivity. Receiving an event or calling an extension API resets this timer."* —
+  https://developer.chrome.com/docs/extensions/whats-new,
+  https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle
+- **Web Store policy — unchanged** ("Last updated 2025-05-22"). *"Request access to the narrowest
+  permissions necessary to implement your Product's features or services."* —
+  https://developer.chrome.com/docs/webstore/program-policies/policies
+- **ChatGPT — one new entry, not for us (brief 1 still open).** 20 Oct "Introducing locked chats"
+  (PIN-hidden chats via the ••• menu). The GPT-6 article was edited today but still reads *"Use the
+  **Thinking** slider to choose your effort."* and still does not say where the chosen level is
+  shown. It now also has a section *"GPT-6.1 Sol is a model option for ChatGPT Work and Codex"* —
+  outside the chat surface we read; not yet known when it was added. —
+  https://help.openai.com/en/articles/6825453-chatgpt-release-notes,
+  https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt
+- **Gemini — unchanged.** Release notes newest still 2026.10.13 (Argon). Models help still *"Low,
+  Medium, High"* for every plan and *"Tip: If you don't select a thinking level, it will default to
+  Low."*; models still Flash-Lite, Flash, Pro, Argon. — https://gemini.google/release-notes/,
+  https://support.google.com/gemini/answer/18648722
+- **Claude — one new entry, not for us.** 21 Oct: *"Claude Duet research preview for Pro and Max
+  plans… a new app where Claude works as a proactive agent."* A separate app, not claude.ai's
+  composer; no picker or extended-thinking change. If Duet later surfaces inside claude.ai, unseen
+  agent work is what N9's timing rule already charges. —
+  https://support.claude.com/en/articles/12138966-release-notes
+
+**Desktop** — *(sub-sweep)* all unchanged
+
+- *"The SetPerTcpConnectionEStats function can only be called by a user logged on as a member of the
+  Administrators group."* — https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getpertcpconnectionestats
+- *"EV certificates no longer bypass SmartScreen."* — https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation;
+  Artifact Signing (metadata updated 2026-10-08, text unchanged): *"Individual developers must be
+  located in the United States or Canada."*; *"Public Trust certificates are available to
+  organizations in the United States, Canada, the European Union, the United Kingdom, Australia, New
+  Zealand, Japan, South Korea, Singapore, Switzerland, Norway, and Israel."* — India still excluded.
+  — https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart
+- *"Beginning in macOS 10.15, all software built after June 1, 2019, and distributed with Developer
+  ID must be notarized."* — https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution
+
+**The numbers**
+
+- **Greenpixie 2609.33965 — only v1 exists (read by me).** Submission history lists one version:
+  *"[v1] Sun, 27 Sep 2026 22:10:47 UTC (339 KB)"* — https://arxiv.org/abs/2609.33965. **Correction
+  to the 10-19 entry**, whose "v2 dated 29 Sep" was wrong; the 10-16 "still v1" was right.
+- Google 2508.15734 still v1; Microsoft 2509.20241 still v2; Ruf & Detyniecki 2610.19819 still v1
+  *(sub-sweep)*.
+- **Brief 7 — no production input/output split.** Nearest item *(sub-sweep; vendor blog, corroborates
+  only)*: Crusoe, 9 Oct 2026, a batched production stack (256 concurrent requests, 1,024 in / 256
+  out), reports *"26.9% less energy per output token (1.686 → 1.232 J/tok)"* but gives no
+  input-vs-output split, no per-query and no water figure — https://www.crusoe.ai/resources/blog/how-green-is-crusoes-inference-engine.
+  Does not bear on D-22.
+- **No new vendor or peer-reviewed per-query energy or water figure** since 19 Oct.
+
+**Decisions:**
+- **No change anywhere.** D-22 stays at 5×; I-69 interim rule (High and above = reasoning) stands;
+  accessibility stays the exact Android sensor and Usage Access the default estimate; tunnel stays
+  parked behind the endpoint-encryption clause; iPhone plan unchanged. `ISSUES.md` and
+  `TRACEABILITY.md` untouched.
+- **Two small follow-ups for the Android track, not issues:** say in estimate-mode copy that minutes
+  older than a few days can't be recovered if the app isn't opened; and confirm the harvest pairs
+  resume/pause per package when an AI app has several activities.
+
+**What would change our mind next pass:** (1) the live chatgpt.com and gemini.google.com pickers —
+which element shows the thinking level (I-69); (2) Mouli's answer on which levels are reasoning;
+(3) Play adding an on-device VpnService exemption, or naming `PACKAGE_USAGE_STATS` in a declaration
+requirement; (4) India in a developer-verification wave; (5) an Android 18 preview page; (6) iOS
+27.2 final or a 27.3 beta touching NetworkExtension or Screen Time; (7) any production (batched)
+input-vs-output token energy split; (8) `getConnectionOwnerUid` re-read (the fetcher truncated it
+again this pass; try a browser tab).
+
+**Next pass due:** 2026-10-25.
+
 ## 2026-10-19 — scheduled three-day pass (all five areas)
 
 **Trigger:** the standing cadence (automated run). Brief from 10-16: (1) live chatgpt.com Thinking
